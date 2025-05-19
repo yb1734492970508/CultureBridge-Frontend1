@@ -1,0 +1,71 @@
+.swipe-gesture-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.swipe-gesture-content {
+  width: 100%;
+  will-change: transform;
+}
+
+/* 滑动提示指示器 */
+.swipe-hint {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background-color: rgba(97, 218, 251, 0.2);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.swipe-hint-left {
+  left: 10px;
+}
+
+.swipe-hint-right {
+  right: 10px;
+}
+
+.swipe-hint-arrow {
+  width: 20px;
+  height: 20px;
+  background-color: #61dafb;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.swipe-hint-left .swipe-hint-arrow {
+  mask-image: url('../../assets/icons/arrow-left.svg');
+  -webkit-mask-image: url('../../assets/icons/arrow-left.svg');
+}
+
+.swipe-hint-right .swipe-hint-arrow {
+  mask-image: url('../../assets/icons/arrow-right.svg');
+  -webkit-mask-image: url('../../assets/icons/arrow-right.svg');
+}
+
+/* 滑动时显示提示 */
+.swipe-gesture-container.swiping-left .swipe-hint-left,
+.swipe-gesture-container.swiping-right .swipe-hint-right {
+  opacity: 1;
+}
+
+/* 在大屏幕设备上禁用滑动视觉效果 */
+@media (min-width: 768px) {
+  .swipe-hint {
+    display: none;
+  }
+}

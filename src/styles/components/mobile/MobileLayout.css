@@ -1,0 +1,81 @@
+.mobile-layout {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+}
+
+.mobile-content {
+  padding-bottom: 60px; /* 为底部导航留出空间 */
+}
+
+.desktop-content {
+  width: 100%;
+}
+
+/* 移动端特定样式 */
+.is-mobile {
+  overflow-x: hidden;
+  touch-action: pan-y;
+}
+
+/* 移动端页面过渡动画 */
+.page-transition-enter {
+  transform: translateX(100%);
+}
+
+.page-transition-enter-active {
+  transform: translateX(0);
+  transition: transform 0.3s ease;
+}
+
+.page-transition-exit {
+  transform: translateX(0);
+}
+
+.page-transition-exit-active {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+/* 反向过渡动画 */
+.page-transition-reverse-enter {
+  transform: translateX(-100%);
+}
+
+.page-transition-reverse-enter-active {
+  transform: translateX(0);
+  transition: transform 0.3s ease;
+}
+
+.page-transition-reverse-exit {
+  transform: translateX(0);
+}
+
+.page-transition-reverse-exit-active {
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+
+/* 移动端适配 */
+@media (max-width: 767px) {
+  .mobile-layout {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 60px);
+  }
+}
+
+/* 平板适配 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .mobile-layout:not(.is-mobile) {
+    max-width: 90%;
+    margin: 0 auto;
+  }
+}
+
+/* 桌面适配 */
+@media (min-width: 1024px) {
+  .mobile-layout:not(.is-mobile) {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
