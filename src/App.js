@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import HomePage from './components/pages/HomePage';
 import ForumListPage from './components/pages/ForumListPage';
+import EventsPage from './components/pages/EventsPage';
 import './styles/App.css';
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/forum" element={<ForumListPage />} />
+          <Route path="/events" element={<EventsPage />} />
           <Route path="*" element={
             <div className="coming-soon">
               <h2>功能开发中</h2>
