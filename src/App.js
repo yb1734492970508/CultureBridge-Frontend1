@@ -1,23 +1,26 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Layout from './components/layout/Layout';
+import HomePage from './components/pages/HomePage';
+import ForumListPage from './components/pages/ForumListPage';
 import './styles/App.css';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>CultureBridge</h1>
-        <p>连接世界，促进文化交流</p>
-      </header>
-      <main>
-        <section className="welcome-section">
-          <h2>欢迎来到CultureBridge</h2>
-          <p>这是一个跨文化交流平台，旨在连接不同文化背景的人们，促进文化理解与交流。</p>
-        </section>
-      </main>
-      <footer>
-        <p>&copy; {new Date().getFullYear()} CultureBridge. All rights reserved.</p>
-      </footer>
-    </div>
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/forum" element={<ForumListPage />} />
+          <Route path="*" element={
+            <div className="coming-soon">
+              <h2>功能开发中</h2>
+              <p>该页面正在开发中，敬请期待！</p>
+            </div>
+          } />
+        </Routes>
+      </Layout>
+    </Router>
   );
 }
 
