@@ -4,22 +4,23 @@
 
 /* 论坛头部 */
 .forum-header {
-  background-color: #f8f9fa;
-  padding: 2rem;
-  border-radius: 8px;
-  margin-bottom: 2rem;
+  background-color: #f0f9ff;
+  padding: 3rem 1rem;
   text-align: center;
+  margin-bottom: 3rem;
+  border-radius: 8px;
 }
 
 .forum-header h1 {
-  font-size: 2.2rem;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
   color: #282c34;
-  margin-bottom: 0.5rem;
 }
 
 .forum-header p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
   color: #666;
-  margin-bottom: 1.5rem;
 }
 
 .forum-actions {
@@ -29,6 +30,21 @@
   flex-wrap: wrap;
 }
 
+.primary-button {
+  padding: 0.8rem 1.5rem;
+  background-color: #61dafb;
+  color: #282c34;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.primary-button:hover {
+  background-color: #4fa8c9;
+}
+
 .search-box {
   display: flex;
   max-width: 400px;
@@ -36,21 +52,21 @@
 }
 
 .search-box input {
-  flex: 1;
-  padding: 0.8rem;
+  flex-grow: 1;
+  padding: 0.8rem 1rem;
   border: 1px solid #ddd;
   border-radius: 4px 0 0 4px;
   font-size: 1rem;
 }
 
 .search-button {
-  padding: 0.8rem 1.2rem;
+  padding: 0.8rem 1.5rem;
   background-color: #61dafb;
-  color: white;
+  color: #282c34;
   border: none;
   border-radius: 0 4px 4px 0;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .search-button:hover {
@@ -59,25 +75,69 @@
 
 /* 论坛分类 */
 .forum-categories {
+  padding: 3rem 1rem;
   margin-bottom: 3rem;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2.5rem;
+  color: #282c34;
+}
+
+/* 分类筛选按钮 */
+.category-filter {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.filter-button {
+  padding: 0.5rem 1rem;
+  background-color: #f0f9ff;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-button:hover {
+  background-color: #e0f0ff;
+}
+
+.filter-button.active {
+  background-color: #61dafb;
+  color: #282c34;
+  border-color: #61dafb;
 }
 
 .categories-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
 }
 
 .category-card {
-  display: flex;
   background-color: white;
   border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .category-card:hover {
+  transform: translateY(-5px);
+}
+
+.category-card.highlighted {
+  border: 2px solid #61dafb;
   transform: translateY(-5px);
 }
 
@@ -86,41 +146,42 @@
   height: 50px;
   background-color: #f0f9ff;
   border-radius: 8px;
-  margin-right: 1rem;
+  margin-right: 1.5rem;
   flex-shrink: 0;
 }
 
 .category-content {
-  flex: 1;
+  flex-grow: 1;
 }
 
 .category-content h3 {
-  margin: 0 0 0.5rem;
+  margin-bottom: 0.5rem;
   color: #282c34;
 }
 
 .category-content p {
   color: #666;
-  margin: 0 0 1rem;
-  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.6;
 }
 
 .category-stats {
   display: flex;
   gap: 1rem;
-  font-size: 0.8rem;
   color: #888;
+  font-size: 0.9rem;
 }
 
 /* 热门话题 */
 .hot-topics {
+  padding: 3rem 1rem;
   margin-bottom: 3rem;
 }
 
 .topics-container {
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -129,59 +190,126 @@
   border-collapse: collapse;
 }
 
-.topics-table th,
-.topics-table td {
+.topics-table th {
+  background-color: #f0f9ff;
   padding: 1rem;
   text-align: left;
+  color: #282c34;
+  font-weight: 500;
+}
+
+.topics-table td {
+  padding: 1rem;
   border-bottom: 1px solid #eee;
 }
 
-.topics-table th {
-  background-color: #f8f9fa;
-  font-weight: 600;
-  color: #444;
-}
-
 .topic-row:hover {
-  background-color: #f8f9fa;
+  background-color: #f9f9f9;
 }
 
 .topic-title {
-  font-weight: 500;
   color: #282c34;
+  font-weight: 500;
+  cursor: pointer;
 }
 
-.topic-author,
-.topic-replies,
-.topic-views,
-.topic-activity {
+.topic-title:hover {
+  color: #61dafb;
+}
+
+.topic-author, .topic-category, .topic-replies, .topic-views, .topic-activity {
   color: #666;
-  font-size: 0.9rem;
+}
+
+/* 分页控件 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+}
+
+.pagination-button {
+  padding: 0.5rem 1rem;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background-color: #f0f9ff;
+}
+
+.pagination-button.active {
+  background-color: #61dafb;
+  color: white;
+  border-color: #61dafb;
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 无话题提示 */
+.no-topics {
+  padding: 3rem;
+  text-align: center;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.no-topics p {
+  margin-bottom: 1.5rem;
+  color: #666;
+}
+
+.reset-button {
+  padding: 0.8rem 1.5rem;
+  background-color: #61dafb;
+  color: #282c34;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reset-button:hover {
+  background-color: #4fa8c9;
 }
 
 /* 论坛统计 */
 .forum-stats {
-  margin-bottom: 2rem;
+  padding: 3rem 1rem;
 }
 
 .stats-container {
   display: flex;
   justify-content: space-around;
-  background-color: #f8f9fa;
+  flex-wrap: wrap;
+  gap: 2rem;
+  background-color: white;
   border-radius: 8px;
-  padding: 2rem 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-item {
   text-align: center;
 }
 
 .stat-item h4 {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   color: #61dafb;
-  margin: 0 0 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .stat-item p {
   color: #666;
-  margin: 0;
 }
 
 /* 响应式设计 */
@@ -192,24 +320,19 @@
   }
   
   .search-box {
-    width: 100%;
+    max-width: 100%;
   }
   
-  .categories-container {
-    grid-template-columns: 1fr;
-  }
-  
-  .topics-table {
-    display: block;
-    overflow-x: auto;
+  .topics-table th:nth-child(3),
+  .topics-table th:nth-child(4),
+  .topics-table td:nth-child(3),
+  .topics-table td:nth-child(4) {
+    display: none;
   }
   
   .stats-container {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
     gap: 1.5rem;
-  }
-  
-  .stat-item {
-    width: 45%;
   }
 }

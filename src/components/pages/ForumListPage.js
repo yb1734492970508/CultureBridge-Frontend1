@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../../styles/pages/ForumListPage.css';
 
 const ForumListPage = () => {
@@ -55,14 +55,15 @@ const ForumListPage = () => {
   ];
 
   // 模拟热门话题数据
-  const hotTopics = [
+  const allTopics = [
     {
       id: 101,
       title: '中国春节习俗大盘点',
       author: '文化达人',
       replies: 48,
       views: 1256,
-      lastActivity: '2小时前'
+      lastActivity: '2小时前',
+      category: '文化交流'
     },
     {
       id: 102,
@@ -70,7 +71,8 @@ const ForumListPage = () => {
       author: '语言学习者',
       replies: 36,
       views: 982,
-      lastActivity: '5小时前'
+      lastActivity: '5小时前',
+      category: '语言学习'
     },
     {
       id: 103,
@@ -78,7 +80,8 @@ const ForumListPage = () => {
       author: '环球旅行家',
       replies: 29,
       views: 876,
-      lastActivity: '昨天'
+      lastActivity: '昨天',
+      category: '文化交流'
     },
     {
       id: 104,
@@ -86,7 +89,8 @@ const ForumListPage = () => {
       author: '心理顾问',
       replies: 52,
       views: 1378,
-      lastActivity: '3天前'
+      lastActivity: '3天前',
+      category: '留学生活'
     },
     {
       id: 105,
@@ -94,9 +98,93 @@ const ForumListPage = () => {
       author: '艺术研究者',
       replies: 41,
       views: 1089,
-      lastActivity: '4天前'
+      lastActivity: '4天前',
+      category: '艺术与音乐'
+    },
+    {
+      id: 106,
+      title: '法国葡萄酒文化探索',
+      author: '美食爱好者',
+      replies: 27,
+      views: 843,
+      lastActivity: '1周前',
+      category: '美食世界'
+    },
+    {
+      id: 107,
+      title: '日本动漫对全球流行文化的影响',
+      author: '文化评论家',
+      replies: 63,
+      views: 1567,
+      lastActivity: '2天前',
+      category: '艺术与音乐'
+    },
+    {
+      id: 108,
+      title: '印度排灯节的庆祝方式',
+      author: '文化探索者',
+      replies: 19,
+      views: 721,
+      lastActivity: '5天前',
+      category: '节日与庆典'
+    },
+    {
+      id: 109,
+      title: '西班牙语和葡萄牙语的异同',
+      author: '语言学家',
+      replies: 31,
+      views: 876,
+      lastActivity: '3天前',
+      category: '语言学习'
+    },
+    {
+      id: 110,
+      title: '在国外租房的经验分享',
+      author: '留学顾问',
+      replies: 45,
+      views: 1243,
+      lastActivity: '1天前',
+      category: '留学生活'
     }
   ];
+
+  // 状态管理
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const topicsPerPage = 5;
+
+  // 根据分类和搜索过滤话题
+  const filteredTopics = allTopics.filter(topic => {
+    const matchesCategory = selectedCategory === 'all' || topic.category === selectedCategory;
+    const matchesSearch = topic.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          topic.author.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  // 分页处理
+  const indexOfLastTopic = currentPage * topicsPerPage;
+  const indexOfFirstTopic = indexOfLastTopic - topicsPerPage;
+  const currentTopics = filteredTopics.slice(indexOfFirstTopic, indexOfLastTopic);
+  const totalPages = Math.ceil(filteredTopics.length / topicsPerPage);
+
+  // 页面切换
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const goToNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const goToPrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+
+  // 处理分类变更
+  const handleCategoryChange = (categoryTitle) => {
+    setSelectedCategory(categoryTitle === '全部' ? 'all' : categoryTitle);
+    setCurrentPage(1); // 重置到第一页
+  };
+
+  // 处理搜索
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // 搜索已经通过状态实时过滤，这里只需重置页码
+    setCurrentPage(1);
+  };
 
   return (
     <div className="forum-list-page">
@@ -105,18 +193,44 @@ const ForumListPage = () => {
         <p>探索不同文化，分享您的见解和经验</p>
         <div className="forum-actions">
           <button className="primary-button">发布新主题</button>
-          <div className="search-box">
-            <input type="text" placeholder="搜索论坛..." />
-            <button className="search-button">搜索</button>
-          </div>
+          <form className="search-box" onSubmit={handleSearch}>
+            <input 
+              type="text" 
+              placeholder="搜索论坛..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button type="submit" className="search-button">搜索</button>
+          </form>
         </div>
       </section>
 
       <section className="forum-categories">
         <h2 className="section-title">论坛分类</h2>
+        <div className="category-filter">
+          <button 
+            className={`filter-button ${selectedCategory === 'all' ? 'active' : ''}`}
+            onClick={() => handleCategoryChange('全部')}
+          >
+            全部
+          </button>
+          {forumCategories.map(category => (
+            <button 
+              key={category.id}
+              className={`filter-button ${selectedCategory === category.title ? 'active' : ''}`}
+              onClick={() => handleCategoryChange(category.title)}
+            >
+              {category.title}
+            </button>
+          ))}
+        </div>
         <div className="categories-container">
           {forumCategories.map(category => (
-            <div className="category-card" key={category.id}>
+            <div 
+              className={`category-card ${selectedCategory === category.title ? 'highlighted' : ''}`} 
+              key={category.id}
+              onClick={() => handleCategoryChange(category.title)}
+            >
               <div className={`category-icon ${category.icon}`}></div>
               <div className="category-content">
                 <h3>{category.title}</h3>
@@ -132,31 +246,80 @@ const ForumListPage = () => {
       </section>
 
       <section className="hot-topics">
-        <h2 className="section-title">热门话题</h2>
-        <div className="topics-container">
-          <table className="topics-table">
-            <thead>
-              <tr>
-                <th>话题</th>
-                <th>作者</th>
-                <th>回复</th>
-                <th>浏览</th>
-                <th>最后活动</th>
-              </tr>
-            </thead>
-            <tbody>
-              {hotTopics.map(topic => (
-                <tr key={topic.id} className="topic-row">
-                  <td className="topic-title">{topic.title}</td>
-                  <td className="topic-author">{topic.author}</td>
-                  <td className="topic-replies">{topic.replies}</td>
-                  <td className="topic-views">{topic.views}</td>
-                  <td className="topic-activity">{topic.lastActivity}</td>
+        <h2 className="section-title">
+          {selectedCategory === 'all' ? '热门话题' : `${selectedCategory}话题`}
+          {searchQuery && ` - 搜索结果: "${searchQuery}"`}
+        </h2>
+        {filteredTopics.length > 0 ? (
+          <div className="topics-container">
+            <table className="topics-table">
+              <thead>
+                <tr>
+                  <th>话题</th>
+                  <th>作者</th>
+                  <th>分类</th>
+                  <th>回复</th>
+                  <th>浏览</th>
+                  <th>最后活动</th>
                 </tr>
+              </thead>
+              <tbody>
+                {currentTopics.map(topic => (
+                  <tr key={topic.id} className="topic-row">
+                    <td className="topic-title">{topic.title}</td>
+                    <td className="topic-author">{topic.author}</td>
+                    <td className="topic-category">{topic.category}</td>
+                    <td className="topic-replies">{topic.replies}</td>
+                    <td className="topic-views">{topic.views}</td>
+                    <td className="topic-activity">{topic.lastActivity}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {/* 分页控件 */}
+            <div className="pagination">
+              <button 
+                className="pagination-button" 
+                onClick={goToPrevPage}
+                disabled={currentPage === 1}
+              >
+                上一页
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  className={`pagination-button ${currentPage === i + 1 ? 'active' : ''}`}
+                  onClick={() => paginate(i + 1)}
+                >
+                  {i + 1}
+                </button>
               ))}
-            </tbody>
-          </table>
-        </div>
+              
+              <button 
+                className="pagination-button" 
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+              >
+                下一页
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="no-topics">
+            <p>没有找到符合条件的话题</p>
+            <button 
+              className="reset-button"
+              onClick={() => {
+                setSelectedCategory('all');
+                setSearchQuery('');
+              }}
+            >
+              重置筛选条件
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="forum-stats">
