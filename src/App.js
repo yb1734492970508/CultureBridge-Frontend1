@@ -1,28 +1,48 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Layout from './components/layout/Layout';
-import HomePage from './components/pages/HomePage';
-import ForumListPage from './components/pages/ForumListPage';
-import EventsPage from './components/pages/EventsPage';
+import routes from './routes/routes';
+import RouteGuard from './routes/RouteGuard';
+import { AppProvider } from './context/AppContext';
 import './styles/App.css';
+import './styles/responsive.css';
+
+// 路由切换动画组件
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  
+  return (
+    <div className="page-transition">
+      <Routes location={location}>
+        {routes.map((route) => (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={
+              route.requireAuth ? (
+                <RouteGuard requireAuth={true} redirectTo="/">
+                  {route.element}
+                </RouteGuard>
+              ) : (
+                route.element
+              )
+            }
+          />
+        ))}
+      </Routes>
+    </div>
+  );
+};
 
 function App() {
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/forum" element={<ForumListPage />} />
-          <Route path="/events" element={<EventsPage />} />
-          <Route path="*" element={
-            <div className="coming-soon">
-              <h2>功能开发中</h2>
-              <p>该页面正在开发中，敬请期待！</p>
-            </div>
-          } />
-        </Routes>
-      </Layout>
-    </Router>
+    <AppProvider>
+      <Router>
+        <Layout>
+          <AnimatedRoutes />
+        </Layout>
+      </Router>
+    </AppProvider>
   );
 }
 
