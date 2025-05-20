@@ -1,0 +1,1223 @@
+/* 区块链翻译聊天组件样式 */
+:root {
+  --primary-color: #3f51b5;
+  --secondary-color: #ff4081;
+  --accent-color: #00bcd4;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --error-color: #f44336;
+  --dark-bg: #121212;
+  --light-bg: #f5f5f5;
+  --card-bg: #ffffff;
+  --card-bg-dark: #1e1e1e;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --text-primary-dark: #ffffff;
+  --text-secondary-dark: #b0b0b0;
+  --border-radius: 12px;
+  --transition-speed: 0.3s;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.14);
+  
+  /* BNB链主题色 */
+  --bnb-yellow: #F3BA2F;
+  --bnb-black: #12161C;
+  --bnb-gray: #474D57;
+}
+
+.blockchain-chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: var(--light-bg);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+}
+
+/* 暗色模式支持 */
+.dark-mode .blockchain-chat-container {
+  background: var(--dark-bg);
+  color: var(--text-primary-dark);
+}
+
+/* 头部区域 */
+.blockchain-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, var(--bnb-yellow) 0%, #F8D33A 100%);
+  color: var(--bnb-black);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 10;
+}
+
+.blockchain-chat-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.blockchain-chat-header h2 svg {
+  margin-right: 12px;
+}
+
+.blockchain-status {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6px 12px;
+  border-radius: 20px;
+  backdrop-filter: blur(5px);
+}
+
+.blockchain-status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+  background: var(--success-color);
+  position: relative;
+}
+
+.blockchain-status-indicator.connecting {
+  background: var(--warning-color);
+}
+
+.blockchain-status-indicator.disconnected {
+  background: var(--error-color);
+}
+
+.blockchain-status-indicator::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.5;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  70% {
+    transform: scale(2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* 聊天内容区域 */
+.blockchain-chat-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+/* 消息气泡 */
+.message {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: var(--border-radius);
+  position: relative;
+  animation: messageAppear 0.3s ease-out;
+  transition: transform var(--transition-speed);
+}
+
+.message:hover {
+  transform: translateY(-2px);
+}
+
+@keyframes messageAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-message {
+  align-self: flex-end;
+  background: var(--primary-color);
+  color: white;
+  border-bottom-right-radius: 4px;
+  box-shadow: var(--shadow-sm);
+}
+
+.translation-message {
+  align-self: flex-start;
+  background: white;
+  color: var(--text-primary);
+  border-bottom-left-radius: 4px;
+  box-shadow: var(--shadow-sm);
+}
+
+.dark-mode .translation-message {
+  background: var(--card-bg-dark);
+  color: var(--text-primary-dark);
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+}
+
+.language-tag {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.user-message .language-tag {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.timestamp {
+  opacity: 0.7;
+}
+
+.message-content {
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+/* 区块链交易状态指示器 */
+.blockchain-tx-status {
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  gap: 4px;
+}
+
+.blockchain-tx-status .status-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.blockchain-tx-status.pending {
+  color: var(--warning-color);
+}
+
+.blockchain-tx-status.confirmed {
+  color: var(--success-color);
+}
+
+.blockchain-tx-status.failed {
+  color: var(--error-color);
+}
+
+/* NFT标签 */
+.nft-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.nft-tag {
+  background: rgba(63, 81, 181, 0.1);
+  color: var(--primary-color);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all var(--transition-speed);
+}
+
+.dark-mode .nft-tag {
+  background: rgba(63, 81, 181, 0.2);
+}
+
+.nft-tag:hover {
+  background: rgba(63, 81, 181, 0.2);
+  transform: translateY(-2px);
+}
+
+.nft-tag svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* 输入区域 */
+.blockchain-chat-input {
+  padding: 16px 24px;
+  background: white;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 5;
+}
+
+.dark-mode .blockchain-chat-input {
+  background: var(--card-bg-dark);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.input-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.language-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.language-selector label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.language-selector select {
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  padding: 8px 12px;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+}
+
+.dark-mode .language-selector select {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary-dark);
+}
+
+.language-selector select:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .language-selector select:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.translation-mode {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.translation-mode label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.translation-mode select {
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  padding: 8px 12px;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+}
+
+.dark-mode .translation-mode select {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary-dark);
+}
+
+.input-container {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.input-container textarea {
+  flex: 1;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--border-radius);
+  padding: 12px 16px;
+  font-size: 1rem;
+  resize: none;
+  min-height: 60px;
+  max-height: 150px;
+  transition: all var(--transition-speed);
+  background: white;
+}
+
+.dark-mode .input-container textarea {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary-dark);
+}
+
+.input-container textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+}
+
+.input-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.input-actions button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-speed);
+}
+
+.input-actions button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.dark-mode .input-actions button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.input-actions button svg {
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
+}
+
+.dark-mode .input-actions button svg {
+  color: var(--text-secondary-dark);
+}
+
+.send-button {
+  background: var(--primary-color) !important;
+  color: white !important;
+}
+
+.send-button svg {
+  color: white !important;
+}
+
+.send-button:hover {
+  background: var(--primary-color) !important;
+  opacity: 0.9;
+}
+
+.voice-button {
+  background: var(--accent-color) !important;
+  color: white !important;
+}
+
+.voice-button svg {
+  color: white !important;
+}
+
+.voice-button:hover {
+  background: var(--accent-color) !important;
+  opacity: 0.9;
+}
+
+.voice-button.recording {
+  background: var(--error-color) !important;
+  animation: pulse-recording 1.5s infinite;
+}
+
+@keyframes pulse-recording {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* NFT选择面板 */
+.nft-selection-panel {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: all var(--transition-speed);
+  max-height: 0;
+  opacity: 0;
+}
+
+.dark-mode .nft-selection-panel {
+  background: var(--card-bg-dark);
+}
+
+.nft-selection-panel.open {
+  max-height: 300px;
+  opacity: 1;
+  margin-bottom: 16px;
+}
+
+.nft-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .nft-panel-header {
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nft-panel-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.nft-panel-header button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.dark-mode .nft-panel-header button {
+  color: var(--text-secondary-dark);
+}
+
+.nft-list {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.nft-list::-webkit-scrollbar {
+  height: 6px;
+}
+
+.nft-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.nft-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.dark-mode .nft-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .nft-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.nft-item {
+  min-width: 180px;
+  border-radius: var(--border-radius);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  position: relative;
+  overflow: hidden;
+}
+
+.dark-mode .nft-item {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nft-item:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.nft-item.selected {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.3);
+}
+
+.nft-item.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.nft-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.nft-id {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.nft-type {
+  font-size: 0.75rem;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.dark-mode .nft-type {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nft-language {
+  font-size: 0.875rem;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+.dark-mode .nft-language {
+  color: var(--text-secondary-dark);
+}
+
+.nft-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.tag {
+  font-size: 0.75rem;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.dark-mode .tag {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nft-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.dark-mode .nft-footer {
+  color: var(--text-secondary-dark);
+}
+
+.nft-price {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.nft-price svg {
+  width: 12px;
+  height: 12px;
+  color: var(--bnb-yellow);
+}
+
+/* 钱包连接按钮 */
+.wallet-connect-button {
+  background: var(--bnb-yellow);
+  color: var(--bnb-black);
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all var(--transition-speed);
+}
+
+.wallet-connect-button:hover {
+  background: #F8D33A;
+  transform: translateY(-2px);
+}
+
+.wallet-connect-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* 钱包信息 */
+.wallet-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wallet-address {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 6px 12px;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  font-family: monospace;
+}
+
+.dark-mode .wallet-address {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.token-balance {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(243, 186, 47, 0.1);
+  padding: 6px 12px;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.token-balance svg {
+  width: 16px;
+  height: 16px;
+  color: var(--bnb-yellow);
+}
+
+/* 加载状态 */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(5px);
+}
+
+.dark-mode .loading-overlay {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(63, 81, 181, 0.1);
+  border-left-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  margin-top: 16px;
+  font-weight: 500;
+}
+
+/* 翻译质量评分 */
+.quality-rating {
+  margin-top: 8px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: var(--border-radius);
+}
+
+.dark-mode .quality-rating {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.quality-rating-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.quality-rating-header h4 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.quality-rating-slider {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.quality-rating-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.dark-mode .quality-rating-labels {
+  color: var(--text-secondary-dark);
+}
+
+.quality-rating-submit {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  margin-top: 8px;
+}
+
+.quality-rating-submit:hover {
+  background: #303f9f;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .blockchain-chat-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .input-options {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .language-selector, .translation-mode {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .message {
+    max-width: 90%;
+  }
+  
+  .nft-item {
+    min-width: 150px;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* 语音波形动画 */
+.voice-waveform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  gap: 3px;
+}
+
+.voice-waveform-bar {
+  width: 3px;
+  background: var(--primary-color);
+  border-radius: 3px;
+  animation: waveform-animation 1s infinite;
+}
+
+.voice-waveform-bar:nth-child(1) { animation-delay: 0.0s; height: 10px; }
+.voice-waveform-bar:nth-child(2) { animation-delay: 0.1s; height: 16px; }
+.voice-waveform-bar:nth-child(3) { animation-delay: 0.2s; height: 24px; }
+.voice-waveform-bar:nth-child(4) { animation-delay: 0.3s; height: 32px; }
+.voice-waveform-bar:nth-child(5) { animation-delay: 0.4s; height: 24px; }
+.voice-waveform-bar:nth-child(6) { animation-delay: 0.5s; height: 16px; }
+.voice-waveform-bar:nth-child(7) { animation-delay: 0.6s; height: 10px; }
+
+@keyframes waveform-animation {
+  0%, 100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* 区块链交易确认动画 */
+.tx-confirmation-animation {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.tx-confirmation-circle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--primary-color);
+  border-radius: 50%;
+  opacity: 0;
+  animation: tx-confirmation-pulse 2s infinite;
+}
+
+.tx-confirmation-circle:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+@keyframes tx-confirmation-pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* 语言切换动画 */
+.language-switch-animation {
+  position: relative;
+  overflow: hidden;
+}
+
+.language-switch-animation::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: translateX(-100%);
+  animation: language-switch-shine 2s infinite;
+}
+
+@keyframes language-switch-shine {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* 双语并列显示 */
+.dual-language-display {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-left: 3px solid var(--primary-color);
+  padding-left: 12px;
+  margin-top: 8px;
+}
+
+.original-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.dark-mode .original-text {
+  color: var(--text-secondary-dark);
+}
+
+/* 滑动切换原文/译文 */
+.swipeable-message {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.swipeable-message-inner {
+  display: flex;
+  width: 200%;
+  transition: transform 0.3s ease;
+}
+
+.swipeable-message-original,
+.swipeable-message-translated {
+  width: 50%;
+  padding: 12px;
+}
+
+.swipeable-message-indicator {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+}
+
+.swipeable-message-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .swipeable-message-dot {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.swipeable-message-dot.active {
+  background: var(--primary-color);
+}
+
+/* BNB链特定样式 */
+.bnb-chain-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(243, 186, 47, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--bnb-yellow);
+}
+
+.bnb-chain-badge svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* 气泡提示 */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltip-text {
+  visibility: hidden;
+  width: 120px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.75rem;
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* 隐私级别指示器 */
+.privacy-level {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.privacy-level label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.privacy-level-indicator {
+  display: flex;
+  gap: 2px;
+}
+
+.privacy-level-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .privacy-level-dot {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.privacy-level-dot.active {
+  background: var(--primary-color);
+}
+
+.privacy-level-high .privacy-level-dot.active {
+  background: var(--success-color);
+}
+
+/* 语音识别动画 */
+.voice-recognition-animation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.voice-recognition-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(63, 81, 181, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.voice-recognition-circle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(63, 81, 181, 0.1);
+  animation: voice-recognition-pulse 1.5s infinite;
+}
+
+@keyframes voice-recognition-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.voice-recognition-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--primary-color);
+}
+
+/* 文化上下文提示 */
+.cultural-context-hint {
+  background: rgba(0, 188, 212, 0.1);
+  border-left: 3px solid var(--accent-color);
+  padding: 8px 12px;
+  margin-top: 8px;
+  font-size: 0.875rem;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.dark-mode .cultural-context-hint {
+  background: rgba(0, 188, 212, 0.2);
+}
+
+.cultural-context-hint-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  color: var(--accent-color);
+  margin-bottom: 4px;
+}
+
+.cultural-context-hint-header svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 语言学习建议 */
+.language-learning-suggestion {
+  background: rgba(255, 64, 129, 0.1);
+  border-left: 3px solid var(--secondary-color);
+  padding: 8px 12px;
+  margin-top: 8px;
+  font-size: 0.875rem;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.dark-mode .language-learning-suggestion {
+  background: rgba(255, 64, 129, 0.2);
+}
+
+.language-learning-suggestion-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  color: var(--secondary-color);
+  margin-bottom: 4px;
+}
+
+.language-learning-suggestion-header svg {
+  width: 16px;
+  height: 16px;
+}
