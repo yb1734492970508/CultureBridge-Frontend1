@@ -1,15 +1,7 @@
-import NFTGallery from './NFTGallery';
-import NFTMinter from './NFTMinter';
-import TokenBalance from './TokenBalance';
-import TransactionHistory from './TransactionHistory';
-import WalletConnect from './WalletConnect';
-import ContractInteraction from './ContractInteraction';
-
-export {
-  NFTGallery,
-  NFTMinter,
-  TokenBalance,
-  TransactionHistory,
-  WalletConnect,
-  ContractInteraction
-};
+export { default as NFTGallery } from './NFTGallery';
+export { default as NFTMinter } from './NFTMinter';
+export { default as TokenBalance } from './TokenBalance';
+export { default as TransactionHistory } from './TransactionHistory';
+export { default as WalletConnect } from './WalletConnect';
+export { default as ContractInteraction } from './ContractInteraction';
+export { default as GovernanceProposal } from './GovernanceProposal';
