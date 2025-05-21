@@ -82,6 +82,12 @@
   outline: none;
 }
 
+.field-hint {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 0.25rem;
+}
+
 .image-upload-container {
   display: flex;
   flex-direction: column;
@@ -114,6 +120,7 @@
   border-radius: 8px;
   overflow: hidden;
   margin-top: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .image-preview img {
@@ -122,12 +129,58 @@
   object-fit: cover;
 }
 
+.image-placeholder {
+  width: 100%;
+  max-width: 300px;
+  height: 200px;
+  border-radius: 8px;
+  border: 2px dashed #ddd;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+  color: #999;
+}
+
+.placeholder-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.placeholder-text {
+  font-size: 0.9rem;
+}
+
 .minter-error {
+  display: flex;
+  align-items: flex-start;
   color: #e74c3c;
   margin-bottom: 1.5rem;
   padding: 0.75rem;
   background-color: #fde2e2;
   border-radius: 4px;
+  position: relative;
+}
+
+.error-icon {
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.error-message {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.5rem;
 }
 
 .minter-actions {
@@ -176,6 +229,259 @@
   cursor: not-allowed;
 }
 
+/* 步骤指示器 */
+.step-indicator {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.step-indicator::before {
+  content: '';
+  position: absolute;
+  top: 1.5rem;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #ddd;
+  z-index: 1;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.step-number {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background-color: white;
+  border: 2px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s;
+}
+
+.step.active .step-number {
+  background-color: var(--primary-color, #4a6fa5);
+  border-color: var(--primary-color, #4a6fa5);
+  color: white;
+}
+
+.step.completed .step-number {
+  background-color: var(--success-color, #4caf50);
+  border-color: var(--success-color, #4caf50);
+  color: white;
+}
+
+.step-label {
+  font-size: 0.9rem;
+  color: #666;
+  text-align: center;
+}
+
+.step.active .step-label {
+  color: var(--primary-color, #4a6fa5);
+  font-weight: 500;
+}
+
+.step.completed .step-label {
+  color: var(--success-color, #4caf50);
+}
+
+/* 确认页面样式 */
+.confirmation-summary {
+  margin-bottom: 2rem;
+}
+
+.confirmation-summary h3 {
+  font-size: 1.5rem;
+  color: var(--primary-color, #4a6fa5);
+  margin-bottom: 0.5rem;
+}
+
+.confirmation-details {
+  display: flex;
+  gap: 2rem;
+  margin: 1.5rem 0;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.confirmation-image {
+  width: 250px;
+  height: 250px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.confirmation-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.confirmation-info {
+  flex: 1;
+}
+
+.info-item {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.info-label {
+  font-size: 0.8rem;
+  color: #999;
+  margin-bottom: 0.25rem;
+}
+
+.info-value {
+  font-weight: 500;
+  color: #333;
+}
+
+.info-item.description .info-value {
+  white-space: pre-line;
+  line-height: 1.5;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  background-color: #eee;
+  color: #666;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+}
+
+.network-status {
+  display: flex;
+  align-items: center;
+  background-color: #f0f8ff;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.network-status-icon {
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.network-status-text {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.minting-note {
+  background-color: #fff8e1;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.minting-note p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #856404;
+}
+
+/* 进度条样式 */
+.minting-progress {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.progress-section {
+  margin-bottom: 1.5rem;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.progress-label {
+  font-weight: 500;
+  color: #333;
+}
+
+.progress-percentage {
+  font-weight: 500;
+  color: var(--primary-color, #4a6fa5);
+}
+
+.progress-bar {
+  height: 0.75rem;
+  background-color: #eee;
+  border-radius: 1rem;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--primary-color, #4a6fa5);
+  border-radius: 1rem;
+  transition: width 0.3s ease;
+}
+
+.progress-status {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+.gas-estimate {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #666;
+  background-color: #f0f0f0;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.transaction-info {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.transaction-info a {
+  color: var(--primary-color, #4a6fa5);
+  text-decoration: none;
+}
+
+.transaction-info a:hover {
+  text-decoration: underline;
+}
+
 /* 铸造成功样式 */
 .mint-success {
   padding: 2rem;
@@ -190,7 +496,7 @@
 
 .mint-success-header h3 {
   font-size: 1.5rem;
-  color: var(--primary-color, #4a6fa5);
+  color: var(--success-color, #4caf50);
   margin: 0;
 }
 
@@ -214,6 +520,7 @@
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .mint-success-image img {
@@ -243,6 +550,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .mint-detail {
@@ -259,6 +567,31 @@
 .detail-value {
   font-weight: 500;
   color: #333;
+}
+
+.mint-success-links {
+  margin-top: 1.5rem;
+}
+
+.link-item {
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.link-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-right: 0.5rem;
+}
+
+.link-value {
+  color: var(--primary-color, #4a6fa5);
+  text-decoration: none;
+}
+
+.link-value:hover {
+  text-decoration: underline;
 }
 
 .mint-success-actions {
@@ -298,6 +631,18 @@
 }
 
 /* 响应式设计 */
+@media (max-width: 992px) {
+  .confirmation-details {
+    flex-direction: column;
+  }
+  
+  .confirmation-image {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
   .form-row {
     flex-direction: column;
@@ -311,6 +656,7 @@
   .mint-success-image {
     width: 100%;
     height: 250px;
+    margin: 0 auto 1.5rem;
   }
   
   .mint-success-details {
@@ -319,5 +665,39 @@
   
   .mint-success-actions {
     flex-direction: column;
+  }
+  
+  .step-indicator {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .step-indicator::before {
+    display: none;
+  }
+  
+  .step {
+    flex-direction: row;
+    gap: 1rem;
+  }
+  
+  .step-number {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .minter-form {
+    padding: 1.5rem 1rem;
+  }
+  
+  .minter-actions {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+  
+  .mint-btn, .reset-btn {
+    width: 100%;
   }
 }
