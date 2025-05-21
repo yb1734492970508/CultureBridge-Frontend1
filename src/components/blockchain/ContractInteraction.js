@@ -8,651 +8,775 @@ import './ContractInteraction.css';
  * 允许用户与任意智能合约进行交互
  */
 const ContractInteraction = () => {
-  const { active, account, library } = useBlockchain();
+  const { active, account, library, chainId } = useBlockchain();
   
-  // 合约信息
+  // 合约信息状态
   const [contractAddress, setContractAddress] = useState('');
   const [contractABI, setContractABI] = useState('');
-  const [parsedABI, setParsedABI] = useState(null);
-  const [contract, setContract] = useState(null);
+  const [contractInstance, setContractInstance] = useState(null);
+  const [contractFunctions, setContractFunctions] = useState([]);
+  const [contractEvents, setContractEvents] = useState([]);
+  const [isValidABI, setIsValidABI] = useState(true);
+  const [isValidating, setIsValidating] = useState(false);
+  
+  // 函数调用状态
   const [selectedFunction, setSelectedFunction] = useState(null);
-  
-  // 交互状态
   const [functionInputs, setFunctionInputs] = useState({});
-  const [callResult, setCallResult] = useState(null);
-  const [transactionHash, setTransactionHash] = useState('');
-  const [transactionStatus, setTransactionStatus] = useState('');
+  const [functionResult, setFunctionResult] = useState(null);
+  const [isCallPending, setIsCallPending] = useState(false);
+  const [callError, setCallError] = useState(null);
+  
+  // 交易状态
+  const [txHash, setTxHash] = useState(null);
+  const [txStatus, setTxStatus] = useState(null); // 'pending', 'confirmed', 'failed'
+  const [txReceipt, setTxReceipt] = useState(null);
+  
+  // 事件监听状态
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [eventLogs, setEventLogs] = useState([]);
+  const [isListening, setIsListening] = useState(false);
+  
+  // 气体估算状态
   const [gasEstimate, setGasEstimate] = useState(null);
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [gasPrice, setGasPrice] = useState(null);
+  const [customGasPrice, setCustomGasPrice] = useState('');
+  const [useCustomGasPrice, setUseCustomGasPrice] = useState(false);
   
-  // 合约事件
-  const [events, setEvents] = useState([]);
-  const [isListeningEvents, setIsListeningEvents] = useState(false);
-  
-  // 常用合约模板
-  const contractTemplates = [
-    { 
-      name: 'ERC20代币', 
-      abi: [
-        "function name() view returns (string)",
-        "function symbol() view returns (string)",
-        "function decimals() view returns (uint8)",
-        "function totalSupply() view returns (uint256)",
-        "function balanceOf(address owner) view returns (uint256)",
-        "function transfer(address to, uint256 amount) returns (bool)",
-        "function allowance(address owner, address spender) view returns (uint256)",
-        "function approve(address spender, uint256 amount) returns (bool)",
-        "function transferFrom(address from, address to, uint256 amount) returns (bool)",
-        "event Transfer(address indexed from, address indexed to, uint256 value)",
-        "event Approval(address indexed owner, address indexed spender, uint256 value)"
-      ]
-    },
-    { 
-      name: 'ERC721 NFT', 
-      abi: [
-        "function name() view returns (string)",
-        "function symbol() view returns (string)",
-        "function tokenURI(uint256 tokenId) view returns (string)",
-        "function balanceOf(address owner) view returns (uint256)",
-        "function ownerOf(uint256 tokenId) view returns (address)",
-        "function safeTransferFrom(address from, address to, uint256 tokenId)",
-        "function transferFrom(address from, address to, uint256 tokenId)",
-        "function approve(address to, uint256 tokenId)",
-        "function getApproved(uint256 tokenId) view returns (address)",
-        "function setApprovalForAll(address operator, bool approved)",
-        "function isApprovedForAll(address owner, address operator) view returns (bool)",
-        "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
-        "event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId)",
-        "event ApprovalForAll(address indexed owner, address indexed operator, bool approved)"
-      ]
-    }
-  ];
-
-  // 当合约地址或ABI变化时，尝试创建合约实例
-  useEffect(() => {
-    if (active && library && contractAddress && parsedABI) {
-      try {
-        const contractInstance = new ethers.Contract(
-          contractAddress,
-          parsedABI,
-          library.getSigner()
-        );
-        setContract(contractInstance);
-        setError(null);
-      } catch (err) {
-        console.error('创建合约实例失败:', err);
-        setContract(null);
-        setError('创建合约实例失败，请检查合约地址和ABI格式');
-      }
-    } else {
-      setContract(null);
-    }
-  }, [active, library, contractAddress, parsedABI]);
-
-  // 解析ABI
-  const parseABI = (abiString) => {
+  // 验证合约地址
+  const validateContractAddress = (address) => {
     try {
-      // 尝试解析JSON格式的ABI
-      let parsedABI;
-      try {
-        parsedABI = JSON.parse(abiString);
-      } catch {
-        // 如果不是JSON，尝试解析人类可读格式的ABI
-        parsedABI = abiString.split('\n')
-          .map(line => line.trim())
-          .filter(line => line.length > 0);
-      }
-      
-      setParsedABI(parsedABI);
-      setSelectedFunction(null);
-      setFunctionInputs({});
-      setCallResult(null);
-      setTransactionHash('');
-      setTransactionStatus('');
-      setGasEstimate(null);
-      setError(null);
-      return true;
-    } catch (err) {
-      console.error('解析ABI失败:', err);
-      setError('解析ABI失败，请检查格式');
-      setParsedABI(null);
+      return ethers.utils.isAddress(address);
+    } catch (error) {
       return false;
     }
   };
-
+  
+  // 验证ABI
+  const validateABI = (abiString) => {
+    try {
+      const parsedABI = JSON.parse(abiString);
+      return Array.isArray(parsedABI);
+    } catch (error) {
+      return false;
+    }
+  };
+  
+  // 解析ABI，提取函数和事件
+  const parseABI = (abiString) => {
+    try {
+      const parsedABI = JSON.parse(abiString);
+      
+      // 提取函数
+      const functions = parsedABI.filter(item => 
+        item.type === 'function'
+      ).map(func => ({
+        name: func.name,
+        inputs: func.inputs || [],
+        outputs: func.outputs || [],
+        stateMutability: func.stateMutability,
+        isView: func.stateMutability === 'view' || func.stateMutability === 'pure',
+        signature: `${func.name}(${(func.inputs || []).map(input => input.type).join(',')})`
+      }));
+      
+      // 提取事件
+      const events = parsedABI.filter(item => 
+        item.type === 'event'
+      ).map(event => ({
+        name: event.name,
+        inputs: event.inputs || [],
+        signature: `${event.name}(${(event.inputs || []).map(input => input.type).join(',')})`
+      }));
+      
+      return { functions, events };
+    } catch (error) {
+      console.error('解析ABI失败:', error);
+      return { functions: [], events: [] };
+    }
+  };
+  
+  // 初始化合约实例
+  const initializeContract = () => {
+    if (!active || !library || !validateContractAddress(contractAddress) || !isValidABI) {
+      return;
+    }
+    
+    try {
+      setIsValidating(true);
+      
+      // 解析ABI
+      const { functions, events } = parseABI(contractABI);
+      
+      // 创建合约实例
+      const contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        library.getSigner()
+      );
+      
+      setContractInstance(contract);
+      setContractFunctions(functions);
+      setContractEvents(events);
+      setSelectedFunction(null);
+      setSelectedEvent(null);
+      setFunctionInputs({});
+      setFunctionResult(null);
+      setCallError(null);
+      setTxHash(null);
+      setTxStatus(null);
+      setTxReceipt(null);
+      setEventLogs([]);
+      
+    } catch (error) {
+      console.error('初始化合约失败:', error);
+      setContractInstance(null);
+      setContractFunctions([]);
+      setContractEvents([]);
+    } finally {
+      setIsValidating(false);
+    }
+  };
+  
   // 处理ABI输入变化
   const handleABIChange = (e) => {
-    const newABI = e.target.value;
-    setContractABI(newABI);
-    
-    if (newABI.trim()) {
-      parseABI(newABI);
-    } else {
-      setParsedABI(null);
-    }
+    const value = e.target.value;
+    setContractABI(value);
+    setIsValidABI(validateABI(value));
   };
-
-  // 处理模板选择
-  const handleTemplateSelect = (e) => {
-    const templateIndex = parseInt(e.target.value);
-    if (templateIndex >= 0) {
-      const template = contractTemplates[templateIndex];
-      setContractABI(JSON.stringify(template.abi, null, 2));
-      parseABI(JSON.stringify(template.abi));
-    }
-  };
-
+  
   // 处理函数选择
-  const handleFunctionSelect = (functionName) => {
-    if (!contract) return;
+  const handleFunctionSelect = (func) => {
+    setSelectedFunction(func);
+    setFunctionInputs({});
+    setFunctionResult(null);
+    setCallError(null);
+    setTxHash(null);
+    setTxStatus(null);
+    setTxReceipt(null);
+    setGasEstimate(null);
     
-    try {
-      // 查找选中的函数
-      const selectedFunc = Object.keys(contract.interface.functions)
-        .map(key => contract.interface.functions[key])
-        .find(func => func.name === functionName);
-      
-      if (selectedFunc) {
-        setSelectedFunction(selectedFunc);
-        
-        // 重置输入和结果
-        const initialInputs = {};
-        selectedFunc.inputs.forEach(input => {
-          initialInputs[input.name || `param${input.idx}`] = '';
-        });
-        setFunctionInputs(initialInputs);
-        setCallResult(null);
-        setTransactionHash('');
-        setTransactionStatus('');
-        setGasEstimate(null);
-        setError(null);
-      }
-    } catch (err) {
-      console.error('选择函数失败:', err);
-      setError('选择函数失败，请检查ABI格式');
+    // 如果是状态修改函数，获取当前gas价格
+    if (func && !func.isView) {
+      fetchGasPrice();
     }
   };
-
-  // 处理输入变化
-  const handleInputChange = (name, value) => {
+  
+  // 处理事件选择
+  const handleEventSelect = (event) => {
+    setSelectedEvent(event);
+    setEventLogs([]);
+    setIsListening(false);
+  };
+  
+  // 处理函数输入变化
+  const handleInputChange = (name, type, value) => {
     setFunctionInputs(prev => ({
       ...prev,
-      [name]: value
+      [name]: formatInputValue(type, value)
     }));
   };
-
-  // 估算Gas
-  const estimateGas = async () => {
-    if (!contract || !selectedFunction || !active) return;
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // 准备函数参数
-      const params = selectedFunction.inputs.map(input => 
-        functionInputs[input.name || `param${input.idx}`]
-      );
-      
-      // 只有非只读函数才需要估算gas
-      if (!selectedFunction.constant) {
-        const estimate = await contract.estimateGas[selectedFunction.name](...params);
-        setGasEstimate(ethers.utils.formatUnits(estimate, 'gwei'));
+  
+  // 格式化输入值，根据类型转换
+  const formatInputValue = (type, value) => {
+    if (type.includes('int') && value !== '') {
+      // 处理整数类型
+      try {
+        if (type.includes('uint')) {
+          return ethers.BigNumber.from(value);
+        } else {
+          return ethers.BigNumber.from(value);
+        }
+      } catch (error) {
+        return value;
       }
-    } catch (err) {
-      console.error('估算Gas失败:', err);
-      setError(`估算Gas失败: ${err.message || '请检查参数是否正确'}`);
-      setGasEstimate(null);
-    } finally {
-      setIsLoading(false);
+    } else if (type === 'bool') {
+      // 处理布尔类型
+      return value === 'true';
+    } else if (type.includes('[]')) {
+      // 处理数组类型
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        return value;
+      }
+    } else {
+      // 其他类型直接返回
+      return value;
     }
   };
-
-  // 调用合约函数
-  const callContractFunction = async () => {
-    if (!contract || !selectedFunction || !active) return;
-    
-    setIsLoading(true);
-    setCallResult(null);
-    setTransactionHash('');
-    setTransactionStatus('');
-    setError(null);
+  
+  // 获取当前gas价格
+  const fetchGasPrice = async () => {
+    if (!library) return;
     
     try {
-      // 准备函数参数
+      const price = await library.getGasPrice();
+      setGasPrice(price);
+    } catch (error) {
+      console.error('获取gas价格失败:', error);
+    }
+  };
+  
+  // 估算gas用量
+  const estimateGas = async () => {
+    if (!contractInstance || !selectedFunction || !selectedFunction.inputs) return;
+    
+    try {
+      setIsCallPending(true);
+      
+      // 准备参数
       const params = selectedFunction.inputs.map(input => 
-        functionInputs[input.name || `param${input.idx}`]
+        functionInputs[input.name] || getDefaultValue(input.type)
       );
       
-      // 根据函数类型调用
-      if (selectedFunction.constant) {
-        // 只读函数
-        const result = await contract[selectedFunction.name](...params);
-        setCallResult(formatCallResult(result));
-      } else {
-        // 写入函数
-        setTransactionStatus('pending');
+      // 估算gas
+      const estimatedGas = await contractInstance.estimateGas[selectedFunction.name](...params);
+      setGasEstimate(estimatedGas);
+      
+    } catch (error) {
+      console.error('估算gas失败:', error);
+      setCallError(`估算gas失败: ${error.message}`);
+    } finally {
+      setIsCallPending(false);
+    }
+  };
+  
+  // 获取类型的默认值
+  const getDefaultValue = (type) => {
+    if (type.includes('int')) return 0;
+    if (type === 'bool') return false;
+    if (type === 'address') return ethers.constants.AddressZero;
+    if (type.includes('[]')) return [];
+    return '';
+  };
+  
+  // 调用合约函数
+  const callContractFunction = async () => {
+    if (!contractInstance || !selectedFunction) return;
+    
+    setIsCallPending(true);
+    setFunctionResult(null);
+    setCallError(null);
+    setTxHash(null);
+    setTxStatus(null);
+    setTxReceipt(null);
+    
+    try {
+      // 准备参数
+      const params = selectedFunction.inputs.map(input => 
+        functionInputs[input.name] || getDefaultValue(input.type)
+      );
+      
+      // 如果是只读函数
+      if (selectedFunction.isView) {
+        const result = await contractInstance[selectedFunction.name](...params);
+        setFunctionResult(formatResult(result));
+      } 
+      // 如果是状态修改函数
+      else {
+        // 准备交易选项
+        const options = {};
+        
+        // 如果使用自定义gas价格
+        if (useCustomGasPrice && customGasPrice) {
+          options.gasPrice = ethers.utils.parseUnits(customGasPrice, 'gwei');
+        }
         
         // 发送交易
-        const tx = await contract[selectedFunction.name](...params);
-        setTransactionHash(tx.hash);
-        setTransactionStatus('mining');
+        const tx = await contractInstance[selectedFunction.name](...params, options);
+        setTxHash(tx.hash);
+        setTxStatus('pending');
         
         // 等待交易确认
         const receipt = await tx.wait();
-        setTransactionStatus('confirmed');
-        
-        // 解析事件日志
-        if (receipt.logs && receipt.logs.length > 0) {
-          try {
-            const parsedLogs = receipt.logs
-              .map(log => {
-                try {
-                  return contract.interface.parseLog(log);
-                } catch (e) {
-                  return null;
-                }
-              })
-              .filter(Boolean);
-            
-            if (parsedLogs.length > 0) {
-              setEvents(prev => [...parsedLogs, ...prev].slice(0, 10));
-            }
-          } catch (logErr) {
-            console.error('解析事件日志失败:', logErr);
-          }
-        }
+        setTxReceipt(receipt);
+        setTxStatus('confirmed');
       }
-    } catch (err) {
-      console.error('调用合约函数失败:', err);
-      
-      // 提供详细错误信息
-      if (err.code === 'ACTION_REJECTED') {
-        setError('您拒绝了交易签名');
-      } else if (err.code === 'INSUFFICIENT_FUNDS') {
-        setError('您的钱包余额不足，无法支付交易费用');
-      } else if (err.message && err.message.includes('gas')) {
-        setError('Gas估算失败，请检查参数是否正确');
-      } else {
-        setError(`调用失败: ${err.message || '请检查参数是否正确'}`);
-      }
-      
-      setTransactionStatus('failed');
+    } catch (error) {
+      console.error('调用合约函数失败:', error);
+      setCallError(`调用失败: ${error.message}`);
+      setTxStatus('failed');
     } finally {
-      setIsLoading(false);
+      setIsCallPending(false);
     }
   };
-
-  // 格式化调用结果
-  const formatCallResult = (result) => {
-    if (result === null || result === undefined) {
-      return 'null';
-    }
-    
-    // 处理BigNumber
+  
+  // 格式化结果
+  const formatResult = (result) => {
+    // 如果是BigNumber
     if (ethers.BigNumber.isBigNumber(result)) {
       return result.toString();
     }
     
-    // 处理数组
+    // 如果是数组
     if (Array.isArray(result)) {
-      return result.map(item => formatCallResult(item));
+      return result.map(item => formatResult(item));
     }
     
-    // 处理对象
-    if (typeof result === 'object') {
+    // 如果是对象但不是数组
+    if (typeof result === 'object' && result !== null) {
       const formatted = {};
       for (const key in result) {
-        if (isNaN(parseInt(key))) { // 跳过数字键（用于数组）
-          formatted[key] = formatCallResult(result[key]);
+        if (isNaN(parseInt(key))) { // 只处理非数字键
+          formatted[key] = formatResult(result[key]);
         }
       }
       return formatted;
     }
     
-    return result.toString();
+    // 其他类型直接返回
+    return result;
   };
-
-  // 监听合约事件
-  const listenToEvents = () => {
-    if (!contract || !active || isListeningEvents) return;
+  
+  // 开始监听事件
+  const startEventListener = () => {
+    if (!contractInstance || !selectedEvent) return;
     
-    try {
-      // 获取所有事件
-      const eventFilters = Object.keys(contract.interface.events)
-        .map(key => {
-          const event = contract.interface.events[key];
-          return contract.filters[event.name]();
-        });
+    setIsListening(true);
+    setEventLogs([]);
+    
+    // 创建事件过滤器
+    const filter = contractInstance.filters[selectedEvent.name]();
+    
+    // 监听事件
+    contractInstance.on(filter, (...args) => {
+      const event = args[args.length - 1];
+      const values = {};
       
-      // 为每个事件添加监听器
-      eventFilters.forEach(filter => {
-        contract.on(filter, (...args) => {
-          const event = args[args.length - 1];
-          setEvents(prev => [event, ...prev].slice(0, 10));
-        });
+      // 提取事件参数
+      selectedEvent.inputs.forEach((input, index) => {
+        values[input.name] = formatResult(args[index]);
       });
       
-      setIsListeningEvents(true);
-      setError(null);
-    } catch (err) {
-      console.error('监听事件失败:', err);
-      setError('监听事件失败，请检查合约ABI是否包含事件定义');
-    }
+      // 添加到日志
+      setEventLogs(prev => [{
+        id: `${event.blockNumber}-${event.transactionIndex}-${event.logIndex}`,
+        blockNumber: event.blockNumber,
+        transactionHash: event.transactionHash,
+        values,
+        timestamp: new Date().toISOString()
+      }, ...prev]);
+    });
   };
-
+  
   // 停止监听事件
-  const stopListeningEvents = () => {
-    if (!contract || !isListeningEvents) return;
+  const stopEventListener = () => {
+    if (!contractInstance || !selectedEvent) return;
     
-    try {
-      contract.removeAllListeners();
-      setIsListeningEvents(false);
-      setError(null);
-    } catch (err) {
-      console.error('停止监听事件失败:', err);
-      setError('停止监听事件失败');
-    }
+    // 移除所有监听器
+    contractInstance.removeAllListeners(selectedEvent.name);
+    setIsListening(false);
   };
-
-  // 清除事件列表
-  const clearEvents = () => {
-    setEvents([]);
-  };
-
-  // 渲染函数列表
-  const renderFunctionList = () => {
-    if (!contract) return null;
-    
-    try {
-      // 获取所有函数
-      const functions = Object.keys(contract.interface.functions)
-        .map(key => contract.interface.functions[key])
-        .filter(func => func.type === 'function'); // 只显示函数，不显示事件
-      
-      // 分为读取函数和写入函数
-      const readFunctions = functions.filter(func => func.constant);
-      const writeFunctions = functions.filter(func => !func.constant);
-      
-      return (
-        <div className="function-list">
-          <div className="function-category">
-            <h4>读取函数</h4>
-            <div className="function-buttons">
-              {readFunctions.map(func => (
-                <button
-                  key={func.name}
-                  className={`function-button read ${selectedFunction?.name === func.name ? 'selected' : ''}`}
-                  onClick={() => handleFunctionSelect(func.name)}
-                >
-                  {func.name}
-                </button>
-              ))}
-              {readFunctions.length === 0 && <p className="no-functions">无读取函数</p>}
-            </div>
-          </div>
-          
-          <div className="function-category">
-            <h4>写入函数</h4>
-            <div className="function-buttons">
-              {writeFunctions.map(func => (
-                <button
-                  key={func.name}
-                  className={`function-button write ${selectedFunction?.name === func.name ? 'selected' : ''}`}
-                  onClick={() => handleFunctionSelect(func.name)}
-                >
-                  {func.name}
-                </button>
-              ))}
-              {writeFunctions.length === 0 && <p className="no-functions">无写入函数</p>}
-            </div>
-          </div>
-        </div>
-      );
-    } catch (err) {
-      console.error('渲染函数列表失败:', err);
-      return <div className="error-message">解析合约函数失败，请检查ABI格式</div>;
-    }
-  };
-
-  // 渲染函数表单
-  const renderFunctionForm = () => {
-    if (!selectedFunction) return null;
+  
+  // 当组件卸载时停止所有事件监听
+  useEffect(() => {
+    return () => {
+      if (contractInstance && selectedEvent) {
+        contractInstance.removeAllListeners(selectedEvent.name);
+      }
+    };
+  }, [contractInstance, selectedEvent]);
+  
+  // 渲染函数输入表单
+  const renderFunctionInputs = () => {
+    if (!selectedFunction || !selectedFunction.inputs) return null;
     
     return (
-      <div className="function-form">
-        <h3>{selectedFunction.name}</h3>
-        <div className="function-signature">
-          {`${selectedFunction.name}(${selectedFunction.inputs.map(input => `${input.type} ${input.name || ''}`).join(', ')})`}
-          {selectedFunction.outputs.length > 0 && 
-            ` returns (${selectedFunction.outputs.map(output => output.type).join(', ')})`
-          }
-        </div>
-        
-        {selectedFunction.inputs.length > 0 ? (
-          <div className="function-inputs">
-            {selectedFunction.inputs.map((input, index) => {
-              const inputName = input.name || `param${index}`;
-              return (
-                <div key={index} className="input-group">
-                  <label htmlFor={inputName}>
-                    {input.name || `参数 ${index + 1}`} ({input.type})
-                  </label>
-                  <input
-                    id={inputName}
-                    type="text"
-                    value={functionInputs[inputName] || ''}
-                    onChange={(e) => handleInputChange(inputName, e.target.value)}
-                    placeholder={`输入 ${input.type} 类型的值`}
-                  />
-                </div>
-              );
-            })}
-          </div>
+      <div className="function-inputs">
+        <h4>函数参数</h4>
+        {selectedFunction.inputs.length === 0 ? (
+          <p>此函数没有参数</p>
         ) : (
-          <p className="no-inputs">此函数不需要参数</p>
+          selectedFunction.inputs.map((input, index) => (
+            <div key={`${input.name}-${index}`} className="input-field">
+              <label>
+                {input.name || `参数 ${index + 1}`} ({input.type})
+                <input
+                  type="text"
+                  value={functionInputs[input.name] || ''}
+                  onChange={(e) => handleInputChange(input.name, input.type, e.target.value)}
+                  placeholder={`输入${input.type}类型的值`}
+                />
+              </label>
+              {input.type.includes('[]') && (
+                <small className="input-hint">数组格式: [1, 2, 3] 或 ["a", "b", "c"]</small>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    );
+  };
+  
+  // 渲染函数输出
+  const renderFunctionOutputs = () => {
+    if (!selectedFunction || !selectedFunction.outputs) return null;
+    
+    return (
+      <div className="function-outputs">
+        <h4>返回值类型</h4>
+        {selectedFunction.outputs.length === 0 ? (
+          <p>此函数没有返回值</p>
+        ) : (
+          <div className="output-types">
+            {selectedFunction.outputs.map((output, index) => (
+              <span key={index} className="output-type">
+                {output.name ? `${output.name}: ${output.type}` : output.type}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  // 渲染函数调用结果
+  const renderFunctionResult = () => {
+    if (!functionResult && !callError && !txHash) return null;
+    
+    return (
+      <div className="function-result">
+        <h4>调用结果</h4>
+        
+        {callError && (
+          <div className="result-error">
+            <p>{callError}</p>
+          </div>
         )}
         
-        <div className="function-actions">
-          {!selectedFunction.constant && (
-            <button 
-              className="estimate-gas-btn" 
-              onClick={estimateGas}
-              disabled={isLoading}
-            >
-              估算Gas
-            </button>
-          )}
+        {txHash && (
+          <div className="tx-info">
+            <div className="tx-status">
+              <span className="status-label">交易状态:</span>
+              <span className={`status-value status-${txStatus}`}>
+                {txStatus === 'pending' ? '确认中' : 
+                 txStatus === 'confirmed' ? '已确认' : 
+                 txStatus === 'failed' ? '失败' : '未知'}
+              </span>
+            </div>
+            
+            <div className="tx-hash">
+              <span className="hash-label">交易哈希:</span>
+              <span className="hash-value">{txHash}</span>
+            </div>
+            
+            {txReceipt && (
+              <div className="tx-receipt">
+                <div className="receipt-item">
+                  <span className="receipt-label">区块号:</span>
+                  <span className="receipt-value">{txReceipt.blockNumber}</span>
+                </div>
+                <div className="receipt-item">
+                  <span className="receipt-label">Gas使用量:</span>
+                  <span className="receipt-value">{txReceipt.gasUsed.toString()}</span>
+                </div>
+                <div className="receipt-item">
+                  <span className="receipt-label">确认数:</span>
+                  <span className="receipt-value">1</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {functionResult && (
+          <div className="result-value">
+            <pre>{JSON.stringify(functionResult, null, 2)}</pre>
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  // 渲染Gas设置
+  const renderGasSettings = () => {
+    if (!selectedFunction || selectedFunction.isView) return null;
+    
+    return (
+      <div className="gas-settings">
+        <h4>Gas设置</h4>
+        
+        <div className="gas-price">
+          <div className="gas-price-current">
+            <span className="gas-label">当前Gas价格:</span>
+            <span className="gas-value">
+              {gasPrice ? `${ethers.utils.formatUnits(gasPrice, 'gwei')} Gwei` : '加载中...'}
+            </span>
+          </div>
           
-          <button 
-            className="call-function-btn" 
-            onClick={callContractFunction}
-            disabled={isLoading}
-          >
-            {selectedFunction.constant ? '调用' : '发送交易'}
-          </button>
+          <div className="gas-price-custom">
+            <label className="custom-gas-checkbox">
+              <input
+                type="checkbox"
+                checked={useCustomGasPrice}
+                onChange={(e) => setUseCustomGasPrice(e.target.checked)}
+              />
+              使用自定义Gas价格
+            </label>
+            
+            {useCustomGasPrice && (
+              <div className="custom-gas-input">
+                <input
+                  type="text"
+                  value={customGasPrice}
+                  onChange={(e) => setCustomGasPrice(e.target.value)}
+                  placeholder="输入Gas价格 (Gwei)"
+                />
+                <span className="gas-unit">Gwei</span>
+              </div>
+            )}
+          </div>
         </div>
         
         {gasEstimate && (
           <div className="gas-estimate">
-            <span>估算Gas: </span>
-            <span className="gas-value">{gasEstimate} Gwei</span>
+            <span className="gas-label">估算Gas用量:</span>
+            <span className="gas-value">{gasEstimate.toString()}</span>
           </div>
         )}
         
-        {transactionStatus && (
-          <div className={`transaction-status ${transactionStatus}`}>
-            <span>交易状态: </span>
-            <span className="status-value">
-              {transactionStatus === 'pending' && '等待签名...'}
-              {transactionStatus === 'mining' && '交易确认中...'}
-              {transactionStatus === 'confirmed' && '交易已确认'}
-              {transactionStatus === 'failed' && '交易失败'}
-            </span>
-          </div>
-        )}
+        <button 
+          className="estimate-gas-btn"
+          onClick={estimateGas}
+          disabled={isCallPending || !selectedFunction || selectedFunction.isView}
+        >
+          估算Gas用量
+        </button>
+      </div>
+    );
+  };
+  
+  // 渲染事件监听
+  const renderEventListener = () => {
+    if (!contractInstance || contractEvents.length === 0) return null;
+    
+    return (
+      <div className="event-listener">
+        <h3>事件监听</h3>
         
-        {transactionHash && (
-          <div className="transaction-hash">
-            <span>交易哈希: </span>
-            <a 
-              href={`https://etherscan.io/tx/${transactionHash}`} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="hash-link"
+        <div className="event-selector">
+          <label>
+            选择事件
+            <select
+              value={selectedEvent ? selectedEvent.name : ''}
+              onChange={(e) => {
+                const event = contractEvents.find(ev => ev.name === e.target.value);
+                handleEventSelect(event);
+              }}
             >
-              {`${transactionHash.substring(0, 10)}...${transactionHash.substring(transactionHash.length - 8)}`}
-            </a>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // 渲染调用结果
-  const renderCallResult = () => {
-    if (!callResult) return null;
-    
-    return (
-      <div className="call-result">
-        <h3>调用结果</h3>
-        <pre className="result-data">
-          {typeof callResult === 'object' 
-            ? JSON.stringify(callResult, null, 2) 
-            : callResult.toString()
-          }
-        </pre>
-      </div>
-    );
-  };
-
-  // 渲染事件列表
-  const renderEvents = () => {
-    if (events.length === 0) return null;
-    
-    return (
-      <div className="events-list">
-        <div className="events-header">
-          <h3>合约事件</h3>
-          <div className="events-actions">
-            <button 
-              className="clear-events-btn" 
-              onClick={clearEvents}
-            >
-              清除
-            </button>
-          </div>
+              <option value="">-- 选择事件 --</option>
+              {contractEvents.map((event, index) => (
+                <option key={index} value={event.name}>
+                  {event.name}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
         
-        <div className="events-container">
-          {events.map((event, index) => (
-            <div key={index} className="event-item">
-              <div className="event-name">{event.name || '未知事件'}</div>
-              <div className="event-data">
-                {event.args && Object.keys(event.args).map(key => {
-                  if (isNaN(parseInt(key))) { // 跳过数字键（用于数组）
-                    return (
-                      <div key={key} className="event-arg">
-                        <span className="arg-name">{key}:</span>
-                        <span className="arg-value">{event.args[key].toString()}</span>
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-              {event.transactionHash && (
-                <div className="event-tx">
-                  <a 
-                    href={`https://etherscan.io/tx/${event.transactionHash}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                  >
-                    查看交易
-                  </a>
+        {selectedEvent && (
+          <>
+            <div className="event-details">
+              <h4>事件参数</h4>
+              {selectedEvent.inputs.length === 0 ? (
+                <p>此事件没有参数</p>
+              ) : (
+                <div className="event-params">
+                  {selectedEvent.inputs.map((input, index) => (
+                    <div key={index} className="event-param">
+                      <span className="param-name">{input.name || `参数 ${index + 1}`}</span>
+                      <span className="param-type">{input.type}</span>
+                      <span className="param-indexed">{input.indexed ? '(indexed)' : ''}</span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-          ))}
-        </div>
+            
+            <div className="event-controls">
+              {isListening ? (
+                <button 
+                  className="stop-listening-btn"
+                  onClick={stopEventListener}
+                >
+                  停止监听
+                </button>
+              ) : (
+                <button 
+                  className="start-listening-btn"
+                  onClick={startEventListener}
+                >
+                  开始监听
+                </button>
+              )}
+            </div>
+            
+            <div className="event-logs">
+              <h4>事件日志 {isListening && <span className="listening-indicator">监听中...</span>}</h4>
+              
+              {eventLogs.length === 0 ? (
+                <p className="no-logs">{isListening ? '等待事件...' : '无事件日志'}</p>
+              ) : (
+                <div className="logs-list">
+                  {eventLogs.map((log) => (
+                    <div key={log.id} className="log-item">
+                      <div className="log-header">
+                        <span className="log-block">区块: {log.blockNumber}</span>
+                        <span className="log-time">{new Date(log.timestamp).toLocaleString()}</span>
+                      </div>
+                      <div className="log-tx">
+                        <span className="log-tx-label">交易:</span>
+                        <span className="log-tx-hash">{log.transactionHash.substring(0, 10)}...</span>
+                      </div>
+                      <div className="log-values">
+                        {Object.entries(log.values).map(([key, value]) => (
+                          <div key={key} className="log-value">
+                            <span className="log-value-name">{key}:</span>
+                            <span className="log-value-data">
+                              {typeof value === 'object' 
+                                ? JSON.stringify(value) 
+                                : value.toString()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     );
   };
-
-  // 渲染组件
+  
   return (
     <div className="contract-interaction">
-      <div className="interaction-header">
+      <div className="contract-header">
         <h2>智能合约交互</h2>
-        <p>与以太坊区块链上的智能合约进行交互</p>
+        <p>与以太坊智能合约进行交互</p>
       </div>
       
       {!active ? (
-        <div className="interaction-message">
+        <div className="contract-message">
           <p>请连接您的钱包以与智能合约交互</p>
         </div>
       ) : (
-        <div className="interaction-content">
+        <div className="contract-content">
           <div className="contract-setup">
-            <div className="form-group">
-              <label htmlFor="contractAddress">合约地址</label>
-              <input
-                type="text"
-                id="contractAddress"
-                value={contractAddress}
-                onChange={(e) => setContractAddress(e.target.value)}
-                placeholder="输入智能合约地址 (0x...)"
-              />
+            <div className="contract-address">
+              <label>
+                合约地址
+                <input
+                  type="text"
+                  value={contractAddress}
+                  onChange={(e) => setContractAddress(e.target.value)}
+                  placeholder="输入智能合约地址"
+                  className={validateContractAddress(contractAddress) ? '' : 'invalid'}
+                />
+              </label>
+              {contractAddress && !validateContractAddress(contractAddress) && (
+                <p className="validation-error">无效的合约地址</p>
+              )}
             </div>
             
-            <div className="form-group">
-              <label htmlFor="contractTemplate">选择合约模板（可选）</label>
-              <select 
-                id="contractTemplate" 
-                onChange={handleTemplateSelect}
-                defaultValue=""
-              >
-                <option value="">-- 选择模板 --</option>
-                {contractTemplates.map((template, index) => (
-                  <option key={index} value={index}>{template.name}</option>
-                ))}
-              </select>
+            <div className="contract-abi">
+              <label>
+                合约ABI
+                <textarea
+                  value={contractABI}
+                  onChange={handleABIChange}
+                  placeholder="粘贴合约ABI (JSON格式)"
+                  className={isValidABI ? '' : 'invalid'}
+                  rows={5}
+                />
+              </label>
+              {contractABI && !isValidABI && (
+                <p className="validation-error">无效的ABI格式</p>
+              )}
             </div>
             
-            <div className="form-group">
-              <label htmlFor="contractABI">合约ABI</label>
-              <textarea
-                id="contractABI"
-                value={contractABI}
-                onChange={handleABIChange}
-                placeholder="输入合约ABI（JSON格式或人类可读格式）"
-                rows={5}
-              />
-            </div>
-            
-            <div className="events-control">
-              <button 
-                className={`listen-events-btn ${isListeningEvents ? 'active' : ''}`} 
-                onClick={isListeningEvents ? stopListeningEvents : listenToEvents}
-                disabled={!contract}
-              >
-                {isListeningEvents ? '停止监听事件' : '监听合约事件'}
-              </button>
-            </div>
+            <button
+              className="initialize-btn"
+              onClick={initializeContract}
+              disabled={!validateContractAddress(contractAddress) || !isValidABI || isValidating}
+            >
+              {isValidating ? '初始化中...' : '初始化合约'}
+            </button>
           </div>
           
-          {error && <div className="error-message">{error}</div>}
-          
-          {contract && (
-            <div className="contract-functions">
-              {renderFunctionList()}
-              {renderFunctionForm()}
-              {renderCallResult()}
+          {contractInstance && (
+            <div className="contract-interface">
+              <div className="contract-functions">
+                <h3>合约函数</h3>
+                
+                <div className="function-selector">
+                  <label>
+                    选择函数
+                    <select
+                      value={selectedFunction ? selectedFunction.name : ''}
+                      onChange={(e) => {
+                        const func = contractFunctions.find(f => f.name === e.target.value);
+                        handleFunctionSelect(func);
+                      }}
+                    >
+                      <option value="">-- 选择函数 --</option>
+                      <optgroup label="只读函数">
+                        {contractFunctions
+                          .filter(f => f.isView)
+                          .map((func, index) => (
+                            <option key={`view-${index}`} value={func.name}>
+                              {func.name}
+                            </option>
+                          ))
+                        }
+                      </optgroup>
+                      <optgroup label="状态修改函数">
+                        {contractFunctions
+                          .filter(f => !f.isView)
+                          .map((func, index) => (
+                            <option key={`state-${index}`} value={func.name}>
+                              {func.name}
+                            </option>
+                          ))
+                        }
+                      </optgroup>
+                    </select>
+                  </label>
+                </div>
+                
+                {selectedFunction && (
+                  <div className="function-details">
+                    <div className="function-signature">
+                      <h4>函数签名</h4>
+                      <code>{selectedFunction.signature}</code>
+                      <span className="function-type">
+                        {selectedFunction.isView ? '(只读)' : '(状态修改)'}
+                      </span>
+                    </div>
+                    
+                    {renderFunctionInputs()}
+                    {renderFunctionOutputs()}
+                    {renderGasSettings()}
+                    
+                    <div className="function-actions">
+                      <button
+                        className="call-function-btn"
+                        onClick={callContractFunction}
+                        disabled={isCallPending}
+                      >
+                        {isCallPending ? '处理中...' : selectedFunction.isView ? '调用' : '发送交易'}
+                      </button>
+                    </div>
+                    
+                    {renderFunctionResult()}
+                  </div>
+                )}
+              </div>
+              
+              {renderEventListener()}
             </div>
           )}
-          
-          {renderEvents()}
         </div>
       )}
     </div>
