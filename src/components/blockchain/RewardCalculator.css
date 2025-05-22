@@ -1,0 +1,203 @@
+/* RewardCalculator.css - 质押奖励计算器组件样式 */
+
+.reward-calculator {
+  background-color: var(--color-background-primary, #ffffff);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+}
+
+.calculator-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.calculator-header h3 {
+  color: var(--color-primary, #4a6fa5);
+  margin-bottom: 8px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.calculator-header p {
+  color: var(--color-text-secondary, #666666);
+  font-size: 1rem;
+}
+
+.connect-wallet-message {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--color-text-secondary, #666666);
+  font-style: italic;
+}
+
+.calculator-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.calculator-main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.reward-simulator {
+  background-color: var(--color-background-secondary, #f5f7fa);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.reward-simulator h3 {
+  color: var(--color-primary, #4a6fa5);
+  margin-bottom: 12px;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.simulator-description {
+  color: var(--color-text-secondary, #666666);
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
+
+.calculator-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.info-section {
+  background-color: var(--color-background-secondary, #f5f7fa);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+/* APY表格样式 */
+.apy-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background-color: var(--color-primary, #4a6fa5);
+  color: white;
+  border-radius: 6px 6px 0 0;
+  overflow: hidden;
+}
+
+.header-cell {
+  padding: 12px 16px;
+  font-weight: 500;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+  transition: background-color 0.2s;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+  border-radius: 0 0 6px 6px;
+  overflow: hidden;
+}
+
+.table-row:hover {
+  background-color: rgba(74, 111, 165, 0.05);
+}
+
+.table-cell {
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--color-text-primary, #333333);
+}
+
+/* 收益说明样式 */
+.reward-explanation h4 {
+  color: var(--color-primary, #4a6fa5);
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.reward-explanation p {
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  color: var(--color-text-primary, #333333);
+  line-height: 1.5;
+}
+
+.reward-explanation p:last-child {
+  margin-bottom: 0;
+}
+
+/* 策略建议样式 */
+.strategy-tips h4 {
+  color: var(--color-primary, #4a6fa5);
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.strategy-tips ul {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.strategy-tips li {
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  color: var(--color-text-primary, #333333);
+  line-height: 1.5;
+}
+
+.strategy-tips li:last-child {
+  margin-bottom: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 992px) {
+  .calculator-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .reward-calculator {
+    padding: 20px;
+  }
+  
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  
+  .header-cell,
+  .table-cell {
+    padding: 10px 8px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  
+  .header-cell,
+  .table-cell {
+    padding: 8px 4px;
+    font-size: 0.8rem;
+  }
+}
