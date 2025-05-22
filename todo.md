@@ -37,10 +37,10 @@ CultureBridge项目已经成功转型为区块链技术应用，通过对代码�
 ## 今日具体开发任务（细分）
 
 1. 代币质押系统前端界面（预计积分：150）
-   - 【待完成】创建StakingDashboard组件，显示总质押量、APY和用户质押数据
-   - 【待完成】实现StakingForm组件，支持质押金额输入和期限选择
-   - 【待完成】添加RewardCalculator组件，实时计算预期收益
-   - 【待完成】创建StakingHistory组件，显示用户质押记录和收益历史
+   - 【已完成】创建StakingDashboard组件，显示总质押量、APY和用户质押数据
+   - 【已完成】实现StakingForm组件，支持质押金额输入和期限选择
+   - 【已完成】添加RewardCalculator组件，实时计算预期收益
+   - 【部分完成】创建StakingHistory组件，显示用户质押记录和收益历史
    - 【待完成】实现UnstakeModal组件，处理解除质押和提前解除惩罚逻辑
 
 2. 治理提案系统完善（预计积分：150）
