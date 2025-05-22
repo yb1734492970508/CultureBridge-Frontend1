@@ -11,7 +11,8 @@ import {
   TransactionHistory, 
   WalletConnect, 
   ContractInteraction,
-  GovernanceProposal
+  GovernanceProposal,
+  CrossChainBridge
 } from './components/blockchain';
 import { BlockchainProvider } from './context/blockchain';
 import './styles/App.css';
@@ -31,6 +32,7 @@ function App() {
             <Route path="/transaction/history" element={<TransactionHistory />} />
             <Route path="/contract/interaction" element={<ContractInteraction />} />
             <Route path="/governance" element={<GovernanceProposal />} />
+            <Route path="/bridge" element={<CrossChainBridge />} />
             <Route path="*" element={
               <div className="coming-soon">
                 <h2>功能开发中</h2>
