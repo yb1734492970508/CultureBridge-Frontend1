@@ -1,9 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import './styles/App.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Layout from './components/layout/Layout';
+import HomePage from './components/pages/HomePage';
+import ForumListPage from './components/pages/ForumListPage';
+import EventsPage from './components/pages/EventsPage';
 import WalletConnect from './components/WalletConnect';
 import UserIdentity from './components/UserIdentity';
 import AssetManagement from './components/AssetManagement';
 import MarketplaceView from './components/MarketplaceView';
+import { BlockchainProvider } from './context/blockchain';
+import './styles/App.css';
+
+// 区块链组件导入
+import { 
+  NFTGallery, 
+  NFTMinter, 
+  TokenBalance, 
+  TransactionHistory, 
+  ContractInteraction,
+  GovernanceProposal,
+  CrossChainBridge
+} from './components/blockchain';
 
 function App() {
   const [account, setAccount] = useState(null);
@@ -33,7 +50,8 @@ function App() {
     setActiveTab(tab);
   };
 
-  return (
+  // 简单版本 - 直接在页面中集成区块链功能
+  const SimpleApp = () => (
     <div className="App">
       <header className="App-header">
         <h1>CultureBridge</h1>
@@ -114,6 +132,41 @@ function App() {
       </footer>
     </div>
   );
+
+  // 路由版本 - 使用React Router进行页面路由
+  const RoutedApp = () => (
+    <BlockchainProvider>
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/forum" element={<ForumListPage />} />
+            <Route path="/events" element={<EventsPage />} />
+            <Route path="/nft/gallery" element={<NFTGallery />} />
+            <Route path="/nft/create" element={<NFTMinter />} />
+            <Route path="/token/balance" element={<TokenBalance />} />
+            <Route path="/transaction/history" element={<TransactionHistory />} />
+            <Route path="/contract/interaction" element={<ContractInteraction />} />
+            <Route path="/governance" element={<GovernanceProposal />} />
+            <Route path="/bridge" element={<CrossChainBridge />} />
+            <Route path="/identity" element={<UserIdentity account={account} />} />
+            <Route path="/assets" element={<AssetManagement account={account} />} />
+            <Route path="/marketplace" element={<MarketplaceView account={account} />} />
+            <Route path="*" element={
+              <div className="coming-soon">
+                <h2>功能开发中</h2>
+                <p>该页面正在开发中，敬请期待！</p>
+              </div>
+            } />
+          </Routes>
+        </Layout>
+      </Router>
+    </BlockchainProvider>
+  );
+
+  // 根据环境变量或配置选择使用哪个版本的App
+  // 这里默认使用路由版本，更适合大型应用
+  return <RoutedApp />;
 }
 
 export default App;

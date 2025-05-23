@@ -1,0 +1,780 @@
+.events-page {
+  width: 100%;
+}
+
+/* 活动头部 */
+.events-header {
+  background-color: #f0f9ff;
+  padding: 3rem 1rem;
+  text-align: center;
+  margin-bottom: 3rem;
+  border-radius: 8px;
+}
+
+.events-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #282c34;
+}
+
+.events-header p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  color: #666;
+}
+
+/* 活动筛选 */
+.events-filter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.toggle-btn {
+  padding: 0.5rem 1rem;
+  background-color: #f0f9ff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-btn.active {
+  background-color: #61dafb;
+  color: white;
+  border-color: #61dafb;
+}
+
+.category-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 1rem;
+}
+
+/* 日历视图 */
+.calendar-view {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin-bottom: 3rem;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.calendar-header h2 {
+  font-size: 1.5rem;
+  color: #282c34;
+}
+
+.month-nav {
+  width: 40px;
+  height: 40px;
+  background-color: #f0f9ff;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.month-nav:hover {
+  background-color: #61dafb;
+  color: white;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.weekday {
+  text-align: center;
+  font-weight: 500;
+  color: #282c34;
+  padding: 0.5rem;
+  background-color: #f0f9ff;
+  border-radius: 4px;
+}
+
+.calendar-day {
+  min-height: 100px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 0.5rem;
+  position: relative;
+}
+
+.empty-day {
+  background-color: #f9f9f9;
+}
+
+.has-events {
+  background-color: #f0f9ff;
+}
+
+.day-number {
+  font-weight: 500;
+  color: #282c34;
+  margin-bottom: 0.5rem;
+}
+
+.day-events {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.calendar-event {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  background-color: white;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.calendar-event:hover {
+  background-color: #e0f0ff;
+}
+
+.event-marker {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.event-marker.festival {
+  background-color: #ff6b6b;
+}
+
+.event-marker.exhibition {
+  background-color: #4ecdc4;
+}
+
+.event-marker.workshop {
+  background-color: #ffd166;
+}
+
+.event-marker.performance {
+  background-color: #6a0572;
+}
+
+.event-marker.food {
+  background-color: #f08a5d;
+}
+
+.event-marker.film {
+  background-color: #1a535c;
+}
+
+.event-marker.lecture {
+  background-color: #3a86ff;
+}
+
+.event-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #282c34;
+}
+
+/* 列表视图 */
+.list-view {
+  margin-bottom: 3rem;
+}
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.event-card {
+  display: flex;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.event-image {
+  width: 200px;
+  background-color: #f0f9ff;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.event-category-badge {
+  position: absolute;
+  top: 1rem;
+  left: 0;
+  padding: 0.3rem 0.8rem;
+  background-color: #61dafb;
+  color: white;
+  font-size: 0.8rem;
+  border-radius: 0 4px 4px 0;
+}
+
+.event-category-badge.festival {
+  background-color: #ff6b6b;
+}
+
+.event-category-badge.exhibition {
+  background-color: #4ecdc4;
+}
+
+.event-category-badge.workshop {
+  background-color: #ffd166;
+}
+
+.event-category-badge.performance {
+  background-color: #6a0572;
+}
+
+.event-category-badge.food {
+  background-color: #f08a5d;
+}
+
+.event-category-badge.film {
+  background-color: #1a535c;
+}
+
+.event-category-badge.lecture {
+  background-color: #3a86ff;
+}
+
+.event-details {
+  padding: 1.5rem;
+  flex-grow: 1;
+}
+
+.event-details h3 {
+  margin-bottom: 1rem;
+  color: #282c34;
+  font-size: 1.3rem;
+}
+
+.event-meta {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.event-date, .event-location {
+  display: flex;
+  align-items: center;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.event-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #f0f9ff;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.event-description {
+  color: #444;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.event-organizer {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.event-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.event-details-btn, .event-reminder-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.event-details-btn {
+  background-color: #61dafb;
+  color: white;
+  border: none;
+}
+
+.event-details-btn:hover {
+  background-color: #4fa8c9;
+}
+
+.event-reminder-btn {
+  background-color: transparent;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.event-reminder-btn:hover {
+  background-color: #f0f9ff;
+}
+
+.event-reminder-btn.active {
+  background-color: #ffd166;
+  color: #282c34;
+  border-color: #ffd166;
+}
+
+.no-events {
+  padding: 3rem;
+  text-align: center;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 活动详情弹窗 */
+.event-details-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.close-modal {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 30px;
+  height: 30px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.close-modal:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-size: 1.5rem;
+  color: #282c34;
+  margin: 0;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.event-detail-image {
+  height: 250px;
+  background-color: #f0f9ff;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.event-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.event-info-item h4 {
+  margin-bottom: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.event-info-item p {
+  color: #282c34;
+  font-weight: 500;
+}
+
+.event-description-full {
+  margin-bottom: 1.5rem;
+}
+
+.event-description-full h4 {
+  margin-bottom: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.event-description-full p {
+  color: #444;
+  line-height: 1.6;
+}
+
+.event-map {
+  margin-bottom: 1.5rem;
+}
+
+.event-map h4 {
+  margin-bottom: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.map-placeholder {
+  background-color: #f0f9ff;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.map-placeholder p {
+  margin-bottom: 0.5rem;
+  color: #444;
+}
+
+.map-image {
+  height: 200px;
+  background-color: #e0f0ff;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.event-contact h4 {
+  margin-bottom: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.event-contact p {
+  margin-bottom: 0.5rem;
+  color: #444;
+}
+
+.event-contact a {
+  color: #61dafb;
+  text-decoration: none;
+}
+
+.event-contact a:hover {
+  text-decoration: underline;
+}
+
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+}
+
+.reminder-btn, .website-btn {
+  padding: 0.8rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reminder-btn {
+  background-color: transparent;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.reminder-btn:hover {
+  background-color: #f0f9ff;
+}
+
+.reminder-btn.active {
+  background-color: #ffd166;
+  color: #282c34;
+  border-color: #ffd166;
+}
+
+.website-btn {
+  background-color: #61dafb;
+  color: white;
+  border: none;
+  text-decoration: none;
+}
+
+.website-btn:hover {
+  background-color: #4fa8c9;
+}
+
+/* 即将到来的活动 */
+.upcoming-events {
+  padding: 3rem 1rem;
+  margin-bottom: 3rem;
+}
+
+.upcoming-events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.upcoming-event-card {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.upcoming-event-card:hover {
+  transform: translateY(-5px);
+}
+
+.upcoming-event-image {
+  height: 180px;
+  background-color: #f0f9ff;
+}
+
+.upcoming-event-content {
+  padding: 1.5rem;
+}
+
+.upcoming-event-content h3 {
+  margin-bottom: 1rem;
+  color: #282c34;
+  font-size: 1.3rem;
+}
+
+.upcoming-event-date, .upcoming-event-location {
+  color: #666;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.upcoming-event-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.upcoming-event-btn {
+  padding: 0.5rem 1rem;
+  background-color: #61dafb;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.upcoming-event-btn:hover {
+  background-color: #4fa8c9;
+}
+
+.reminder-icon {
+  width: 36px;
+  height: 36px;
+  background-color: transparent;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
+}
+
+.reminder-icon:hover {
+  background-color: #f0f9ff;
+}
+
+.reminder-icon.active {
+  background-color: #ffd166;
+  border-color: #ffd166;
+}
+
+/* 我的活动提醒 */
+.my-reminders {
+  padding: 3rem 1rem;
+  margin-bottom: 3rem;
+}
+
+.reminders-list {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.reminder-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.reminder-item:last-child {
+  border-bottom: none;
+}
+
+.reminder-content h3 {
+  margin-bottom: 0.5rem;
+  color: #282c34;
+  font-size: 1.1rem;
+}
+
+.reminder-date, .reminder-location {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.remove-reminder {
+  width: 30px;
+  height: 30px;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
+}
+
+.remove-reminder:hover {
+  background-color: #ff6b6b;
+  color: white;
+}
+
+/* 活动CTA */
+.events-cta {
+  background-color: #61dafb;
+  color: #282c34;
+  padding: 4rem 1rem;
+  text-align: center;
+  margin-bottom: 3rem;
+  border-radius: 8px;
+}
+
+.cta-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.cta-content h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.cta-content p {
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+.primary-button {
+  padding: 0.8rem 1.5rem;
+  background-color: #282c34;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.primary-button:hover {
+  background-color: #1a1e24;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .events-filter {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .event-card {
+    flex-direction: column;
+  }
+  
+  .event-image {
+    width: 100%;
+    height: 150px;
+  }
+  
+  .calendar-day {
+    min-height: 80px;
+  }
+  
+  .calendar-event {
+    font-size: 0.7rem;
+  }
+  
+  .modal-content {
+    width: 95%;
+  }
+  
+  .event-info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .reminder-btn, .website-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
