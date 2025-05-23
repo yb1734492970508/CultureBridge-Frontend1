@@ -44,8 +44,8 @@ CultureBridge项目已经成功转型为区块链技术应用，通过对代码�
    - 【待完成】实现UnstakeModal组件，处理解除质押和提前解除惩罚逻辑
 
 2. 治理提案系统完善（预计积分：150）
-   - 【待完成】优化ProposalCreation组件，支持多步骤创建流程
-   - 【待完成】实现VotingPower组件，显示用户投票权重和增益因素
+   - 【部分完成】优化ProposalCreation组件，支持多步骤创建流程
+   - 【已完成】实现VotingPower组件，显示用户投票权重和增益因素
    - 【待完成】添加ProposalDetails组件，展示提案详情和投票进度
    - 【待完成】创建VotingInterface组件，支持投票和投票理由提交
    - 【待完成】实现ProposalResults组件，展示投票结果和执行状态
