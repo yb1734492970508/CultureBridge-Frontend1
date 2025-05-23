@@ -56,6 +56,27 @@ const DIDManager = () => {
   const [showCredentialForm, setShowCredentialForm] = useState(false);
   const [selectedCredential, setSelectedCredential] = useState(null);
   
+  // 隐私设置
+  const [privacySettings, setPrivacySettings] = useState({
+    showName: true,
+    showDescription: true,
+    showImage: true,
+    showCredentials: true,
+    showIssuers: true
+  });
+  const [showPrivacySettings, setShowPrivacySettings] = useState(false);
+  
+  // 社交恢复
+  const [recoveryAddresses, setRecoveryAddresses] = useState([]);
+  const [newRecoveryAddress, setNewRecoveryAddress] = useState('');
+  const [showRecoverySettings, setShowRecoverySettings] = useState(false);
+  const [recoveryError, setRecoveryError] = useState(null);
+  
+  // 凭证验证状态
+  const [verificationStatus, setVerificationStatus] = useState({});
+  const [showVerificationDetails, setShowVerificationDetails] = useState(false);
+  const [selectedVerification, setSelectedVerification] = useState(null);
+  
   // 获取DID合约实例
   const getDIDContract = () => {
     if (!active || !library) return null;
@@ -106,10 +127,18 @@ const DIDManager = () => {
           
           // 加载凭证
           loadCredentials(identityData.id);
+          
+          // 加载社交恢复地址（模拟数据）
+          loadRecoveryAddresses(identityData.id);
+          
+          // 加载验证状态（模拟数据）
+          loadVerificationStatus(identityData.id);
         } else {
           setHasIdentity(false);
           setIdentity(null);
           setCredentials([]);
+          setRecoveryAddresses([]);
+          setVerificationStatus({});
         }
       } catch (err) {
         console.error('加载身份失败:', err);
@@ -140,7 +169,8 @@ const DIDManager = () => {
         issuer: cred.issuer,
         issuedAt: new Date(cred.issuedAt.toNumber() * 1000),
         hash: cred.hash,
-        uri: cred.uri
+        uri: cred.uri,
+        verified: Math.random() > 0.3 // 模拟验证状态
       }));
       
       setCredentials(formattedCredentials);
@@ -148,6 +178,46 @@ const DIDManager = () => {
       console.error('加载凭证失败:', err);
       setCredentials([]);
     }
+  };
+  
+  // 加载社交恢复地址（模拟数据）
+  const loadRecoveryAddresses = (identityId) => {
+    // 模拟数据
+    const mockRecoveryAddresses = [
+      '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+      '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
+    ];
+    
+    setRecoveryAddresses(mockRecoveryAddresses);
+  };
+  
+  // 加载验证状态（模拟数据）
+  const loadVerificationStatus = (identityId) => {
+    // 模拟数据
+    const mockVerificationStatus = {
+      'email': {
+        status: 'verified',
+        verifier: 'CultureBridge验证服务',
+        timestamp: Date.now() - 86400000 * 3, // 3天前
+        expiresAt: Date.now() + 86400000 * 30, // 30天后
+        value: 'user@example.com'
+      },
+      'phone': {
+        status: 'pending',
+        verifier: 'CultureBridge验证服务',
+        timestamp: Date.now() - 3600000, // 1小时前
+        value: '+86 1XX XXXX XXXX'
+      },
+      'kyc': {
+        status: 'verified',
+        verifier: '第三方KYC服务',
+        timestamp: Date.now() - 86400000 * 10, // 10天前
+        expiresAt: Date.now() + 86400000 * 180, // 180天后
+        level: 2
+      }
+    };
+    
+    setVerificationStatus(mockVerificationStatus);
   };
   
   // 创建身份
@@ -191,6 +261,15 @@ const DIDManager = () => {
         imageURI: identityData.imageURI,
         createdAt: new Date(identityData.createdAt.toNumber() * 1000),
         verified: identityData.verified
+      });
+      
+      // 设置默认隐私设置
+      setPrivacySettings({
+        showName: true,
+        showDescription: true,
+        showImage: true,
+        showCredentials: true,
+        showIssuers: true
       });
       
     } catch (err) {
@@ -357,11 +436,49 @@ const DIDManager = () => {
     }
   };
   
+  // 添加社交恢复地址
+  const addRecoveryAddress = () => {
+    if (!ethers.utils.isAddress(newRecoveryAddress)) {
+      setRecoveryError('请输入有效的以太坊地址');
+      return;
+    }
+    
+    if (recoveryAddresses.includes(newRecoveryAddress)) {
+      setRecoveryError('该地址已在恢复列表中');
+      return;
+    }
+    
+    // 添加新的恢复地址
+    setRecoveryAddresses(prev => [...prev, newRecoveryAddress]);
+    setNewRecoveryAddress('');
+    setRecoveryError(null);
+  };
+  
+  // 移除社交恢复地址
+  const removeRecoveryAddress = (address) => {
+    setRecoveryAddresses(prev => prev.filter(addr => addr !== address));
+  };
+  
+  // 更新隐私设置
+  const updatePrivacySettings = (setting, value) => {
+    setPrivacySettings(prev => ({
+      ...prev,
+      [setting]: value
+    }));
+  };
+  
   // 格式化日期
   const formatDate = (date) => {
     if (!date) return '';
     
     return date.toLocaleString();
+  };
+  
+  // 格式化地址
+  const formatAddress = (address) => {
+    if (!address) return '';
+    
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
   
   // 渲染身份创建表单
@@ -425,18 +542,20 @@ const DIDManager = () => {
       <div className="identity-profile">
         <div className="profile-header">
           <div className="profile-image">
-            {identity.imageURI ? (
+            {privacySettings.showImage && identity.imageURI ? (
               <img src={identity.imageURI} alt={identity.name} />
             ) : (
               <div className="placeholder-image">
-                {identity.name.charAt(0).toUpperCase()}
+                {privacySettings.showName ? identity.name.charAt(0).toUpperCase() : '?'}
               </div>
             )}
           </div>
           
           <div className="profile-info">
-            <h3>{identity.name}</h3>
-            <p className="profile-description">{identity.description || '暂无描述'}</p>
+            <h3>{privacySettings.showName ? identity.name : '匿名用户'}</h3>
+            {privacySettings.showDescription && (
+              <p className="profile-description">{identity.description || '暂无描述'}</p>
+            )}
             <div className="profile-meta">
               <span className="profile-id">ID: {identity.id}</span>
               <span className="profile-created">创建于: {formatDate(identity.createdAt)}</span>
@@ -444,8 +563,26 @@ const DIDManager = () => {
                 <span className="profile-verified">已验证</span>
               )}
             </div>
+            
+            <div className="profile-actions">
+              <button 
+                className="privacy-button"
+                onClick={() => setShowPrivacySettings(!showPrivacySettings)}
+              >
+                隐私设置
+              </button>
+              <button 
+                className="recovery-button"
+                onClick={() => setShowRecoverySettings(!showRecoverySettings)}
+              >
+                社交恢复
+              </button>
+            </div>
           </div>
         </div>
+        
+        {showPrivacySettings && renderPrivacySettings()}
+        {showRecoverySettings && renderRecoverySettings()}
         
         <div className="profile-edit">
           <h4>编辑身份信息</h4>
@@ -493,6 +630,268 @@ const DIDManager = () => {
             {isUpdating ? '更新中...' : '更新身份'}
           </button>
         </div>
+        
+        {renderVerificationStatus()}
+      </div>
+    );
+  };
+  
+  // 渲染隐私设置
+  const renderPrivacySettings = () => {
+    return (
+      <div className="privacy-settings">
+        <h4>隐私设置</h4>
+        <p>控制您的身份信息对外展示的内容</p>
+        
+        <div className="privacy-options">
+          <div className="privacy-option">
+            <label>
+              <input
+                type="checkbox"
+                checked={privacySettings.showName}
+                onChange={(e) => updatePrivacySettings('showName', e.target.checked)}
+              />
+              显示姓名
+            </label>
+          </div>
+          
+          <div className="privacy-option">
+            <label>
+              <input
+                type="checkbox"
+                checked={privacySettings.showDescription}
+                onChange={(e) => updatePrivacySettings('showDescription', e.target.checked)}
+              />
+              显示描述
+            </label>
+          </div>
+          
+          <div className="privacy-option">
+            <label>
+              <input
+                type="checkbox"
+                checked={privacySettings.showImage}
+                onChange={(e) => updatePrivacySettings('showImage', e.target.checked)}
+              />
+              显示头像
+            </label>
+          </div>
+          
+          <div className="privacy-option">
+            <label>
+              <input
+                type="checkbox"
+                checked={privacySettings.showCredentials}
+                onChange={(e) => updatePrivacySettings('showCredentials', e.target.checked)}
+              />
+              显示凭证
+            </label>
+          </div>
+          
+          <div className="privacy-option">
+            <label>
+              <input
+                type="checkbox"
+                checked={privacySettings.showIssuers}
+                onChange={(e) => updatePrivacySettings('showIssuers', e.target.checked)}
+              />
+              显示发行方
+            </label>
+          </div>
+        </div>
+        
+        <div className="privacy-note">
+          <p>注意：隐私设置仅控制前端显示，链上数据仍然可见。</p>
+        </div>
+      </div>
+    );
+  };
+  
+  // 渲染社交恢复设置
+  const renderRecoverySettings = () => {
+    return (
+      <div className="recovery-settings">
+        <h4>社交恢复设置</h4>
+        <p>添加可信任的地址，用于在您丢失私钥时恢复身份</p>
+        
+        <div className="recovery-addresses">
+          <h5>当前恢复地址</h5>
+          
+          {recoveryAddresses.length === 0 ? (
+            <p>暂无恢复地址</p>
+          ) : (
+            <ul className="address-list">
+              {recoveryAddresses.map((address, index) => (
+                <li key={index} className="address-item">
+                  <span className="address">{formatAddress(address)}</span>
+                  <button
+                    className="remove-address"
+                    onClick={() => removeRecoveryAddress(address)}
+                  >
+                    移除
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        
+        <div className="add-recovery">
+          <h5>添加恢复地址</h5>
+          
+          <div className="form-group">
+            <input
+              type="text"
+              value={newRecoveryAddress}
+              onChange={(e) => setNewRecoveryAddress(e.target.value)}
+              placeholder="输入以太坊地址"
+            />
+            <button
+              className="add-button"
+              onClick={addRecoveryAddress}
+              disabled={!newRecoveryAddress}
+            >
+              添加
+            </button>
+          </div>
+          
+          {recoveryError && (
+            <div className="error-message">{recoveryError}</div>
+          )}
+        </div>
+        
+        <div className="recovery-note">
+          <p>注意：至少需要3个恢复地址才能启用社交恢复功能。</p>
+        </div>
+      </div>
+    );
+  };
+  
+  // 渲染验证状态
+  const renderVerificationStatus = () => {
+    return (
+      <div className="verification-status">
+        <h4>身份验证状态</h4>
+        
+        <div className="verification-items">
+          {Object.entries(verificationStatus).map(([key, value]) => (
+            <div 
+              key={key} 
+              className={`verification-item ${value.status}`}
+              onClick={() => {
+                setSelectedVerification({ key, ...value });
+                setShowVerificationDetails(true);
+              }}
+            >
+              <div className="verification-type">
+                {key === 'email' ? '电子邮箱' : key === 'phone' ? '手机号码' : 'KYC验证'}
+              </div>
+              <div className="verification-info">
+                <span className={`status-badge ${value.status}`}>
+                  {value.status === 'verified' ? '已验证' : value.status === 'pending' ? '待验证' : '未验证'}
+                </span>
+                {value.status === 'verified' && value.expiresAt && (
+                  <span className="expiry">
+                    {new Date(value.expiresAt).toLocaleDateString()} 到期
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+          
+          <div className="add-verification">
+            <button className="add-verification-button">
+              添加新验证
+            </button>
+          </div>
+        </div>
+        
+        {showVerificationDetails && selectedVerification && (
+          <div className="verification-details-modal">
+            <div className="verification-details">
+              <div className="details-header">
+                <h4>验证详情</h4>
+                <button 
+                  className="close-button"
+                  onClick={() => setShowVerificationDetails(false)}
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="details-content">
+                <div className="detail-item">
+                  <span className="detail-label">类型:</span>
+                  <span className="detail-value">
+                    {selectedVerification.key === 'email' ? '电子邮箱' : 
+                     selectedVerification.key === 'phone' ? '手机号码' : 'KYC验证'}
+                  </span>
+                </div>
+                
+                <div className="detail-item">
+                  <span className="detail-label">状态:</span>
+                  <span className={`detail-value status-${selectedVerification.status}`}>
+                    {selectedVerification.status === 'verified' ? '已验证' : 
+                     selectedVerification.status === 'pending' ? '待验证' : '未验证'}
+                  </span>
+                </div>
+                
+                <div className="detail-item">
+                  <span className="detail-label">验证方:</span>
+                  <span className="detail-value">{selectedVerification.verifier}</span>
+                </div>
+                
+                <div className="detail-item">
+                  <span className="detail-label">验证时间:</span>
+                  <span className="detail-value">
+                    {new Date(selectedVerification.timestamp).toLocaleString()}
+                  </span>
+                </div>
+                
+                {selectedVerification.expiresAt && (
+                  <div className="detail-item">
+                    <span className="detail-label">到期时间:</span>
+                    <span className="detail-value">
+                      {new Date(selectedVerification.expiresAt).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                
+                {selectedVerification.value && (
+                  <div className="detail-item">
+                    <span className="detail-label">验证值:</span>
+                    <span className="detail-value">{selectedVerification.value}</span>
+                  </div>
+                )}
+                
+                {selectedVerification.level !== undefined && (
+                  <div className="detail-item">
+                    <span className="detail-label">验证级别:</span>
+                    <span className="detail-value">Level {selectedVerification.level}</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="details-actions">
+                {selectedVerification.status === 'pending' && (
+                  <button className="verify-button">
+                    完成验证
+                  </button>
+                )}
+                
+                {selectedVerification.status === 'verified' && (
+                  <button className="renew-button">
+                    更新验证
+                  </button>
+                )}
+                
+                <button className="delete-button">
+                  删除验证
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -578,162 +977,252 @@ const DIDManager = () => {
   
   // 渲染凭证列表
   const renderCredentialsList = () => {
-    if (credentials.length === 0) {
+    if (!privacySettings.showCredentials) {
       return (
-        <div className="credentials-empty">
-          <p>暂无凭证记录</p>
+        <div className="credentials-hidden">
+          <p>凭证已设为私密，仅您可见</p>
         </div>
       );
     }
     
     return (
       <div className="credentials-list">
-        {credentials.map((credential) => (
-          <div 
-            key={credential.id} 
-            className={`credential-item ${selectedCredential === credential.id ? 'selected' : ''}`}
-            onClick={() => setSelectedCredential(selectedCredential === credential.id ? null : credential.id)}
-          >
-            <div className="credential-header">
-              <div className="credential-type">{credential.type}</div>
-              {credential.verified ? (
-                <div className="credential-verified">已验证</div>
-              ) : (
-                <div className="credential-unverified">未验证</div>
-              )}
-            </div>
-            
-            <div className="credential-body">
-              <div className="credential-issuer">
-                <span className="label">发行方:</span>
-                <span className="value">{credential.issuer}</span>
-              </div>
-              
-              <div className="credential-issued-at">
-                <span className="label">发行时间:</span>
-                <span className="value">{formatDate(credential.issuedAt)}</span>
-              </div>
-              
-              {selectedCredential === credential.id && (
-                <>
-                  {credential.hash && (
-                    <div className="credential-hash">
-                      <span className="label">哈希:</span>
-                      <span className="value">{credential.hash}</span>
-                    </div>
-                  )}
-                  
-                  {credential.uri && (
-                    <div className="credential-uri">
-                      <span className="label">URI:</span>
-                      <a 
-                        href={credential.uri}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="value"
-                      >
-                        {credential.uri}
-                      </a>
-                    </div>
-                  )}
-                  
-                  <div className="credential-actions">
-                    {!credential.verified && (
-                      <button
-                        className="verify-button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          verifyCredential(credential.id);
-                        }}
-                      >
-                        验证
-                      </button>
-                    )}
-                    
-                    <button
-                      className="revoke-button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        revokeCredential(credential.id);
-                      }}
-                    >
-                      吊销
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+        {credentials.length === 0 ? (
+          <div className="no-credentials">
+            <p>暂无凭证</p>
           </div>
-        ))}
+        ) : (
+          credentials.map(credential => (
+            <div key={credential.id} className="credential-item">
+              <div className="credential-header">
+                <h4 className="credential-type">{credential.type}</h4>
+                {credential.verified && (
+                  <span className="credential-verified">已验证</span>
+                )}
+              </div>
+              
+              {privacySettings.showIssuers && (
+                <div className="credential-issuer">
+                  发行方: {credential.issuer}
+                </div>
+              )}
+              
+              <div className="credential-date">
+                发行于: {formatDate(credential.issuedAt)}
+              </div>
+              
+              {credential.uri && (
+                <div className="credential-uri">
+                  <a href={credential.uri} target="_blank" rel="noopener noreferrer">
+                    查看凭证详情
+                  </a>
+                </div>
+              )}
+              
+              <div className="credential-actions">
+                {!credential.verified && (
+                  <button
+                    className="verify-button"
+                    onClick={() => verifyCredential(credential.id)}
+                  >
+                    验证
+                  </button>
+                )}
+                
+                <button
+                  className="revoke-button"
+                  onClick={() => revokeCredential(credential.id)}
+                >
+                  吊销
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     );
   };
   
-  // 渲染凭证管理
-  const renderCredentialsManagement = () => {
+  // 渲染可验证凭证展示
+  const renderVerifiableCredentials = () => {
+    // 模拟可验证凭证数据
+    const vcData = [
+      {
+        id: '1',
+        type: 'EducationCredential',
+        issuer: '北京大学',
+        issuanceDate: new Date(2022, 5, 15),
+        expirationDate: new Date(2032, 5, 15),
+        subject: {
+          id: account,
+          degree: '计算机科学学士',
+          graduationYear: '2022'
+        },
+        proof: {
+          type: 'EcdsaSecp256k1Signature2019',
+          created: new Date(2022, 5, 15),
+          verificationMethod: 'did:ethr:0x123...abc#keys-1',
+          proofPurpose: 'assertionMethod',
+          jws: 'eyJhbGciOiJFUzI1NksiLCJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdfQ..'
+        }
+      },
+      {
+        id: '2',
+        type: 'LanguageProficiencyCredential',
+        issuer: '文化桥语言评估中心',
+        issuanceDate: new Date(2023, 2, 10),
+        expirationDate: new Date(2026, 2, 10),
+        subject: {
+          id: account,
+          language: '英语',
+          level: 'C1',
+          skills: {
+            speaking: 'Proficient',
+            writing: 'Advanced',
+            reading: 'Proficient',
+            listening: 'Advanced'
+          }
+        },
+        proof: {
+          type: 'EcdsaSecp256k1Signature2019',
+          created: new Date(2023, 2, 10),
+          verificationMethod: 'did:ethr:0x456...def#keys-1',
+          proofPurpose: 'assertionMethod',
+          jws: 'eyJhbGciOiJFUzI1NksiLCJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdfQ..'
+        }
+      }
+    ];
+    
     return (
-      <div className="credentials-management">
-        <div className="credentials-header">
-          <h3>凭证管理</h3>
-          <button
-            className="add-credential-button"
-            onClick={() => setShowCredentialForm(true)}
-          >
-            添加凭证
-          </button>
+      <div className="verifiable-credentials">
+        <h4>可验证凭证</h4>
+        <p>符合W3C标准的可验证凭证，可用于跨平台身份验证</p>
+        
+        <div className="vc-list">
+          {vcData.map(vc => (
+            <div key={vc.id} className="vc-item">
+              <div className="vc-header">
+                <h5>{vc.type}</h5>
+                <span className="vc-issuer">由 {vc.issuer} 颁发</span>
+              </div>
+              
+              <div className="vc-dates">
+                <div className="vc-date">
+                  <span className="date-label">颁发日期:</span>
+                  <span className="date-value">{vc.issuanceDate.toLocaleDateString()}</span>
+                </div>
+                <div className="vc-date">
+                  <span className="date-label">到期日期:</span>
+                  <span className="date-value">{vc.expirationDate.toLocaleDateString()}</span>
+                </div>
+              </div>
+              
+              <div className="vc-subject">
+                {Object.entries(vc.subject).map(([key, value]) => {
+                  if (key === 'id') return null;
+                  
+                  if (typeof value === 'object') {
+                    return (
+                      <div key={key} className="vc-subject-group">
+                        <h6>{key}:</h6>
+                        {Object.entries(value).map(([subKey, subValue]) => (
+                          <div key={subKey} className="vc-subject-item">
+                            <span className="subject-label">{subKey}:</span>
+                            <span className="subject-value">{subValue}</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                  
+                  return (
+                    <div key={key} className="vc-subject-item">
+                      <span className="subject-label">{key}:</span>
+                      <span className="subject-value">{value}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="vc-actions">
+                <button className="verify-vc-button">
+                  验证凭证
+                </button>
+                <button className="share-vc-button">
+                  分享凭证
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
         
-        {showCredentialForm ? renderCredentialForm() : renderCredentialsList()}
+        <div className="vc-import">
+          <button className="import-vc-button">
+            导入凭证
+          </button>
+        </div>
       </div>
     );
   };
   
-  // 渲染未连接钱包状态
-  const renderNotConnected = () => {
-    return (
-      <div className="not-connected">
-        <h3>请连接钱包</h3>
-        <p>您需要连接以太坊钱包才能管理您的去中心化身份。</p>
-      </div>
-    );
-  };
-  
+  // 渲染组件
   return (
     <div className="did-manager">
       <div className="did-header">
         <h2>去中心化身份管理</h2>
-        <p>安全地创建和管理您的区块链身份和凭证</p>
+        <p>创建和管理您的区块链身份和凭证</p>
       </div>
       
       {!active ? (
-        renderNotConnected()
+        <div className="connect-wallet-message">
+          <p>请连接您的钱包以管理身份</p>
+        </div>
+      ) : !hasIdentity ? (
+        renderIdentityCreationForm()
       ) : (
-        <>
-          {!hasIdentity ? (
-            renderIdentityCreationForm()
-          ) : (
-            <>
-              <div className="did-tabs">
-                <div 
-                  className={`did-tab ${activeTab === 'profile' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('profile')}
-                >
-                  身份信息
+        <div className="did-content">
+          <div className="did-tabs">
+            <button
+              className={`tab-button ${activeTab === 'profile' ? 'active' : ''}`}
+              onClick={() => setActiveTab('profile')}
+            >
+              身份信息
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'credentials' ? 'active' : ''}`}
+              onClick={() => setActiveTab('credentials')}
+            >
+              凭证管理
+            </button>
+          </div>
+          
+          <div className="did-tab-content">
+            {activeTab === 'profile' ? (
+              renderIdentityProfile()
+            ) : (
+              <div className="credentials-management">
+                <div className="credentials-header">
+                  <h3>凭证管理</h3>
+                  <button
+                    className="add-credential-button"
+                    onClick={() => setShowCredentialForm(true)}
+                  >
+                    添加凭证
+                  </button>
                 </div>
-                <div 
-                  className={`did-tab ${activeTab === 'credentials' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('credentials')}
-                >
-                  凭证管理
-                </div>
+                
+                {showCredentialForm ? (
+                  renderCredentialForm()
+                ) : (
+                  <>
+                    {renderCredentialsList()}
+                    {renderVerifiableCredentials()}
+                  </>
+                )}
               </div>
-              
-              <div className="did-content">
-                {activeTab === 'profile' ? renderIdentityProfile() : renderCredentialsManagement()}
-              </div>
-            </>
-          )}
-        </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
