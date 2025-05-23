@@ -1,0 +1,276 @@
+/* 链上事件通知组件样式 */
+:root {
+  --toast-bg-info: rgba(59, 130, 246, 0.95);
+  --toast-bg-success: rgba(16, 185, 129, 0.95);
+  --toast-bg-warning: rgba(245, 158, 11, 0.95);
+  --toast-bg-error: rgba(239, 68, 68, 0.95);
+  --toast-text: #ffffff;
+  --toast-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --toast-border-radius: 8px;
+  --toast-padding: 12px 16px;
+  --toast-margin: 8px;
+  --toast-font-size: 14px;
+  --toast-title-font-size: 16px;
+  --toast-icon-size: 24px;
+  --toast-close-size: 16px;
+  --toast-z-index: 9999;
+  --toast-max-width: 360px;
+}
+
+/* 暗色模式变量 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --toast-bg-info: rgba(37, 99, 235, 0.95);
+    --toast-bg-success: rgba(5, 150, 105, 0.95);
+    --toast-bg-warning: rgba(217, 119, 6, 0.95);
+    --toast-bg-error: rgba(220, 38, 38, 0.95);
+    --toast-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* 通知容器 */
+.toast-container {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  z-index: var(--toast-z-index);
+  max-width: var(--toast-max-width);
+  width: 100%;
+}
+
+/* 位置变体 */
+.toast-container.top-right {
+  top: 20px;
+  right: 20px;
+}
+
+.toast-container.top-left {
+  top: 20px;
+  left: 20px;
+}
+
+.toast-container.bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+.toast-container.bottom-left {
+  bottom: 20px;
+  left: 20px;
+}
+
+.toast-container.top-center {
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.toast-container.bottom-center {
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 通知卡片 */
+.toast-notification {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--toast-padding);
+  margin-bottom: var(--toast-margin);
+  border-radius: var(--toast-border-radius);
+  box-shadow: var(--toast-shadow);
+  color: var(--toast-text);
+  font-size: var(--toast-font-size);
+  max-width: 100%;
+  overflow: hidden;
+  animation: toast-slide-in 0.3s ease-out forwards;
+}
+
+/* 通知类型样式 */
+.toast-notification.info {
+  background-color: var(--toast-bg-info);
+}
+
+.toast-notification.success {
+  background-color: var(--toast-bg-success);
+}
+
+.toast-notification.warning {
+  background-color: var(--toast-bg-warning);
+}
+
+.toast-notification.error {
+  background-color: var(--toast-bg-error);
+}
+
+/* 图标容器 */
+.toast-icon {
+  flex-shrink: 0;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-icon svg {
+  width: var(--toast-icon-size);
+  height: var(--toast-icon-size);
+  stroke: var(--toast-text);
+}
+
+/* 内容区域 */
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-weight: 600;
+  font-size: var(--toast-title-font-size);
+  margin-bottom: 4px;
+}
+
+.toast-message {
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* 关闭按钮 */
+.toast-close {
+  background: transparent;
+  border: none;
+  color: var(--toast-text);
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 8px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+.toast-close svg {
+  width: var(--toast-close-size);
+  height: var(--toast-close-size);
+  stroke: var(--toast-text);
+}
+
+/* 交易信息 */
+.toast-transaction {
+  margin-top: 8px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.transaction-link {
+  color: var(--toast-text);
+  text-decoration: underline;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.transaction-link:hover {
+  opacity: 1;
+}
+
+.transaction-link svg {
+  stroke: var(--toast-text);
+}
+
+/* 交易进度 */
+.transaction-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.transaction-progress.pending .spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.transaction-progress.confirmed svg,
+.transaction-progress.failed svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--toast-text);
+}
+
+/* 动画 */
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 动画变体 */
+.toast-notification.animate {
+  animation: toast-slide-in 0.3s ease-out forwards, toast-slide-out 0.3s ease-in forwards 4.7s;
+}
+
+/* 移动端适配 */
+@media (max-width: 480px) {
+  .toast-container {
+    max-width: 90%;
+    width: 90%;
+  }
+  
+  .toast-container.top-right,
+  .toast-container.top-left,
+  .toast-container.top-center {
+    top: 10px;
+    right: 5%;
+    left: 5%;
+    transform: none;
+  }
+  
+  .toast-container.bottom-right,
+  .toast-container.bottom-left,
+  .toast-container.bottom-center {
+    bottom: 10px;
+    right: 5%;
+    left: 5%;
+    transform: none;
+  }
+  
+  .toast-notification {
+    width: 100%;
+  }
+}
