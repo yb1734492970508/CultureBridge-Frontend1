@@ -19,7 +19,8 @@ import {
   TransactionHistory, 
   ContractInteraction,
   GovernanceProposal,
-  CrossChainBridge
+  CrossChainBridge,
+  DIDManager
 } from './components/blockchain';
 
 function App() {
@@ -149,7 +150,7 @@ function App() {
             <Route path="/contract/interaction" element={<ContractInteraction />} />
             <Route path="/governance" element={<GovernanceProposal />} />
             <Route path="/bridge" element={<CrossChainBridge />} />
-            <Route path="/identity" element={<UserIdentity account={account} />} />
+            <Route path="/identity" element={<DIDManager />} />
             <Route path="/assets" element={<AssetManagement account={account} />} />
             <Route path="/marketplace" element={<MarketplaceView account={account} />} />
             <Route path="*" element={

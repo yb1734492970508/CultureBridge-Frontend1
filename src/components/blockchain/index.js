@@ -6,3 +6,4 @@ export { default as WalletConnect } from './WalletConnect';
 export { default as ContractInteraction } from './ContractInteraction';
 export { default as GovernanceProposal } from './GovernanceProposal';
 export { default as CrossChainBridge } from './CrossChainBridge';
+export { default as DIDManager } from './DIDManager';
