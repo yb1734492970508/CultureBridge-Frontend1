@@ -1,0 +1,465 @@
+/* CrossChainBridge.css - 跨链桥组件样式 */
+
+.cross-chain-bridge {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  font-family: 'Arial', sans-serif;
+}
+
+.bridge-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.bridge-header h2 {
+  font-size: 2rem;
+  color: var(--primary-color, #4a6fa5);
+  margin-bottom: 0.5rem;
+}
+
+.bridge-header p {
+  color: #666;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* 标签页 */
+.bridge-tabs {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 2rem;
+}
+
+.bridge-tab {
+  padding: 1rem 2rem;
+  cursor: pointer;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.3s;
+}
+
+.bridge-tab.active {
+  color: var(--primary-color, #4a6fa5);
+  border-bottom: 2px solid var(--primary-color, #4a6fa5);
+}
+
+.bridge-tab:hover {
+  background-color: #f9f9f9;
+}
+
+/* 桥接表单 */
+.bridge-form {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+}
+
+.bridge-networks {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.source-network,
+.target-network {
+  flex: 1;
+}
+
+.source-network h3,
+.target-network h3 {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.network-arrow {
+  font-size: 1.5rem;
+  color: #999;
+  margin: 0 1rem;
+}
+
+/* 网络选择器 */
+.network-selector {
+  position: relative;
+}
+
+.selected-network {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.selected-network:hover {
+  border-color: var(--primary-color, #4a6fa5);
+}
+
+.network-icon {
+  font-size: 1.25rem;
+  margin-right: 0.5rem;
+}
+
+.network-name {
+  flex: 1;
+}
+
+.network-arrow {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.network-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.network-option {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.network-option:hover {
+  background-color: #f5f5f5;
+}
+
+.network-option.active {
+  background-color: #e6f7ff;
+  color: var(--primary-color, #4a6fa5);
+}
+
+/* 代币选择器 */
+.token-selector {
+  margin-bottom: 1.5rem;
+}
+
+.token-selector label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.token-selector select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.token-selector select:focus {
+  border-color: var(--primary-color, #4a6fa5);
+  outline: none;
+}
+
+.token-balance {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+  text-align: right;
+}
+
+/* 金额输入 */
+.amount-input {
+  margin-bottom: 1.5rem;
+}
+
+.amount-input label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.input-with-max {
+  display: flex;
+  align-items: center;
+}
+
+.input-with-max input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px 0 0 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.input-with-max input:focus {
+  border-color: var(--primary-color, #4a6fa5);
+  outline: none;
+}
+
+.max-button {
+  padding: 0.75rem 1rem;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.max-button:hover {
+  background-color: #e0e0e0;
+}
+
+.bridge-fee {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+  text-align: right;
+}
+
+/* 按钮 */
+.bridge-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.approve-button,
+.bridge-button {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.approve-button {
+  background-color: #f0c14b;
+  color: #333;
+}
+
+.approve-button:hover {
+  background-color: #e6bc5c;
+}
+
+.bridge-button {
+  background-color: var(--primary-color, #4a6fa5);
+  color: white;
+}
+
+.bridge-button:hover {
+  background-color: #3d5d8a;
+}
+
+.approve-button:disabled,
+.bridge-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 交易历史 */
+.transaction-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.transaction-item {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.transaction-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.transaction-item.pending {
+  border-left: 4px solid #ffc107;
+}
+
+.transaction-item.completed {
+  border-left: 4px solid #4caf50;
+}
+
+.transaction-item.failed {
+  border-left: 4px solid #f44336;
+}
+
+.transaction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.transaction-networks {
+  display: flex;
+  align-items: center;
+}
+
+.transaction-networks .network-arrow {
+  margin: 0 0.5rem;
+  font-size: 1rem;
+}
+
+.transaction-status {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.transaction-item.pending .transaction-status {
+  color: #ffc107;
+}
+
+.transaction-item.completed .transaction-status {
+  color: #4caf50;
+}
+
+.transaction-item.failed .transaction-status {
+  color: #f44336;
+}
+
+.transaction-body {
+  padding: 1.5rem;
+}
+
+.transaction-amount {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.transaction-time,
+.transaction-hash {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.time-label,
+.hash-label {
+  color: #666;
+  margin-right: 0.5rem;
+  min-width: 80px;
+}
+
+.time-value,
+.hash-value {
+  color: #333;
+}
+
+.hash-value {
+  color: var(--primary-color, #4a6fa5);
+  text-decoration: none;
+}
+
+.hash-value:hover {
+  text-decoration: underline;
+}
+
+.transaction-footer {
+  padding: 1rem 1.5rem;
+  background-color: #f9f9f9;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.claim-button {
+  padding: 0.5rem 1rem;
+  background-color: var(--primary-color, #4a6fa5);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.claim-button:hover {
+  background-color: #3d5d8a;
+}
+
+.claim-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.claim-message {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* 消息和状态 */
+.bridge-message,
+.history-message,
+.history-empty {
+  text-align: center;
+  padding: 3rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.error-message {
+  color: #e74c3c;
+  margin: 1rem 0;
+  padding: 0.75rem;
+  background-color: #fde2e2;
+  border-radius: 4px;
+  text-align: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .bridge-networks {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .network-arrow {
+    transform: rotate(90deg);
+    margin: 0.5rem 0;
+  }
+  
+  .transaction-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .transaction-status {
+    align-self: flex-end;
+  }
+  
+  .bridge-tabs {
+    justify-content: center;
+  }
+  
+  .bridge-tab {
+    padding: 1rem;
+    flex: 1;
+    text-align: center;
+  }
+}

@@ -1,0 +1,235 @@
+.voting-interface {
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  width: 100%;
+  max-width: 800px;
+}
+
+.voting-header {
+  margin-bottom: var(--space-lg);
+}
+
+.voting-header h3 {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-sm);
+}
+
+.voting-power {
+  margin-bottom: var(--space-xs);
+  color: var(--color-gray-dark);
+}
+
+.power-value {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+.time-remaining {
+  color: var(--color-gray-dark);
+}
+
+.time-value {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-warning);
+}
+
+.vote-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.vote-option {
+  border: 2px solid var(--color-gray-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all var(--transition-fast) var(--ease-standard);
+  cursor: pointer;
+}
+
+.vote-option:hover {
+  border-color: var(--color-primary-light);
+  background-color: var(--color-primary-lightest);
+}
+
+.vote-option.selected {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-lightest);
+}
+
+.vote-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.vote-option label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  width: 100%;
+}
+
+.option-icon {
+  font-size: 24px;
+  margin-right: var(--space-md);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.option-icon.for {
+  background-color: var(--color-success-light);
+  color: var(--color-success-dark);
+}
+
+.option-icon.against {
+  background-color: var(--color-error-light);
+  color: var(--color-error-dark);
+}
+
+.option-icon.abstain {
+  background-color: var(--color-gray-light);
+  color: var(--color-gray-dark);
+}
+
+.option-text {
+  flex: 1;
+}
+
+.option-title {
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-xs);
+}
+
+.option-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-dark);
+}
+
+.vote-reason {
+  margin-bottom: var(--space-lg);
+}
+
+.reason-toggle {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.reason-toggle input[type="checkbox"] {
+  margin-right: var(--space-sm);
+}
+
+.reason-input {
+  width: 100%;
+  padding: var(--space-md);
+  border: 1px solid var(--color-gray-light);
+  border-radius: var(--radius-md);
+  resize: vertical;
+  font-family: var(--font-body);
+  transition: border-color var(--transition-fast) var(--ease-standard);
+}
+
+.reason-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.error-message {
+  color: var(--color-error);
+  padding: var(--space-md);
+  background-color: var(--color-error-light);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+}
+
+.success-message {
+  color: var(--color-success);
+  padding: var(--space-md);
+  background-color: var(--color-success-light);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+}
+
+.voting-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.vote-button {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-xl);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.vote-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.vote-button:disabled {
+  background-color: var(--color-gray);
+  cursor: not-allowed;
+}
+
+.vote-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  text-align: center;
+}
+
+.status-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-md);
+}
+
+.status-message {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+}
+
+.vote-status.voted {
+  color: var(--color-success);
+}
+
+.vote-status.voted .status-icon {
+  color: var(--color-success);
+}
+
+.vote-status.inactive {
+  color: var(--color-warning-dark);
+}
+
+.vote-status.inactive .status-icon {
+  color: var(--color-warning);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .vote-options {
+    gap: var(--space-sm);
+  }
+  
+  .option-icon {
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+  }
+}
