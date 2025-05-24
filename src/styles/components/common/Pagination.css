@@ -1,0 +1,103 @@
+/* 分页组件样式 */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+  user-select: none;
+}
+
+.pagination-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  background-color: var(--bg-color, #ffffff);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background-color: var(--hover-bg-color, #f5f5f5);
+  border-color: var(--hover-border-color, #d0d0d0);
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  margin: 0 8px;
+}
+
+.pagination-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: 0 4px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  background-color: var(--bg-color, #ffffff);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-page:hover:not(.active):not(.ellipsis) {
+  background-color: var(--hover-bg-color, #f5f5f5);
+  border-color: var(--hover-border-color, #d0d0d0);
+}
+
+.pagination-page.active {
+  background-color: var(--primary-color, #4a90e2);
+  color: white;
+  border-color: var(--primary-color, #4a90e2);
+}
+
+.pagination-page.ellipsis {
+  border: none;
+  cursor: default;
+}
+
+/* 暗色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .pagination-button,
+  .pagination-page {
+    background-color: var(--dark-bg-color, #2a2a2a);
+    border-color: var(--dark-border-color, #444444);
+    color: var(--dark-text-color, #e0e0e0);
+  }
+  
+  .pagination-button:hover:not(:disabled),
+  .pagination-page:hover:not(.active):not(.ellipsis) {
+    background-color: var(--dark-hover-bg-color, #3a3a3a);
+    border-color: var(--dark-hover-border-color, #555555);
+  }
+  
+  .pagination-page.active {
+    background-color: var(--primary-color, #4a90e2);
+    color: white;
+    border-color: var(--primary-color, #4a90e2);
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .pagination-pages {
+    margin: 0 4px;
+  }
+  
+  .pagination-page,
+  .pagination-button {
+    width: 32px;
+    height: 32px;
+    margin: 0 2px;
+  }
+}

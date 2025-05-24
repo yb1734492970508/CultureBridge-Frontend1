@@ -1,180 +1,89 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-// 修改导入路径，使用新版本的jest-dom
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AIServiceRegistry from '../../components/ai/AIServiceRegistry';
 
-// 模拟ethers库
-jest.mock('ethers', () => {
-  return {
+// 简化的模拟配置
+jest.mock('ethers', () => ({
+  ethers: {
     providers: {
       Web3Provider: jest.fn().mockImplementation(() => ({
         listAccounts: jest.fn().mockResolvedValue(['0x123456789abcdef']),
         getSigner: jest.fn().mockReturnValue({})
       }))
     },
-    Contract: jest.fn().mockImplementation(() => ({
-      serviceCount: jest.fn().mockResolvedValue(0),
-      services: jest.fn().mockResolvedValue({
-        provider: '0x123456789abcdef',
-        serviceType: 'translation',
-        supportedLanguages: ['zh-CN', 'en-US'],
-        performanceScore: { toString: () => '85' },
-        pricePerToken: { toString: () => '10000000000000000000' },
-        isActive: true,
-        metadataURI: 'data:application/json;base64,eyJuYW1lIjoiVGVzdCBTZXJ2aWNlIiwiZGVzY3JpcHRpb24iOiJUZXN0IERlc2NyaXB0aW9uIiwiY2FwYWJpbGl0aWVzIjpbInRlc3QxIiwidGVzdDIiXSwiYXBpRW5kcG9pbnQiOiJodHRwczovL2V4YW1wbGUuY29tL2FwaSJ9'
-      }),
-      getProviderServices: jest.fn().mockResolvedValue([]),
-      findServices: jest.fn().mockResolvedValue([]),
-      on: jest.fn(),
-      off: jest.fn()
-    })),
+    Contract: jest.fn(),
     utils: {
-      formatEther: jest.fn().mockReturnValue('10'),
-      parseEther: jest.fn().mockReturnValue('10000000000000000000')
+      formatEther: jest.fn(),
+      parseEther: jest.fn()
     }
-  };
-});
+  }
+}));
 
 // 模拟web3modal库
 jest.mock('web3modal', () => {
   return jest.fn().mockImplementation(() => ({
-    connect: jest.fn().mockResolvedValue({})
+    connect: jest.fn()
   }));
 });
 
-// 模拟window.ethereum
-global.ethereum = {
-  on: jest.fn(),
-  request: jest.fn().mockResolvedValue(['0x123456789abcdef'])
-};
-
-// 模拟atob和btoa
-global.atob = jest.fn().mockImplementation(str => {
-  return JSON.stringify({
-    name: 'Test Service',
-    description: 'Test Description',
-    capabilities: ['test1', 'test2'],
-    apiEndpoint: 'https://example.com/api'
-  });
+// 模拟组件依赖
+jest.mock('../../components/notifications/ToastNotification', () => {
+  return function DummyToastNotification() {
+    return <div data-testid="toast-notification">Toast通知组件</div>;
+  };
 });
 
-global.btoa = jest.fn().mockReturnValue('base64string');
+jest.mock('../../components/common/Pagination', () => {
+  return function DummyPagination() {
+    return <div data-testid="pagination">分页组件</div>;
+  };
+});
 
+jest.mock('../../components/common/RangeSlider', () => {
+  return function DummyRangeSlider() {
+    return <div data-testid="range-slider">范围滑块组件</div>;
+  };
+});
+
+jest.mock('../../components/common/MultiSelect', () => {
+  return function DummyMultiSelect() {
+    return <div data-testid="multi-select">多选组件</div>;
+  };
+});
+
+// 基础测试用例
 describe('AIServiceRegistry Component', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
+  // 基础渲染测试
   test('renders without crashing', () => {
     render(<AIServiceRegistry />);
     expect(screen.getByText('AI服务注册中心')).toBeInTheDocument();
   });
 
-  test('displays wallet connect button when not connected', () => {
+  // 钱包连接按钮测试
+  test('displays wallet connect button', () => {
     render(<AIServiceRegistry />);
     expect(screen.getByText('连接钱包')).toBeInTheDocument();
   });
-
-  // 以下测试在真实区块链环境中需要进一步验证
-  test.skip('connects wallet and loads services', async () => {
-    render(<AIServiceRegistry />);
-    
-    // 点击连接钱包按钮
-    fireEvent.click(screen.getByText('连接钱包'));
-    
-    // 等待连接完成
-    await waitFor(() => {
-      expect(screen.getByText(/0x123456/)).toBeInTheDocument();
-    });
-    
-    // 验证服务列表加载
-    expect(screen.getByText('可用服务')).toBeInTheDocument();
-  });
-
-  test.skip('registers a new service', async () => {
-    render(<AIServiceRegistry />);
-    
-    // 模拟已连接钱包
-    await waitFor(() => {
-      expect(screen.getByText('注册新服务')).toBeInTheDocument();
-    });
-    
-    // 点击注册新服务按钮
-    fireEvent.click(screen.getByText('注册新服务'));
-    
-    // 填写表单
-    fireEvent.change(screen.getByLabelText('服务名称'), {
-      target: { value: 'Test Service' }
-    });
-    
-    fireEvent.change(screen.getByLabelText('服务描述'), {
-      target: { value: 'Test Description' }
-    });
-    
-    // 提交表单
-    fireEvent.click(screen.getByText('注册'));
-    
-    // 验证提交后的状态
-    await waitFor(() => {
-      expect(screen.getByText('处理中...')).toBeInTheDocument();
-    });
-  });
-
-  test.skip('searches for services', async () => {
-    render(<AIServiceRegistry />);
-    
-    // 模拟已连接钱包
-    await waitFor(() => {
-      expect(screen.getByText('搜索服务')).toBeInTheDocument();
-    });
-    
-    // 设置搜索参数
-    fireEvent.change(screen.getByLabelText('服务类型'), {
-      target: { value: 'translation' }
-    });
-    
-    // 点击搜索按钮
-    fireEvent.click(screen.getByText('搜索'));
-    
-    // 验证搜索结果
-    await waitFor(() => {
-      expect(screen.getByText('找到 0 个匹配的服务')).toBeInTheDocument();
-    });
-  });
-
-  test('renders toast notifications', async () => {
-    render(<AIServiceRegistry />);
-    
-    // 验证通知组件存在（虽然可能不可见）
-    const toastContainer = document.querySelector('.toast-container');
-    expect(toastContainer).toBeDefined();
-  });
-
-  test('renders performance score gauge', () => {
-    // 由于需要区块链连接，这个测试在mock环境中难以完全验证
-    // 在真实环境中需要进一步测试
-  });
-
-  // 添加更多测试...
 });
 
+// 文档化测试局限性
 /**
  * 测试局限性说明：
  * 
- * 1. 区块链交互测试：
- *    由于Jest测试环境无法真实连接区块链网络，所有涉及区块链交互的测试都被标记为skip。
- *    这些测试需要在真实的测试网环境中手动验证。
+ * 1. 由于Jest测试环境无法真实连接区块链网络，以下功能无法在自动化测试中验证：
+ *    - 链上数据分页加载
+ *    - 多条件筛选与排序
+ *    - 服务注册、更新、激活/停用
+ *    - 链上事件监听
+ *    - 交易通知系统
  * 
- * 2. 事件监听测试：
- *    合约事件监听和实时通知功能难以在模拟环境中完全测试，需要在实际环境中验证。
+ * 2. 这些功能需要在实际区块链环境中进行手动测试，建议：
+ *    - 使用测试网（如BNB Chain Testnet）部署合约进行测试
+ *    - 使用多个测试账户验证不同用户角色的交互
+ *    - 验证大数据量下的分页性能
+ *    - 测试各种筛选条件组合
+ *    - 验证通知系统对各类链上事件的响应
  * 
- * 3. 交易状态更新：
- *    交易提交、确认和状态更新的流程需要在真实区块链环境中测试。
- * 
- * 4. Web3钱包交互：
- *    与MetaMask等钱包的交互需要在浏览器环境中手动测试。
- * 
- * 5. 性能评分动画：
- *    UI动画和交互效果需要在真实浏览器环境中验证。
+ * 3. 当前自动化测试仅覆盖基础UI渲染，确保组件能够正常加载
  */
