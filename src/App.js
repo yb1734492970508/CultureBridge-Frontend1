@@ -20,7 +20,8 @@ import {
   ContractInteraction,
   GovernanceProposal,
   CrossChainBridge,
-  DIDManager
+  DIDManager,
+  CulturalReputationSystem
 } from './components/blockchain';
 
 function App() {
@@ -151,6 +152,7 @@ function App() {
             <Route path="/governance" element={<GovernanceProposal />} />
             <Route path="/bridge" element={<CrossChainBridge />} />
             <Route path="/identity" element={<DIDManager />} />
+            <Route path="/reputation" element={<CulturalReputationSystem />} />
             <Route path="/assets" element={<AssetManagement account={account} />} />
             <Route path="/marketplace" element={<MarketplaceView account={account} />} />
             <Route path="*" element={
