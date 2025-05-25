@@ -4,6 +4,7 @@ import WalletConnector from './components/blockchain/WalletConnector';
 import NFTMinter from './components/blockchain/NFTMinter';
 import NFTGallery from './components/blockchain/NFTGallery';
 import NFTDetail from './components/blockchain/NFTDetail';
+import CopyrightProtection from './components/blockchain/CopyrightProtection';
 import './App.css';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Route path="/mint" element={<NFTMinter />} />
           <Route path="/gallery" element={<NFTGallery />} />
           <Route path="/nft/:tokenId" element={<NFTDetailWrapper />} />
+          <Route path="/copyright" element={<CopyrightProtection />} />
         </Routes>
       </main>
       
@@ -50,6 +52,12 @@ function Home() {
           <h3>浏览NFT画廊</h3>
           <p>探索来自世界各地的文化艺术品</p>
           <a href="/gallery" className="feature-link">查看画廊</a>
+        </div>
+        
+        <div className="feature-card">
+          <h3>文化知识产权保护</h3>
+          <p>基于区块链的文化作品版权登记与验证</p>
+          <a href="/copyright" className="feature-link">保护作品</a>
         </div>
       </div>
     </div>
