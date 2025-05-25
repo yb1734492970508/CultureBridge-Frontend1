@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useBlockchain } from '../../context/blockchain';
 import { ethers } from 'ethers';
 import './CulturalReputationSystem.css';
@@ -38,27 +38,74 @@ const CulturalReputationSystem = () => {
   const [contributionStats, setContributionStats] = useState({});
   const [reputationGrowth, setReputationGrowth] = useState([]);
   const [timeRange, setTimeRange] = useState('month');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [sortOption, setSortOption] = useState('date');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [filteredHistory, setFilteredHistory] = useState([]);
+  const [showEndorseModal, setShowEndorseModal] = useState(false);
+  const [showReputationDetails, setShowReputationDetails] = useState(false);
+  const [animateScore, setAnimateScore] = useState(false);
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [nextLevelScore, setNextLevelScore] = useState(0);
+  const [currentLevelScore, setCurrentLevelScore] = useState(0);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notification, setNotification] = useState({ type: '', message: '' });
+  const [recentEndorsements, setRecentEndorsements] = useState([]);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [leaderboardPage, setLeaderboardPage] = useState(1);
+  const [leaderboardFilter, setLeaderboardFilter] = useState('all');
+  const [leaderboardTimeRange, setLeaderboardTimeRange] = useState('all');
+  const [historyPage, setHistoryPage] = useState(1);
+  const [expandedHistoryItem, setExpandedHistoryItem] = useState(null);
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [showAllRewards, setShowAllRewards] = useState(false);
+  const [reputationMilestones, setReputationMilestones] = useState([]);
+  const [nextMilestone, setNextMilestone] = useState(null);
+  const [milestoneProgress, setMilestoneProgress] = useState(0);
+  
+  // 引用
+  const chartRef = useRef(null);
+  const scoreRef = useRef(null);
   
   // 文化类别选项
   const categories = [
-    { id: 'knowledge', label: '文化知识分享', icon: '📚' },
-    { id: 'creation', label: '文化创作', icon: '🎨' },
-    { id: 'preservation', label: '文化保护', icon: '🏛️' },
-    { id: 'education', label: '文化教育', icon: '🎓' },
-    { id: 'exchange', label: '跨文化交流', icon: '🌍' },
-    { id: 'translation', label: '文化翻译', icon: '🔄' },
-    { id: 'curation', label: '文化策展', icon: '🖼️' },
-    { id: 'research', label: '文化研究', icon: '🔍' }
+    { id: 'knowledge', label: '文化知识分享', icon: '📚', color: '#4285F4' },
+    { id: 'creation', label: '文化创作', icon: '🎨', color: '#EA4335' },
+    { id: 'preservation', label: '文化保护', icon: '🏛️', color: '#FBBC05' },
+    { id: 'education', label: '文化教育', icon: '🎓', color: '#34A853' },
+    { id: 'exchange', label: '跨文化交流', icon: '🌍', color: '#8E24AA' },
+    { id: 'translation', label: '文化翻译', icon: '🔄', color: '#00ACC1' },
+    { id: 'curation', label: '文化策展', icon: '🖼️', color: '#FB8C00' },
+    { id: 'research', label: '文化研究', icon: '🔍', color: '#3949AB' },
+    { id: 'performance', label: '文化表演', icon: '🎭', color: '#D81B60' },
+    { id: 'heritage', label: '非物质文化遗产', icon: '👐', color: '#388E3C' },
+    { id: 'cuisine', label: '饮食文化', icon: '🍲', color: '#F4511E' },
+    { id: 'festival', label: '节日文化', icon: '🎉', color: '#6D4C41' }
   ];
   
   // 声誉等级定义
   const reputationLevels = [
-    { level: '文化新手', minScore: 0, maxScore: 99, color: '#8E9AAF' },
-    { level: '文化爱好者', minScore: 100, maxScore: 499, color: '#6DA34D' },
-    { level: '文化使者', minScore: 500, maxScore: 999, color: '#5E60CE' },
-    { level: '文化大师', minScore: 1000, maxScore: 2499, color: '#E07A5F' },
-    { level: '文化守护者', minScore: 2500, maxScore: 4999, color: '#3D348B' },
-    { level: '文化传奇', minScore: 5000, maxScore: Infinity, color: '#F4D35E' }
+    { level: '文化新手', minScore: 0, maxScore: 99, color: '#8E9AAF', icon: '🔰' },
+    { level: '文化爱好者', minScore: 100, maxScore: 499, color: '#6DA34D', icon: '🌱' },
+    { level: '文化使者', minScore: 500, maxScore: 999, color: '#5E60CE', icon: '🌟' },
+    { level: '文化大师', minScore: 1000, maxScore: 2499, color: '#E07A5F', icon: '✨' },
+    { level: '文化守护者', minScore: 2500, maxScore: 4999, color: '#3D348B', icon: '🛡️' },
+    { level: '文化传奇', minScore: 5000, maxScore: Infinity, color: '#F4D35E', icon: '👑' }
+  ];
+
+  // 声誉里程碑定义
+  const milestonesDefinition = [
+    { id: 'first_contribution', name: '首次贡献', description: '完成首次文化贡献', score: 10, icon: '🎯' },
+    { id: 'ten_contributions', name: '持续贡献', description: '完成10次文化贡献', score: 100, icon: '🔄' },
+    { id: 'first_endorsement', name: '首次背书', description: '首次为他人背书文化贡献', score: 50, icon: '👍' },
+    { id: 'category_master', name: '类别专家', description: '在单一类别中获得100分以上', score: 100, icon: '🏆' },
+    { id: 'diversity_champion', name: '多元文化使者', description: '在5个不同类别中获得声誉', score: 250, icon: '🌈' },
+    { id: 'community_pillar', name: '社区支柱', description: '获得10次他人背书', score: 500, icon: '🏛️' },
+    { id: 'reputation_legend', name: '声誉传奇', description: '总声誉分达到1000分', score: 1000, icon: '🌠' },
+    { id: 'cultural_guardian', name: '文化守护者', description: '总声誉分达到2500分', score: 2500, icon: '🔱' },
+    { id: 'cultural_icon', name: '文化偶像', description: '总声誉分达到5000分', score: 5000, icon: '💫' }
   ];
 
   // 奖励定义
@@ -187,32 +234,73 @@ const CulturalReputationSystem = () => {
       requiredScore: 3500,
       amount: '1000 CBT',
       icon: '🪙'
+    },
+    { 
+      id: 'nft_cultural_badge', 
+      name: '文化贡献NFT徽章', 
+      description: '独特的NFT徽章，彰显您的文化贡献', 
+      type: 'nft',
+      requiredScore: 800,
+      icon: '🖼️'
+    },
+    { 
+      id: 'nft_cultural_artwork', 
+      name: '文化艺术品NFT', 
+      description: '由知名艺术家创作的限量版NFT艺术品', 
+      type: 'nft',
+      requiredScore: 2000,
+      icon: '🎨'
+    },
+    { 
+      id: 'feature_premium_content', 
+      name: '高级内容访问权', 
+      description: '访问平台上的高级文化内容', 
+      type: 'feature',
+      requiredScore: 400,
+      icon: '🔐'
+    },
+    { 
+      id: 'feature_early_access', 
+      name: '早期访问权', 
+      description: '提前访问平台新功能和内容', 
+      type: 'feature',
+      requiredScore: 700,
+      icon: '⏱️'
     }
   ];
 
   // 模拟数据 - 实际应用中应从区块链获取
   const mockReputationHistory = [
-    { id: 1, date: '2025-05-20', category: 'knowledge', points: 25, description: '分享关于中国传统节日的深度文章', from: '0x1234...5678' },
-    { id: 2, date: '2025-05-15', category: 'creation', points: 50, description: '创作并分享传统音乐作品', from: '0x8765...4321' },
-    { id: 3, date: '2025-05-10', category: 'exchange', points: 30, description: '组织线上文化交流活动', from: '0x5678...1234' },
-    { id: 4, date: '2025-05-05', category: 'education', points: 40, description: '为社区提供语言学习资源', from: '0x4321...8765' },
-    { id: 5, date: '2025-05-01', category: 'preservation', points: 35, description: '参与数字化保存濒危文化项目', from: '0x2468...1357' },
-    { id: 6, date: '2025-04-25', category: 'translation', points: 20, description: '翻译重要文化文献', from: '0x1357...2468' },
-    { id: 7, date: '2025-04-20', category: 'curation', points: 15, description: '策划线上文化展览', from: '0x3690...1478' },
-    { id: 8, date: '2025-04-15', category: 'research', points: 45, description: '发布文化研究报告', from: '0x1478...3690' }
+    { id: 1, date: '2025-05-20', category: 'knowledge', points: 25, description: '分享关于中国传统节日的深度文章', from: '0x1234...5678', fromName: '文化守护者小王', evidence: 'https://example.com/article/123', transaction: '0xabcd...1234' },
+    { id: 2, date: '2025-05-15', category: 'creation', points: 50, description: '创作并分享传统音乐作品', from: '0x8765...4321', fromName: '传统艺术家小李', evidence: 'https://example.com/music/456', transaction: '0xefgh...5678' },
+    { id: 3, date: '2025-05-10', category: 'exchange', points: 30, description: '组织线上文化交流活动', from: '0x5678...1234', fromName: '语言学者小张', evidence: 'https://example.com/event/789', transaction: '0xijkl...9012' },
+    { id: 4, date: '2025-05-05', category: 'education', points: 40, description: '为社区提供语言学习资源', from: '0x4321...8765', fromName: '民俗收藏家小陈', evidence: 'https://example.com/resources/012', transaction: '0xmnop...3456' },
+    { id: 5, date: '2025-05-01', category: 'preservation', points: 35, description: '参与数字化保存濒危文化项目', from: '0x2468...1357', fromName: '文化教育家小林', evidence: 'https://example.com/project/345', transaction: '0xqrst...7890' },
+    { id: 6, date: '2025-04-25', category: 'translation', points: 20, description: '翻译重要文化文献', from: '0x1357...2468', fromName: '跨文化交流者小刘', evidence: 'https://example.com/translation/678', transaction: '0xuvwx...1234' },
+    { id: 7, date: '2025-04-20', category: 'curation', points: 15, description: '策划线上文化展览', from: '0x3690...1478', fromName: '传统音乐家小赵', evidence: 'https://example.com/exhibition/901', transaction: '0xyzab...5678' },
+    { id: 8, date: '2025-04-15', category: 'research', points: 45, description: '发布文化研究报告', from: '0x1478...3690', fromName: '文化研究者小孙', evidence: 'https://example.com/research/234', transaction: '0xcdef...9012' },
+    { id: 9, date: '2025-04-10', category: 'performance', points: 30, description: '举办传统文化表演活动', from: '0x9012...3456', fromName: '文化爱好者小钱', evidence: 'https://example.com/performance/567', transaction: '0xghij...3456' },
+    { id: 10, date: '2025-04-05', category: 'heritage', points: 40, description: '记录并分享非物质文化遗产', from: '0x3456...9012', fromName: '文化传播者小周', evidence: 'https://example.com/heritage/890', transaction: '0xklmn...7890' },
+    { id: 11, date: '2025-04-01', category: 'cuisine', points: 25, description: '分享传统美食制作技艺', from: '0x7890...1234', fromName: '美食文化专家小吴', evidence: 'https://example.com/cuisine/123', transaction: '0xopqr...1234' },
+    { id: 12, date: '2025-03-25', category: 'festival', points: 35, description: '组织传统节日庆祝活动', from: '0x1234...7890', fromName: '节日文化研究者小郑', evidence: 'https://example.com/festival/456', transaction: '0xstuv...5678' }
   ];
   
   const mockLeaderboard = [
-    { rank: 1, address: '0x1234...5678', name: '文化守护者小王', score: 3750, level: '文化守护者' },
-    { rank: 2, address: '0x8765...4321', name: '传统艺术家小李', score: 2890, level: '文化守护者' },
-    { rank: 3, address: '0x5678...1234', name: '语言学者小张', score: 2340, level: '文化大师' },
-    { rank: 4, address: '0x4321...8765', name: '民俗收藏家小陈', score: 1980, level: '文化大师' },
-    { rank: 5, address: '0x2468...1357', name: '文化教育家小林', score: 1750, level: '文化大师' },
-    { rank: 6, address: '0x1357...2468', name: '跨文化交流者小刘', score: 1520, level: '文化大师' },
-    { rank: 7, address: '0x3690...1478', name: '传统音乐家小赵', score: 1340, level: '文化大师' },
-    { rank: 8, address: '0x1478...3690', name: '文化研究者小孙', score: 980, level: '文化使者' },
-    { rank: 9, address: '0x9012...3456', name: '文化爱好者小钱', score: 780, level: '文化使者' },
-    { rank: 10, address: '0x3456...9012', name: '文化传播者小周', score: 650, level: '文化使者' }
+    { rank: 1, address: '0x1234...5678', name: '文化守护者小王', score: 3750, level: '文化守护者', avatar: 'https://i.pravatar.cc/150?img=1', topCategory: 'knowledge', contributions: 45 },
+    { rank: 2, address: '0x8765...4321', name: '传统艺术家小李', score: 2890, level: '文化守护者', avatar: 'https://i.pravatar.cc/150?img=2', topCategory: 'creation', contributions: 38 },
+    { rank: 3, address: '0x5678...1234', name: '语言学者小张', score: 2340, level: '文化大师', avatar: 'https://i.pravatar.cc/150?img=3', topCategory: 'education', contributions: 32 },
+    { rank: 4, address: '0x4321...8765', name: '民俗收藏家小陈', score: 1980, level: '文化大师', avatar: 'https://i.pravatar.cc/150?img=4', topCategory: 'preservation', contributions: 29 },
+    { rank: 5, address: '0x2468...1357', name: '文化教育家小林', score: 1750, level: '文化大师', avatar: 'https://i.pravatar.cc/150?img=5', topCategory: 'education', contributions: 27 },
+    { rank: 6, address: '0x1357...2468', name: '跨文化交流者小刘', score: 1520, level: '文化大师', avatar: 'https://i.pravatar.cc/150?img=6', topCategory: 'exchange', contributions: 25 },
+    { rank: 7, address: '0x3690...1478', name: '传统音乐家小赵', score: 1340, level: '文化大师', avatar: 'https://i.pravatar.cc/150?img=7', topCategory: 'creation', contributions: 22 },
+    { rank: 8, address: '0x1478...3690', name: '文化研究者小孙', score: 980, level: '文化使者', avatar: 'https://i.pravatar.cc/150?img=8', topCategory: 'research', contributions: 18 },
+    { rank: 9, address: '0x9012...3456', name: '文化爱好者小钱', score: 780, level: '文化使者', avatar: 'https://i.pravatar.cc/150?img=9', topCategory: 'performance', contributions: 15 },
+    { rank: 10, address: '0x3456...9012', name: '文化传播者小周', score: 650, level: '文化使者', avatar: 'https://i.pravatar.cc/150?img=10', topCategory: 'heritage', contributions: 12 },
+    { rank: 11, address: '0x7890...1234', name: '美食文化专家小吴', score: 580, level: '文化使者', avatar: 'https://i.pravatar.cc/150?img=11', topCategory: 'cuisine', contributions: 10 },
+    { rank: 12, address: '0x1234...7890', name: '节日文化研究者小郑', score: 520, level: '文化使者', avatar: 'https://i.pravatar.cc/150?img=12', topCategory: 'festival', contributions: 9 },
+    { rank: 13, address: '0x5678...9012', name: '传统工艺师小马', score: 480, level: '文化爱好者', avatar: 'https://i.pravatar.cc/150?img=13', topCategory: 'creation', contributions: 8 },
+    { rank: 14, address: '0x9012...5678', name: '文化记录者小黄', score: 420, level: '文化爱好者', avatar: 'https://i.pravatar.cc/150?img=14', topCategory: 'preservation', contributions: 7 },
+    { rank: 15, address: '0x3456...1234', name: '民间故事收集者小杨', score: 380, level: '文化爱好者', avatar: 'https://i.pravatar.cc/150?img=15', topCategory: 'knowledge', contributions: 6 }
   ];
 
   // 模拟用户贡献数据
@@ -224,8 +312,36 @@ const CulturalReputationSystem = () => {
     { category: 'exchange', count: 10, totalPoints: 250 },
     { category: 'translation', count: 4, totalPoints: 80 },
     { category: 'curation', count: 3, totalPoints: 60 },
-    { category: 'research', count: 6, totalPoints: 180 }
+    { category: 'research', count: 6, totalPoints: 180 },
+    { category: 'performance', count: 2, totalPoints: 60 },
+    { category: 'heritage', count: 3, totalPoints: 90 },
+    { category: 'cuisine', count: 1, totalPoints: 25 },
+    { category: 'festival', count: 2, totalPoints: 70 }
   ];
+
+  // 模拟最近背书数据
+  const mockRecentEndorsements = [
+    { id: 1, date: '2025-05-22', from: '0x1234...5678', fromName: '文化守护者小王', category: 'knowledge', points: 15, description: '分享了有深度的文化分析文章' },
+    { id: 2, date: '2025-05-21', from: '0x8765...4321', fromName: '传统艺术家小李', category: 'creation', points: 20, description: '创作的传统音乐作品非常出色' },
+    { id: 3, date: '2025-05-20', from: '0x5678...1234', fromName: '语言学者小张', category: 'education', points: 10, description: '提供的语言学习资源很有帮助' }
+  ];
+
+  // 模拟声誉里程碑数据
+  const generateMockMilestones = (score) => {
+    return milestonesDefinition.map(milestone => {
+      const achieved = score >= milestone.score;
+      const nextToAchieve = !achieved && score > 0 && score < milestone.score;
+      const progress = achieved ? 100 : (score / milestone.score) * 100;
+      
+      return {
+        ...milestone,
+        achieved,
+        nextToAchieve,
+        progress: Math.min(100, progress),
+        achievedDate: achieved ? new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString() : null
+      };
+    });
+  };
 
   // 模拟声誉增长数据
   const generateMockGrowthData = (range) => {
@@ -284,6 +400,40 @@ const CulturalReputationSystem = () => {
     }
   }, [isConnected, account]);
 
+  // 过滤和排序声誉历史
+  useEffect(() => {
+    if (!reputationHistory.length) return;
+    
+    let filtered = [...reputationHistory];
+    
+    // 应用类别过滤
+    if (filterCategory !== 'all') {
+      filtered = filtered.filter(item => item.category === filterCategory);
+    }
+    
+    // 应用排序
+    filtered.sort((a, b) => {
+      if (sortOption === 'date') {
+        return sortDirection === 'desc' 
+          ? new Date(b.date) - new Date(a.date)
+          : new Date(a.date) - new Date(b.date);
+      } else if (sortOption === 'points') {
+        return sortDirection === 'desc' 
+          ? b.points - a.points
+          : a.points - b.points;
+      } else if (sortOption === 'category') {
+        const catA = getCategoryLabel(a.category);
+        const catB = getCategoryLabel(b.category);
+        return sortDirection === 'desc'
+          ? catB.localeCompare(catA)
+          : catA.localeCompare(catB);
+      }
+      return 0;
+    });
+    
+    setFilteredHistory(filtered);
+  }, [reputationHistory, filterCategory, sortOption, sortDirection]);
+
   // 获取声誉数据
   const fetchReputationData = async () => {
     setIsLoading(true);
@@ -300,8 +450,27 @@ const CulturalReputationSystem = () => {
         );
         setReputationLevel(level.level);
         
+        // 计算下一级所需分数和进度
+        const nextLevel = reputationLevels.find(
+          l => mockScore < l.minScore
+        );
+        
+        if (nextLevel) {
+          setNextLevelScore(nextLevel.minScore);
+          setCurrentLevelScore(level.minScore);
+          const progress = ((mockScore - level.minScore) / (nextLevel.minScore - level.minScore)) * 100;
+          setProgressPercent(progress);
+        } else {
+          // 已是最高级
+          setNextLevelScore(level.maxScore);
+          setCurrentLevelScore(level.minScore);
+          const progress = ((mockScore - level.minScore) / (level.maxScore - level.minScore)) * 100;
+          setProgressPercent(progress);
+        }
+        
         // 设置声誉历史
         setReputationHistory(mockReputationHistory);
+        setFilteredHistory(mockReputationHistory);
         
         // 设置排行榜
         setLeaderboard(mockLeaderboard);
@@ -313,7 +482,12 @@ const CulturalReputationSystem = () => {
         const stats = {
           totalContributions: mockUserContributions.reduce((sum, item) => sum + item.count, 0),
           totalPoints: mockUserContributions.reduce((sum, item) => sum + item.totalPoints, 0),
-          topCategory: mockUserContributions.sort((a, b) => b.totalPoints - a.totalPoints)[0].category
+          topCategory: mockUserContributions.sort((a, b) => b.totalPoints - a.totalPoints)[0].category,
+          categoriesCount: mockUserContributions.length,
+          avgPointsPerContribution: Math.round(
+            mockUserContributions.reduce((sum, item) => sum + item.totalPoints, 0) / 
+            mockUserContributions.reduce((sum, item) => sum + item.count, 0)
+          )
         };
         setContributionStats(stats);
         
@@ -324,11 +498,30 @@ const CulturalReputationSystem = () => {
         const allRewards = rewardDefinitions.map(reward => ({
           ...reward,
           isUnlocked: mockScore >= reward.requiredScore,
+          isClaimed: mockScore >= reward.requiredScore && Math.random() > 0.3,
           progress: Math.min(100, (mockScore / reward.requiredScore) * 100)
         }));
         
         setRewards(allRewards);
         setUnlockedRewards(allRewards.filter(reward => reward.isUnlocked));
+        
+        // 设置最近背书
+        setRecentEndorsements(mockRecentEndorsements);
+        
+        // 设置声誉里程碑
+        const milestones = generateMockMilestones(mockScore);
+        setReputationMilestones(milestones);
+        
+        // 设置下一个里程碑
+        const nextMilestone = milestones.find(m => !m.achieved);
+        if (nextMilestone) {
+          setNextMilestone(nextMilestone);
+          setMilestoneProgress(nextMilestone.progress);
+        }
+        
+        // 动画效果
+        setAnimateScore(true);
+        setTimeout(() => setAnimateScore(false), 1500);
         
         setIsLoading(false);
       }, 1000);
@@ -381,10 +574,18 @@ const CulturalReputationSystem = () => {
         setEndorseComment('');
         setEndorsePoints(1);
         setIsLoading(false);
+        setShowEndorseModal(false);
         
-        // 3秒后清除成功消息
+        // 显示通知
+        setNotification({
+          type: 'success',
+          message: '背书成功！您的评价将帮助建立更可信的文化社区'
+        });
+        setShowNotification(true);
+        
+        // 3秒后清除通知
         setTimeout(() => {
-          setSuccessMessage('');
+          setShowNotification(false);
         }, 3000);
       }, 1500);
     } catch (error) {
@@ -411,15 +612,66 @@ const CulturalReputationSystem = () => {
       setRewards(updatedRewards);
       setUnlockedRewards(updatedRewards.filter(r => r.isUnlocked));
       
-      setSuccessMessage(`成功领取奖励: ${reward.name}`);
+      // 显示通知
+      setNotification({
+        type: 'success',
+        message: `成功领取奖励: ${reward.name}`
+      });
+      setShowNotification(true);
+      
       setIsLoading(false);
       setShowRewardModal(false);
       
-      // 3秒后清除成功消息
+      // 3秒后清除通知
       setTimeout(() => {
-        setSuccessMessage('');
+        setShowNotification(false);
       }, 3000);
     }, 1500);
+  };
+
+  // 分享声誉档案
+  const shareReputationProfile = (method) => {
+    const profileUrl = `https://culturebridge.example/reputation/${account}`;
+    setShareUrl(profileUrl);
+    
+    switch (method) {
+      case 'qrcode':
+        setShowQRCode(true);
+        break;
+      case 'email':
+        window.open(`mailto:?subject=我的文化声誉档案&body=查看我在CultureBridge平台的文化声誉档案：%0A%0A${profileUrl}`);
+        break;
+      case 'copy':
+        navigator.clipboard.writeText(profileUrl)
+          .then(() => {
+            setNotification({
+              type: 'success',
+              message: '链接已复制到剪贴板'
+            });
+            setShowNotification(true);
+            
+            setTimeout(() => {
+              setShowNotification(false);
+            }, 3000);
+          })
+          .catch(err => {
+            console.error('复制失败:', err);
+            setNotification({
+              type: 'error',
+              message: '复制失败，请手动复制'
+            });
+            setShowNotification(true);
+            
+            setTimeout(() => {
+              setShowNotification(false);
+            }, 3000);
+          });
+        break;
+      default:
+        break;
+    }
+    
+    setShowShareModal(false);
   };
 
   // 获取类别标签
@@ -434,15 +686,160 @@ const CulturalReputationSystem = () => {
     return category ? category.icon : '📄';
   };
 
+  // 获取类别颜色
+  const getCategoryColor = (categoryId) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.color : '#cccccc';
+  };
+
   // 格式化日期
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('zh-CN');
   };
 
+  // 渲染声誉概览
+  const renderReputationOverview = () => {
+    return (
+      <div className="reputation-overview">
+        <div className="overview-header">
+          <div className="score-container">
+            <div className="score-label">声誉分数</div>
+            <div className={`score-value ${animateScore ? 'animate' : ''}`} ref={scoreRef}>
+              {reputationScore}
+            </div>
+            <div className="level-badge" style={{ backgroundColor: reputationLevels.find(l => l.level === reputationLevel)?.color }}>
+              {reputationLevels.find(l => l.level === reputationLevel)?.icon} {reputationLevel}
+            </div>
+          </div>
+          
+          <div className="level-progress">
+            <div className="progress-label">
+              <span>当前等级: {reputationLevel}</span>
+              {nextLevelScore !== Infinity && (
+                <span>下一等级: {reputationLevels.find(l => l.minScore === nextLevelScore)?.level}</span>
+              )}
+            </div>
+            <div className="progress-bar">
+              <div 
+                className="progress-fill" 
+                style={{ 
+                  width: `${progressPercent}%`,
+                  backgroundColor: reputationLevels.find(l => l.level === reputationLevel)?.color 
+                }}
+              ></div>
+            </div>
+            <div className="progress-values">
+              <span>{currentLevelScore}</span>
+              <span className="current-score">{reputationScore}</span>
+              <span>{nextLevelScore}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="stats-container">
+          <div className="stat-card">
+            <div className="stat-icon">📊</div>
+            <div className="stat-value">{contributionStats.totalContributions || 0}</div>
+            <div className="stat-label">总贡献次数</div>
+          </div>
+          
+          <div className="stat-card">
+            <div className="stat-icon">🏆</div>
+            <div className="stat-value">{contributionStats.categoriesCount || 0}</div>
+            <div className="stat-label">贡献类别数</div>
+          </div>
+          
+          <div className="stat-card">
+            <div className="stat-icon">⭐</div>
+            <div className="stat-value">{contributionStats.avgPointsPerContribution || 0}</div>
+            <div className="stat-label">平均每次贡献分</div>
+          </div>
+          
+          <div className="stat-card">
+            <div className="stat-icon">{getCategoryIcon(contributionStats.topCategory)}</div>
+            <div className="stat-value">{getCategoryLabel(contributionStats.topCategory)}</div>
+            <div className="stat-label">最强类别</div>
+          </div>
+        </div>
+        
+        {nextMilestone && (
+          <div className="next-milestone">
+            <div className="milestone-header">
+              <h4>下一个里程碑: {nextMilestone.name}</h4>
+              <div className="milestone-description">{nextMilestone.description}</div>
+            </div>
+            <div className="milestone-progress">
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{ width: `${milestoneProgress}%` }}
+                ></div>
+              </div>
+              <div className="progress-values">
+                <span>{reputationScore} / {nextMilestone.score}</span>
+                <span>{Math.round(milestoneProgress)}%</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="action-buttons">
+          <button 
+            className="action-button share-button"
+            onClick={() => setShowShareModal(true)}
+          >
+            <span className="button-icon">🔗</span>
+            分享声誉档案
+          </button>
+          
+          <button 
+            className="action-button endorse-button"
+            onClick={() => setShowEndorseModal(true)}
+          >
+            <span className="button-icon">👍</span>
+            为他人背书
+          </button>
+          
+          <button 
+            className="action-button details-button"
+            onClick={() => setShowReputationDetails(true)}
+          >
+            <span className="button-icon">📋</span>
+            查看详细数据
+          </button>
+        </div>
+        
+        {recentEndorsements.length > 0 && (
+          <div className="recent-endorsements">
+            <h4>最近收到的背书</h4>
+            <div className="endorsements-list">
+              {recentEndorsements.map(endorsement => (
+                <div key={endorsement.id} className="endorsement-item">
+                  <div className="endorsement-header">
+                    <div className="endorsement-from">
+                      <span className="from-name">{endorsement.fromName}</span>
+                      <span className="from-address">{endorsement.from}</span>
+                    </div>
+                    <div className="endorsement-points">+{endorsement.points} 分</div>
+                  </div>
+                  <div className="endorsement-category" style={{ backgroundColor: getCategoryColor(endorsement.category) }}>
+                    {getCategoryIcon(endorsement.category)} {getCategoryLabel(endorsement.category)}
+                  </div>
+                  <div className="endorsement-description">{endorsement.description}</div>
+                  <div className="endorsement-date">{formatDate(endorsement.date)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // 渲染声誉历史记录
   const renderReputationHistory = () => {
-    if (reputationHistory.length === 0) {
+    if (filteredHistory.length === 0) {
       return (
         <div className="empty-state">
           <p>暂无声誉历史记录</p>
@@ -450,25 +847,136 @@ const CulturalReputationSystem = () => {
       );
     }
 
+    const itemsPerPage = 5;
+    const maxPage = Math.ceil(filteredHistory.length / itemsPerPage);
+    const startIndex = (historyPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, filteredHistory.length);
+    const currentItems = filteredHistory.slice(startIndex, endIndex);
+
     return (
-      <div className="reputation-history">
-        {reputationHistory.map(item => (
-          <div key={item.id} className="history-item">
-            <div className="history-date">{item.date}</div>
-            <div className="history-content">
-              <div className="history-category">
-                <span className={`category-tag ${item.category}`}>
-                  {getCategoryIcon(item.category)} {getCategoryLabel(item.category)}
-                </span>
-              </div>
-              <div className="history-description">{item.description}</div>
-              <div className="history-points">+{item.points} 声誉值</div>
-              <div className="history-from">
-                <span className="label">来自:</span> {item.from}
+      <div className="reputation-history-container">
+        <div className="history-filters">
+          <div className="filter-group">
+            <label>类别筛选:</label>
+            <select 
+              value={filterCategory} 
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">全部类别</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.icon} {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="filter-group">
+            <label>排序方式:</label>
+            <select 
+              value={sortOption} 
+              onChange={(e) => setSortOption(e.target.value)}
+              className="filter-select"
+            >
+              <option value="date">按日期</option>
+              <option value="points">按分数</option>
+              <option value="category">按类别</option>
+            </select>
+            
+            <button 
+              className="sort-direction-button" 
+              onClick={() => setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc')}
+            >
+              {sortDirection === 'desc' ? '↓' : '↑'}
+            </button>
+          </div>
+        </div>
+        
+        <div className="reputation-history">
+          {currentItems.map(item => (
+            <div 
+              key={item.id} 
+              className={`history-item ${expandedHistoryItem === item.id ? 'expanded' : ''}`}
+              onClick={() => setExpandedHistoryItem(expandedHistoryItem === item.id ? null : item.id)}
+            >
+              <div className="history-date">{formatDate(item.date)}</div>
+              <div className="history-content">
+                <div className="history-category">
+                  <span 
+                    className="category-tag"
+                    style={{ backgroundColor: getCategoryColor(item.category) }}
+                  >
+                    {getCategoryIcon(item.category)} {getCategoryLabel(item.category)}
+                  </span>
+                </div>
+                <div className="history-description">{item.description}</div>
+                <div className="history-points">+{item.points} 声誉值</div>
+                <div className="history-from">
+                  <span className="label">来自:</span> 
+                  <span className="from-name">{item.fromName}</span>
+                  <span className="from-address">{item.from}</span>
+                </div>
+                
+                {expandedHistoryItem === item.id && (
+                  <div className="history-details">
+                    {item.evidence && (
+                      <div className="detail-row">
+                        <span className="detail-label">证明链接:</span>
+                        <a 
+                          href={item.evidence} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="detail-value evidence-link"
+                        >
+                          {item.evidence}
+                        </a>
+                      </div>
+                    )}
+                    
+                    {item.transaction && (
+                      <div className="detail-row">
+                        <span className="detail-label">交易哈希:</span>
+                        <a 
+                          href={`https://etherscan.io/tx/${item.transaction}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="detail-value transaction-link"
+                        >
+                          {item.transaction}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
+          ))}
+        </div>
+        
+        {filteredHistory.length > itemsPerPage && (
+          <div className="pagination">
+            <button 
+              className="pagination-button"
+              disabled={historyPage === 1}
+              onClick={() => setHistoryPage(historyPage - 1)}
+            >
+              上一页
+            </button>
+            
+            <span className="pagination-info">
+              第 {historyPage} 页，共 {maxPage} 页
+            </span>
+            
+            <button 
+              className="pagination-button"
+              disabled={historyPage === maxPage}
+              onClick={() => setHistoryPage(historyPage + 1)}
+            >
+              下一页
+            </button>
           </div>
-        ))}
+        )}
       </div>
     );
   };
@@ -483,31 +991,534 @@ const CulturalReputationSystem = () => {
       );
     }
 
+    const itemsPerPage = 5;
+    const filteredLeaderboard = leaderboardFilter === 'all' 
+      ? leaderboard 
+      : leaderboard.filter(user => {
+          const level = reputationLevels.find(l => l.level === user.level);
+          return level && level.minScore >= reputationLevels.find(l => l.level === leaderboardFilter)?.minScore;
+        });
+    
+    const maxPage = Math.ceil(filteredLeaderboard.length / itemsPerPage);
+    const startIndex = (leaderboardPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, filteredLeaderboard.length);
+    const currentItems = filteredLeaderboard.slice(startIndex, endIndex);
+
     return (
-      <div className="leaderboard">
-        <div className="leaderboard-header">
-          <div className="rank">排名</div>
-          <div className="user">用户</div>
-          <div className="score">声誉分</div>
-          <div className="level">等级</div>
-        </div>
-        {leaderboard.map(user => (
-          <div key={user.rank} className={`leaderboard-item ${user.address.toLowerCase() === (account || '').toLowerCase() ? 'current-user' : ''}`}>
-            <div className="rank">
-              {user.rank <= 3 ? (
-                <span className={`rank-badge rank-${user.rank}`}>{user.rank}</span>
-              ) : (
-                user.rank
-              )}
-            </div>
-            <div className="user">
-              <div className="user-name">{user.name}</div>
-              <div className="user-address">{user.address}</div>
-            </div>
-            <div className="score">{user.score}</div>
-            <div className="level">{user.level}</div>
+      <div className="leaderboard-container">
+        <div className="leaderboard-filters">
+          <div className="filter-group">
+            <label>等级筛选:</label>
+            <select 
+              value={leaderboardFilter} 
+              onChange={(e) => {
+                setLeaderboardFilter(e.target.value);
+                setLeaderboardPage(1);
+              }}
+              className="filter-select"
+            >
+              <option value="all">全部等级</option>
+              {reputationLevels.map(level => (
+                <option key={level.level} value={level.level}>
+                  {level.icon} {level.level}
+                </option>
+              ))}
+            </select>
           </div>
-        ))}
+          
+          <div className="filter-group">
+            <label>时间范围:</label>
+            <select 
+              value={leaderboardTimeRange} 
+              onChange={(e) => setLeaderboardTimeRange(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">全部时间</option>
+              <option value="week">本周</option>
+              <option value="month">本月</option>
+              <option value="year">今年</option>
+            </select>
+          </div>
+        </div>
+        
+        <div className="leaderboard">
+          <div className="leaderboard-header">
+            <div className="rank">排名</div>
+            <div className="user">用户</div>
+            <div className="score">声誉分</div>
+            <div className="level">等级</div>
+            <div className="contributions">贡献</div>
+          </div>
+          
+          {currentItems.map(user => (
+            <div 
+              key={user.rank} 
+              className={`leaderboard-item ${user.address.toLowerCase() === (account || '').toLowerCase() ? 'current-user' : ''}`}
+            >
+              <div className="rank">
+                {user.rank <= 3 ? (
+                  <span className={`rank-badge rank-${user.rank}`}>{user.rank}</span>
+                ) : (
+                  user.rank
+                )}
+              </div>
+              
+              <div className="user">
+                {user.avatar && (
+                  <div className="user-avatar">
+                    <img src={user.avatar} alt={user.name} />
+                  </div>
+                )}
+                <div className="user-info">
+                  <div className="user-name">{user.name}</div>
+                  <div className="user-address">{user.address}</div>
+                </div>
+              </div>
+              
+              <div className="score">{user.score}</div>
+              
+              <div className="level">
+                <span 
+                  className="level-badge"
+                  style={{ backgroundColor: reputationLevels.find(l => l.level === user.level)?.color }}
+                >
+                  {reputationLevels.find(l => l.level === user.level)?.icon} {user.level}
+                </span>
+              </div>
+              
+              <div className="contributions">
+                <div className="contribution-count">{user.contributions}</div>
+                {user.topCategory && (
+                  <div 
+                    className="top-category"
+                    style={{ backgroundColor: getCategoryColor(user.topCategory) }}
+                  >
+                    {getCategoryIcon(user.topCategory)}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {filteredLeaderboard.length > itemsPerPage && (
+          <div className="pagination">
+            <button 
+              className="pagination-button"
+              disabled={leaderboardPage === 1}
+              onClick={() => setLeaderboardPage(leaderboardPage - 1)}
+            >
+              上一页
+            </button>
+            
+            <span className="pagination-info">
+              第 {leaderboardPage} 页，共 {maxPage} 页
+            </span>
+            
+            <button 
+              className="pagination-button"
+              disabled={leaderboardPage === maxPage}
+              onClick={() => setLeaderboardPage(leaderboardPage + 1)}
+            >
+              下一页
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // 渲染贡献分析
+  const renderContributionAnalysis = () => {
+    if (userContributions.length === 0) {
+      return (
+        <div className="empty-state">
+          <p>暂无贡献数据</p>
+        </div>
+      );
+    }
+
+    // 按总分排序
+    const sortedContributions = [...userContributions].sort((a, b) => b.totalPoints - a.totalPoints);
+    const displayContributions = showAllCategories ? sortedContributions : sortedContributions.slice(0, 5);
+    
+    // 计算最高分，用于相对比例
+    const maxPoints = Math.max(...sortedContributions.map(c => c.totalPoints));
+
+    return (
+      <div className="contribution-analysis">
+        <div className="contribution-summary">
+          <div className="summary-card">
+            <div className="summary-value">{contributionStats.totalContributions}</div>
+            <div className="summary-label">总贡献次数</div>
+          </div>
+          
+          <div className="summary-card">
+            <div className="summary-value">{contributionStats.totalPoints}</div>
+            <div className="summary-label">总获得分数</div>
+          </div>
+          
+          <div className="summary-card">
+            <div className="summary-value">{contributionStats.categoriesCount}</div>
+            <div className="summary-label">贡献类别数</div>
+          </div>
+          
+          <div className="summary-card">
+            <div className="summary-value">{contributionStats.avgPointsPerContribution}</div>
+            <div className="summary-label">平均每次分数</div>
+          </div>
+        </div>
+        
+        <div className="contribution-chart">
+          <h4>类别分布</h4>
+          <div className="category-bars">
+            {displayContributions.map(contribution => (
+              <div key={contribution.category} className="category-bar-container">
+                <div className="category-label">
+                  <span className="category-icon">{getCategoryIcon(contribution.category)}</span>
+                  <span className="category-name">{getCategoryLabel(contribution.category)}</span>
+                </div>
+                <div className="category-bar-wrapper">
+                  <div 
+                    className="category-bar" 
+                    style={{ 
+                      width: `${(contribution.totalPoints / maxPoints) * 100}%`,
+                      backgroundColor: getCategoryColor(contribution.category)
+                    }}
+                  ></div>
+                  <span className="category-points">{contribution.totalPoints}分 ({contribution.count}次)</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {sortedContributions.length > 5 && (
+            <button 
+              className="show-more-button"
+              onClick={() => setShowAllCategories(!showAllCategories)}
+            >
+              {showAllCategories ? '显示更少' : `显示全部 ${sortedContributions.length} 个类别`}
+            </button>
+          )}
+        </div>
+        
+        <div className="growth-chart">
+          <h4>声誉增长趋势</h4>
+          <div className="time-range-selector">
+            <button 
+              className={`range-button ${timeRange === 'week' ? 'active' : ''}`}
+              onClick={() => setTimeRange('week')}
+            >
+              周
+            </button>
+            <button 
+              className={`range-button ${timeRange === 'month' ? 'active' : ''}`}
+              onClick={() => setTimeRange('month')}
+            >
+              月
+            </button>
+            <button 
+              className={`range-button ${timeRange === 'year' ? 'active' : ''}`}
+              onClick={() => setTimeRange('year')}
+            >
+              年
+            </button>
+          </div>
+          
+          <div className="chart-container" ref={chartRef}>
+            {/* 在实际应用中，这里应该使用图表库如Chart.js或Recharts */}
+            <div className="chart-placeholder">
+              <div className="chart-info">
+                <div className="info-item">
+                  <span className="info-label">起始分数:</span>
+                  <span className="info-value">0</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">当前分数:</span>
+                  <span className="info-value">{reputationScore}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">增长率:</span>
+                  <span className="info-value">+{timeRange === 'week' ? '18%' : timeRange === 'month' ? '42%' : '156%'}</span>
+                </div>
+              </div>
+              <div className="chart-message">
+                声誉增长图表将在这里显示
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="milestones-section">
+          <h4>声誉里程碑</h4>
+          <div className="milestones-list">
+            {reputationMilestones.map(milestone => (
+              <div 
+                key={milestone.id} 
+                className={`milestone-item ${milestone.achieved ? 'achieved' : ''} ${milestone.nextToAchieve ? 'next' : ''}`}
+              >
+                <div className="milestone-icon">{milestone.icon}</div>
+                <div className="milestone-content">
+                  <div className="milestone-header">
+                    <div className="milestone-name">{milestone.name}</div>
+                    <div className="milestone-score">{milestone.score}分</div>
+                  </div>
+                  <div className="milestone-description">{milestone.description}</div>
+                  <div className="milestone-progress-bar">
+                    <div 
+                      className="milestone-progress-fill"
+                      style={{ width: `${milestone.progress}%` }}
+                    ></div>
+                  </div>
+                  <div className="milestone-status">
+                    {milestone.achieved ? (
+                      <div className="achieved-status">
+                        <span className="achieved-icon">✓</span>
+                        <span className="achieved-date">已达成于 {formatDate(milestone.achievedDate)}</span>
+                      </div>
+                    ) : (
+                      <div className="progress-status">
+                        <span className="progress-percent">{Math.round(milestone.progress)}%</span>
+                        <span className="progress-remaining">还需 {milestone.score - reputationScore} 分</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染奖励
+  const renderRewards = () => {
+    if (rewards.length === 0) {
+      return (
+        <div className="empty-state">
+          <p>暂无奖励数据</p>
+        </div>
+      );
+    }
+
+    // 按类型和解锁状态分组
+    const badgeRewards = rewards.filter(r => r.type === 'badge');
+    const featureRewards = rewards.filter(r => r.type === 'feature');
+    const tokenRewards = rewards.filter(r => r.type === 'token');
+    const nftRewards = rewards.filter(r => r.type === 'nft');
+    
+    const unlockedCount = rewards.filter(r => r.isUnlocked).length;
+    const lockedCount = rewards.length - unlockedCount;
+    const claimedCount = rewards.filter(r => r.isClaimed).length;
+
+    return (
+      <div className="rewards-container">
+        <div className="rewards-summary">
+          <div className="summary-card">
+            <div className="summary-value">{rewards.length}</div>
+            <div className="summary-label">总奖励数</div>
+          </div>
+          
+          <div className="summary-card">
+            <div className="summary-value">{unlockedCount}</div>
+            <div className="summary-label">已解锁</div>
+          </div>
+          
+          <div className="summary-card">
+            <div className="summary-value">{lockedCount}</div>
+            <div className="summary-label">待解锁</div>
+          </div>
+          
+          <div className="summary-card">
+            <div className="summary-value">{claimedCount}</div>
+            <div className="summary-label">已领取</div>
+          </div>
+        </div>
+        
+        <div className="rewards-sections">
+          {badgeRewards.length > 0 && (
+            <div className="rewards-section">
+              <h4 className="section-title">徽章奖励</h4>
+              <div className="rewards-grid">
+                {badgeRewards.map(reward => (
+                  <div 
+                    key={reward.id} 
+                    className={`reward-card ${reward.isUnlocked ? 'unlocked' : 'locked'} ${reward.isClaimed ? 'claimed' : ''}`}
+                    onClick={() => {
+                      if (reward.isUnlocked && !reward.isClaimed) {
+                        setActiveReward(reward);
+                        setShowRewardModal(true);
+                      }
+                    }}
+                  >
+                    <div className="reward-icon">{reward.icon}</div>
+                    <div className="reward-name">{reward.name}</div>
+                    <div className="reward-description">{reward.description}</div>
+                    <div className="reward-progress-bar">
+                      <div 
+                        className="reward-progress-fill"
+                        style={{ width: `${reward.progress}%` }}
+                      ></div>
+                    </div>
+                    <div className="reward-status">
+                      {reward.isUnlocked ? (
+                        reward.isClaimed ? (
+                          <span className="claimed-status">已领取</span>
+                        ) : (
+                          <span className="claimable-status">可领取</span>
+                        )
+                      ) : (
+                        <span className="locked-status">
+                          需要 {reward.requiredScore} 分 (还差 {reward.requiredScore - reputationScore} 分)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {featureRewards.length > 0 && (
+            <div className="rewards-section">
+              <h4 className="section-title">功能特权</h4>
+              <div className="rewards-grid">
+                {featureRewards.map(reward => (
+                  <div 
+                    key={reward.id} 
+                    className={`reward-card ${reward.isUnlocked ? 'unlocked' : 'locked'} ${reward.isClaimed ? 'claimed' : ''}`}
+                    onClick={() => {
+                      if (reward.isUnlocked && !reward.isClaimed) {
+                        setActiveReward(reward);
+                        setShowRewardModal(true);
+                      }
+                    }}
+                  >
+                    <div className="reward-icon">{reward.icon}</div>
+                    <div className="reward-name">{reward.name}</div>
+                    <div className="reward-description">{reward.description}</div>
+                    <div className="reward-progress-bar">
+                      <div 
+                        className="reward-progress-fill"
+                        style={{ width: `${reward.progress}%` }}
+                      ></div>
+                    </div>
+                    <div className="reward-status">
+                      {reward.isUnlocked ? (
+                        reward.isClaimed ? (
+                          <span className="claimed-status">已激活</span>
+                        ) : (
+                          <span className="claimable-status">可激活</span>
+                        )
+                      ) : (
+                        <span className="locked-status">
+                          需要 {reward.requiredScore} 分 (还差 {reward.requiredScore - reputationScore} 分)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {tokenRewards.length > 0 && (
+            <div className="rewards-section">
+              <h4 className="section-title">代币奖励</h4>
+              <div className="rewards-grid">
+                {tokenRewards.map(reward => (
+                  <div 
+                    key={reward.id} 
+                    className={`reward-card ${reward.isUnlocked ? 'unlocked' : 'locked'} ${reward.isClaimed ? 'claimed' : ''}`}
+                    onClick={() => {
+                      if (reward.isUnlocked && !reward.isClaimed) {
+                        setActiveReward(reward);
+                        setShowRewardModal(true);
+                      }
+                    }}
+                  >
+                    <div className="reward-icon">{reward.icon}</div>
+                    <div className="reward-name">{reward.name}</div>
+                    <div className="reward-amount">{reward.amount}</div>
+                    <div className="reward-description">{reward.description}</div>
+                    <div className="reward-progress-bar">
+                      <div 
+                        className="reward-progress-fill"
+                        style={{ width: `${reward.progress}%` }}
+                      ></div>
+                    </div>
+                    <div className="reward-status">
+                      {reward.isUnlocked ? (
+                        reward.isClaimed ? (
+                          <span className="claimed-status">已领取</span>
+                        ) : (
+                          <span className="claimable-status">可领取</span>
+                        )
+                      ) : (
+                        <span className="locked-status">
+                          需要 {reward.requiredScore} 分 (还差 {reward.requiredScore - reputationScore} 分)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {nftRewards.length > 0 && (
+            <div className="rewards-section">
+              <h4 className="section-title">NFT奖励</h4>
+              <div className="rewards-grid">
+                {nftRewards.map(reward => (
+                  <div 
+                    key={reward.id} 
+                    className={`reward-card ${reward.isUnlocked ? 'unlocked' : 'locked'} ${reward.isClaimed ? 'claimed' : ''}`}
+                    onClick={() => {
+                      if (reward.isUnlocked && !reward.isClaimed) {
+                        setActiveReward(reward);
+                        setShowRewardModal(true);
+                      }
+                    }}
+                  >
+                    <div className="reward-icon">{reward.icon}</div>
+                    <div className="reward-name">{reward.name}</div>
+                    <div className="reward-description">{reward.description}</div>
+                    <div className="reward-progress-bar">
+                      <div 
+                        className="reward-progress-fill"
+                        style={{ width: `${reward.progress}%` }}
+                      ></div>
+                    </div>
+                    <div className="reward-status">
+                      {reward.isUnlocked ? (
+                        reward.isClaimed ? (
+                          <span className="claimed-status">已铸造</span>
+                        ) : (
+                          <span className="claimable-status">可铸造</span>
+                        )
+                      ) : (
+                        <span className="locked-status">
+                          需要 {reward.requiredScore} 分 (还差 {reward.requiredScore - reputationScore} 分)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {rewards.length > 12 && !showAllRewards && (
+          <button 
+            className="show-more-button"
+            onClick={() => setShowAllRewards(true)}
+          >
+            显示全部 {rewards.length} 个奖励
+          </button>
+        )}
       </div>
     );
   };
@@ -524,41 +1535,57 @@ const CulturalReputationSystem = () => {
             value={endorseAddress}
             onChange={(e) => setEndorseAddress(e.target.value)}
             placeholder="输入以太坊地址 (0x...)"
-            disabled={isLoading}
             required
           />
         </div>
         
         <div className="form-group">
-          <label htmlFor="endorseCategory">文化贡献类别</label>
-          <select
-            id="endorseCategory"
-            value={endorseCategory}
-            onChange={(e) => setEndorseCategory(e.target.value)}
-            disabled={isLoading}
-          >
+          <label htmlFor="endorseCategory">贡献类别</label>
+          <div className="category-selector">
             {categories.map(category => (
-              <option key={category.id} value={category.id}>
-                {category.icon} {category.label}
-              </option>
+              <div 
+                key={category.id}
+                className={`category-option ${endorseCategory === category.id ? 'selected' : ''}`}
+                onClick={() => setEndorseCategory(category.id)}
+              >
+                <div className="category-icon">{category.icon}</div>
+                <div className="category-label">{category.label}</div>
+              </div>
             ))}
-          </select>
+          </div>
         </div>
         
         <div className="form-group">
-          <label htmlFor="endorsePoints">声誉点数</label>
+          <label htmlFor="endorsePoints">声誉分数</label>
           <div className="points-selector">
-            {[1, 2, 3, 5, 10].map(point => (
-              <button
-                key={point}
-                type="button"
-                className={`point-btn ${endorsePoints === point ? 'active' : ''}`}
-                onClick={() => setEndorsePoints(point)}
-                disabled={isLoading}
-              >
-                {point}
-              </button>
-            ))}
+            <button 
+              type="button" 
+              className={`point-option ${endorsePoints === 1 ? 'selected' : ''}`}
+              onClick={() => setEndorsePoints(1)}
+            >
+              1分
+            </button>
+            <button 
+              type="button" 
+              className={`point-option ${endorsePoints === 2 ? 'selected' : ''}`}
+              onClick={() => setEndorsePoints(2)}
+            >
+              2分
+            </button>
+            <button 
+              type="button" 
+              className={`point-option ${endorsePoints === 5 ? 'selected' : ''}`}
+              onClick={() => setEndorsePoints(5)}
+            >
+              5分
+            </button>
+            <button 
+              type="button" 
+              className={`point-option ${endorsePoints === 10 ? 'selected' : ''}`}
+              onClick={() => setEndorsePoints(10)}
+            >
+              10分
+            </button>
           </div>
         </div>
         
@@ -569,431 +1596,48 @@ const CulturalReputationSystem = () => {
             value={endorseComment}
             onChange={(e) => setEndorseComment(e.target.value)}
             placeholder="请描述该用户的文化贡献..."
-            disabled={isLoading}
+            rows={4}
             required
           />
         </div>
         
         {errorMessage && (
-          <div className="error-message">
-            <i className="error-icon">!</i> {errorMessage}
-          </div>
+          <div className="error-message">{errorMessage}</div>
         )}
         
         {successMessage && (
-          <div className="success-message">
-            <i className="success-icon">✓</i> {successMessage}
-          </div>
+          <div className="success-message">{successMessage}</div>
         )}
         
-        <button
-          type="submit"
-          className="endorse-btn"
-          disabled={isLoading}
-        >
-          {isLoading ? '处理中...' : '提交背书'}
-        </button>
+        <div className="form-actions">
+          <button 
+            type="button" 
+            className="cancel-button"
+            onClick={() => setShowEndorseModal(false)}
+          >
+            取消
+          </button>
+          <button 
+            type="submit" 
+            className="submit-button"
+            disabled={isLoading}
+          >
+            {isLoading ? '处理中...' : '提交背书'}
+          </button>
+        </div>
       </form>
     );
   };
 
-  // 渲染声誉等级进度
-  const renderReputationProgress = () => {
-    const currentLevel = reputationLevels.find(
-      level => reputationScore >= level.minScore && reputationScore <= level.maxScore
-    );
-    
-    const nextLevel = reputationLevels.find(
-      level => level.minScore > currentLevel.maxScore
-    );
-    
-    const progress = nextLevel 
-      ? ((reputationScore - currentLevel.minScore) / (currentLevel.maxScore - currentLevel.minScore)) * 100
-      : 100;
-    
-    return (
-      <div className="reputation-progress">
-        <div className="current-level">
-          <span className="level-label">当前等级:</span>
-          <span className="level-value" style={{ color: currentLevel.color }}>{reputationLevel}</span>
-        </div>
-        
-        <div className="progress-container">
-          <div 
-            className="progress-bar" 
-            style={{ 
-              width: `${progress}%`,
-              backgroundColor: currentLevel.color
-            }}
-          ></div>
-        </div>
-        
-        <div className="level-info">
-          <div className="current-score">
-            <span className="score-value">{reputationScore}</span>
-            <span className="score-label">声誉值</span>
-          </div>
-          
-          {nextLevel && (
-            <div className="next-level">
-              <span className="next-level-label">距离 {nextLevel.level} 还需:</span>
-              <span className="next-level-value">{nextLevel.minScore - reputationScore} 声誉值</span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // 渲染用户贡献统计
-  const renderContributionStats = () => {
-    if (!contributionStats.totalContributions) {
-      return (
-        <div className="empty-state">
-          <p>暂无贡献数据</p>
-        </div>
-      );
-    }
-
-    // 找到顶级类别
-    const topCategory = categories.find(cat => cat.id === contributionStats.topCategory);
-
-    return (
-      <div className="contribution-stats">
-        <div className="stats-summary">
-          <div className="stat-item">
-            <div className="stat-value">{contributionStats.totalContributions}</div>
-            <div className="stat-label">总贡献次数</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-value">{contributionStats.totalPoints}</div>
-            <div className="stat-label">总获得声誉值</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-value">
-              {topCategory ? (
-                <>
-                  {topCategory.icon} {topCategory.label}
-                </>
-              ) : '未知'}
-            </div>
-            <div className="stat-label">最活跃领域</div>
-          </div>
-        </div>
-
-        <div className="contribution-chart">
-          <h4>贡献分布</h4>
-          <div className="category-bars">
-            {userContributions.map(contribution => {
-              const category = categories.find(cat => cat.id === contribution.category);
-              const percentage = (contribution.totalPoints / contributionStats.totalPoints) * 100;
-              
-              return (
-                <div key={contribution.category} className="category-bar-item">
-                  <div className="category-label">
-                    {category ? (
-                      <>
-                        {category.icon} {category.label}
-                      </>
-                    ) : contribution.category}
-                    <span className="category-points">({contribution.totalPoints}分)</span>
-                  </div>
-                  <div className="bar-container">
-                    <div 
-                      className="bar-fill" 
-                      style={{ 
-                        width: `${percentage}%`,
-                        backgroundColor: `var(--category-${contribution.category}-color, #6DA34D)`
-                      }}
-                    ></div>
-                  </div>
-                  <div className="category-percentage">{percentage.toFixed(1)}%</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // 渲染声誉增长图表
-  const renderReputationGrowth = () => {
-    if (!reputationGrowth.length) {
-      return (
-        <div className="empty-state">
-          <p>暂无增长数据</p>
-        </div>
-      );
-    }
-
-    const maxPoints = Math.max(...reputationGrowth.map(item => item.points));
-    const chartHeight = 200; // 图表高度
-
-    return (
-      <div className="reputation-growth">
-        <div className="growth-header">
-          <h4>声誉增长趋势</h4>
-          <div className="time-range-selector">
-            <button 
-              className={`range-btn ${timeRange === 'week' ? 'active' : ''}`}
-              onClick={() => setTimeRange('week')}
-            >
-              周
-            </button>
-            <button 
-              className={`range-btn ${timeRange === 'month' ? 'active' : ''}`}
-              onClick={() => setTimeRange('month')}
-            >
-              月
-            </button>
-            <button 
-              className={`range-btn ${timeRange === 'year' ? 'active' : ''}`}
-              onClick={() => setTimeRange('year')}
-            >
-              年
-            </button>
-          </div>
-        </div>
-
-        <div className="growth-chart">
-          <div className="chart-y-axis">
-            <div className="y-label">{maxPoints}</div>
-            <div className="y-label">{Math.floor(maxPoints * 0.75)}</div>
-            <div className="y-label">{Math.floor(maxPoints * 0.5)}</div>
-            <div className="y-label">{Math.floor(maxPoints * 0.25)}</div>
-            <div className="y-label">0</div>
-          </div>
-          
-          <div className="chart-content">
-            {reputationGrowth.map((item, index) => {
-              const height = (item.points / maxPoints) * chartHeight;
-              const label = timeRange === 'year' 
-                ? item.date.split('-')[1] 
-                : item.date.split('-')[2];
-              
-              return (
-                <div key={index} className="chart-bar">
-                  <div 
-                    className="bar-fill"
-                    style={{ 
-                      height: `${height}px`,
-                      backgroundColor: `var(--reputation-color, #5E60CE)`
-                    }}
-                    title={`${item.date}: ${item.points}分`}
-                  >
-                    <div className="bar-tooltip">
-                      <div>日期: {item.date}</div>
-                      <div>总分: {item.points}</div>
-                      <div>
-                        {timeRange === 'year' ? '月增: ' : '日增: '}
-                        {timeRange === 'year' ? item.monthlyIncrease : item.dailyIncrease}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bar-label">{label}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="growth-summary">
-          <div className="summary-item">
-            <div className="summary-value">
-              {timeRange === 'year' 
-                ? reputationGrowth[reputationGrowth.length - 1].monthlyIncrease
-                : reputationGrowth[reputationGrowth.length - 1].dailyIncrease}
-            </div>
-            <div className="summary-label">
-              {timeRange === 'year' ? '本月增长' : '今日增长'}
-            </div>
-          </div>
-          
-          <div className="summary-item">
-            <div className="summary-value">
-              {reputationGrowth.reduce((sum, item) => 
-                sum + (timeRange === 'year' ? item.monthlyIncrease : item.dailyIncrease), 0
-              )}
-            </div>
-            <div className="summary-label">
-              {timeRange === 'year' ? '年度总增长' : timeRange === 'month' ? '月度总增长' : '周度总增长'}
-            </div>
-          </div>
-          
-          <div className="summary-item">
-            <div className="summary-value">
-              {(reputationGrowth[reputationGrowth.length - 1].points - reputationGrowth[0].points) / reputationGrowth[0].points * 100 > 0 
-                ? '+' 
-                : ''}
-              {((reputationGrowth[reputationGrowth.length - 1].points - reputationGrowth[0].points) / reputationGrowth[0].points * 100).toFixed(1)}%
-            </div>
-            <div className="summary-label">增长率</div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // 渲染奖励和特权
-  const renderRewards = () => {
-    if (!rewards.length) {
-      return (
-        <div className="empty-state">
-          <p>暂无奖励数据</p>
-        </div>
-      );
-    }
-
-    // 按类型分组
-    const badgeRewards = rewards.filter(reward => reward.type === 'badge');
-    const featureRewards = rewards.filter(reward => reward.type === 'feature');
-    const tokenRewards = rewards.filter(reward => reward.type === 'token');
-
-    return (
-      <div className="rewards-container">
-        <div className="rewards-summary">
-          <div className="summary-item">
-            <div className="summary-value">{unlockedRewards.length}</div>
-            <div className="summary-label">已解锁奖励</div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-value">{rewards.length - unlockedRewards.length}</div>
-            <div className="summary-label">待解锁奖励</div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-value">
-              {unlockedRewards.filter(r => r.type === 'token').reduce((sum, r) => {
-                const amount = parseInt(r.amount.split(' ')[0]);
-                return sum + amount;
-              }, 0)} CBT
-            </div>
-            <div className="summary-label">可获代币</div>
-          </div>
-        </div>
-
-        <div className="rewards-sections">
-          <div className="rewards-section">
-            <h4>徽章</h4>
-            <div className="rewards-grid">
-              {badgeRewards.map(reward => (
-                <div 
-                  key={reward.id} 
-                  className={`reward-item ${reward.isUnlocked ? 'unlocked' : 'locked'}`}
-                  onClick={() => {
-                    if (reward.isUnlocked) {
-                      setActiveReward(reward);
-                      setShowRewardModal(true);
-                    }
-                  }}
-                >
-                  <div className="reward-icon">{reward.icon}</div>
-                  <div className="reward-name">{reward.name}</div>
-                  <div className="reward-progress">
-                    <div 
-                      className="progress-bar" 
-                      style={{ width: `${reward.progress}%` }}
-                    ></div>
-                  </div>
-                  <div className="reward-status">
-                    {reward.isUnlocked ? (
-                      <span className="unlocked-status">已解锁</span>
-                    ) : (
-                      <span className="required-score">需要 {reward.requiredScore} 分</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rewards-section">
-            <h4>功能特权</h4>
-            <div className="rewards-grid">
-              {featureRewards.map(reward => (
-                <div 
-                  key={reward.id} 
-                  className={`reward-item ${reward.isUnlocked ? 'unlocked' : 'locked'}`}
-                  onClick={() => {
-                    if (reward.isUnlocked) {
-                      setActiveReward(reward);
-                      setShowRewardModal(true);
-                    }
-                  }}
-                >
-                  <div className="reward-icon">{reward.icon}</div>
-                  <div className="reward-name">{reward.name}</div>
-                  <div className="reward-description">{reward.description}</div>
-                  <div className="reward-progress">
-                    <div 
-                      className="progress-bar" 
-                      style={{ width: `${reward.progress}%` }}
-                    ></div>
-                  </div>
-                  <div className="reward-status">
-                    {reward.isUnlocked ? (
-                      <span className="unlocked-status">已解锁</span>
-                    ) : (
-                      <span className="required-score">需要 {reward.requiredScore} 分</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rewards-section">
-            <h4>代币奖励</h4>
-            <div className="rewards-grid">
-              {tokenRewards.map(reward => (
-                <div 
-                  key={reward.id} 
-                  className={`reward-item ${reward.isUnlocked ? 'unlocked' : 'locked'}`}
-                  onClick={() => {
-                    if (reward.isUnlocked) {
-                      setActiveReward(reward);
-                      setShowRewardModal(true);
-                    }
-                  }}
-                >
-                  <div className="reward-icon">{reward.icon}</div>
-                  <div className="reward-name">{reward.name}</div>
-                  <div className="reward-amount">{reward.amount}</div>
-                  <div className="reward-progress">
-                    <div 
-                      className="progress-bar" 
-                      style={{ width: `${reward.progress}%` }}
-                    ></div>
-                  </div>
-                  <div className="reward-status">
-                    {reward.isUnlocked ? (
-                      reward.isClaimed ? (
-                        <span className="claimed-status">已领取</span>
-                      ) : (
-                        <span className="unlocked-status">可领取</span>
-                      )
-                    ) : (
-                      <span className="required-score">需要 {reward.requiredScore} 分</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // 渲染奖励详情模态框
+  // 渲染奖励模态框
   const renderRewardModal = () => {
-    if (!showRewardModal || !activeReward) return null;
-
+    if (!activeReward) return null;
+    
     return (
-      <div className="reward-modal-overlay">
-        <div className="reward-modal">
+      <div className="modal-overlay">
+        <div className="modal-container reward-modal">
           <div className="modal-header">
-            <h3>奖励详情</h3>
+            <h3>领取奖励</h3>
             <button 
               className="close-button"
               onClick={() => setShowRewardModal(false)}
@@ -1003,60 +1647,263 @@ const CulturalReputationSystem = () => {
           </div>
           
           <div className="modal-content">
-            <div className="reward-detail-icon">{activeReward.icon}</div>
-            <h4 className="reward-detail-name">{activeReward.name}</h4>
-            <p className="reward-detail-description">{activeReward.description}</p>
-            
-            {activeReward.type === 'token' && (
-              <div className="reward-detail-amount">
-                <span className="amount-label">奖励金额:</span>
-                <span className="amount-value">{activeReward.amount}</span>
+            <div className="reward-details">
+              <div className="reward-icon large">{activeReward.icon}</div>
+              <div className="reward-name">{activeReward.name}</div>
+              <div className="reward-description">{activeReward.description}</div>
+              
+              {activeReward.type === 'token' && (
+                <div className="reward-amount">{activeReward.amount}</div>
+              )}
+              
+              <div className="reward-requirement">
+                需要声誉分数: {activeReward.requiredScore}
               </div>
-            )}
-            
-            <div className="reward-detail-requirement">
-              <span className="requirement-label">解锁要求:</span>
-              <span className="requirement-value">{activeReward.requiredScore} 声誉分</span>
+              
+              <div className="reward-status">
+                状态: <span className="status-unlocked">已解锁</span>
+              </div>
             </div>
             
-            <div className="reward-detail-status">
-              <span className="status-label">状态:</span>
-              <span className={`status-value ${activeReward.isUnlocked ? 'unlocked' : 'locked'}`}>
-                {activeReward.isUnlocked ? '已解锁' : '未解锁'}
-              </span>
-            </div>
-            
-            {activeReward.type === 'token' && activeReward.isUnlocked && !activeReward.isClaimed && (
-              <div className="reward-claim-section">
-                <p className="claim-note">
-                  领取此奖励将向您的钱包发送 {activeReward.amount} 代币。
-                  交易将记录在区块链上，需要支付少量gas费用。
-                </p>
-                
+            <div className="claim-section">
+              <p className="claim-info">
+                {activeReward.type === 'badge' && '领取此徽章将在您的个人资料中显示此成就。'}
+                {activeReward.type === 'feature' && '激活此特权将解锁相应的平台功能。'}
+                {activeReward.type === 'token' && '领取此奖励将向您的钱包发送相应数量的代币。'}
+                {activeReward.type === 'nft' && '铸造此NFT将创建一个独特的数字收藏品并发送到您的钱包。'}
+              </p>
+              
+              <div className="claim-actions">
+                <button 
+                  className="cancel-button"
+                  onClick={() => setShowRewardModal(false)}
+                >
+                  取消
+                </button>
                 <button 
                   className="claim-button"
                   onClick={() => claimReward(activeReward)}
                   disabled={isLoading}
                 >
-                  {isLoading ? '处理中...' : '领取奖励'}
+                  {isLoading ? '处理中...' : (
+                    activeReward.type === 'badge' ? '领取徽章' :
+                    activeReward.type === 'feature' ? '激活特权' :
+                    activeReward.type === 'token' ? '领取代币' :
+                    activeReward.type === 'nft' ? '铸造NFT' : '领取奖励'
+                  )}
                 </button>
               </div>
-            )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染背书模态框
+  const renderEndorseModal = () => {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-container endorse-modal">
+          <div className="modal-header">
+            <h3>为他人背书</h3>
+            <button 
+              className="close-button"
+              onClick={() => setShowEndorseModal(false)}
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className="modal-content">
+            {renderEndorseForm()}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染声誉详情模态框
+  const renderReputationDetailsModal = () => {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-container reputation-details-modal">
+          <div className="modal-header">
+            <h3>声誉详细数据</h3>
+            <button 
+              className="close-button"
+              onClick={() => setShowReputationDetails(false)}
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className="modal-content">
+            <div className="details-section">
+              <h4>声誉等级</h4>
+              <div className="levels-table">
+                <div className="table-header">
+                  <div className="header-cell">等级</div>
+                  <div className="header-cell">最低分数</div>
+                  <div className="header-cell">最高分数</div>
+                  <div className="header-cell">状态</div>
+                </div>
+                {reputationLevels.map(level => (
+                  <div 
+                    key={level.level} 
+                    className={`table-row ${level.level === reputationLevel ? 'current-level' : ''}`}
+                  >
+                    <div className="table-cell level-name">
+                      <span className="level-icon">{level.icon}</span>
+                      <span>{level.level}</span>
+                    </div>
+                    <div className="table-cell">{level.minScore}</div>
+                    <div className="table-cell">{level.maxScore === Infinity ? '无上限' : level.maxScore}</div>
+                    <div className="table-cell">
+                      {reputationScore >= level.minScore && reputationScore <= level.maxScore ? (
+                        <span className="current-status">当前</span>
+                      ) : reputationScore > level.maxScore ? (
+                        <span className="achieved-status">已达成</span>
+                      ) : (
+                        <span className="future-status">未达成</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
             
-            {activeReward.type === 'feature' && activeReward.isUnlocked && (
-              <div className="feature-activation-section">
-                <p className="activation-note">
-                  此特权已解锁，您可以立即使用相关功能。
-                </p>
-                
+            <div className="details-section">
+              <h4>声誉来源分布</h4>
+              <div className="sources-chart">
+                <div className="source-item">
+                  <div className="source-label">他人背书</div>
+                  <div className="source-bar-wrapper">
+                    <div className="source-bar" style={{ width: '65%' }}></div>
+                    <span className="source-value">65%</span>
+                  </div>
+                </div>
+                <div className="source-item">
+                  <div className="source-label">内容创作</div>
+                  <div className="source-bar-wrapper">
+                    <div className="source-bar" style={{ width: '20%' }}></div>
+                    <span className="source-value">20%</span>
+                  </div>
+                </div>
+                <div className="source-item">
+                  <div className="source-label">社区活动</div>
+                  <div className="source-bar-wrapper">
+                    <div className="source-bar" style={{ width: '10%' }}></div>
+                    <span className="source-value">10%</span>
+                  </div>
+                </div>
+                <div className="source-item">
+                  <div className="source-label">治理参与</div>
+                  <div className="source-bar-wrapper">
+                    <div className="source-bar" style={{ width: '5%' }}></div>
+                    <span className="source-value">5%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="details-section">
+              <h4>声誉统计</h4>
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <div className="stat-label">总声誉分</div>
+                  <div className="stat-value">{reputationScore}</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-label">贡献次数</div>
+                  <div className="stat-value">{contributionStats.totalContributions}</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-label">贡献类别</div>
+                  <div className="stat-value">{contributionStats.categoriesCount}</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-label">平均每次分数</div>
+                  <div className="stat-value">{contributionStats.avgPointsPerContribution}</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-label">最高单次分数</div>
+                  <div className="stat-value">50</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-label">排行榜排名</div>
+                  <div className="stat-value">#9</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-label">已解锁奖励</div>
+                  <div className="stat-value">{unlockedRewards.length}</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-label">已达成里程碑</div>
+                  <div className="stat-value">{reputationMilestones.filter(m => m.achieved).length}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染分享模态框
+  const renderShareModal = () => {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-container share-modal">
+          <div className="modal-header">
+            <h3>分享声誉档案</h3>
+            <button 
+              className="close-button"
+              onClick={() => setShowShareModal(false)}
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className="modal-content">
+            <div className="share-options">
+              <button 
+                className="share-option"
+                onClick={() => shareReputationProfile('qrcode')}
+              >
+                <div className="option-icon">📱</div>
+                <div className="option-label">二维码</div>
+              </button>
+              
+              <button 
+                className="share-option"
+                onClick={() => shareReputationProfile('email')}
+              >
+                <div className="option-icon">📧</div>
+                <div className="option-label">电子邮件</div>
+              </button>
+              
+              <button 
+                className="share-option"
+                onClick={() => shareReputationProfile('copy')}
+              >
+                <div className="option-icon">📋</div>
+                <div className="option-label">复制链接</div>
+              </button>
+            </div>
+            
+            {showQRCode && (
+              <div className="qrcode-container">
+                <div className="qrcode-placeholder">
+                  <div className="qrcode-message">
+                    二维码将在这里显示
+                  </div>
+                </div>
                 <button 
-                  className="activation-button"
-                  onClick={() => {
-                    setShowRewardModal(false);
-                    // 这里可以添加导航到相关功能的逻辑
-                  }}
+                  className="close-qrcode"
+                  onClick={() => setShowQRCode(false)}
                 >
-                  前往使用
+                  关闭
                 </button>
               </div>
             )}
@@ -1066,71 +1913,16 @@ const CulturalReputationSystem = () => {
     );
   };
 
-  // 渲染声誉系统说明
-  const renderReputationInfo = () => {
+  // 渲染通知
+  const renderNotification = () => {
+    if (!showNotification) return null;
+    
     return (
-      <div className="reputation-info">
-        <h3>文化声誉系统说明</h3>
-        
-        <div className="info-section">
-          <h4>什么是文化声誉?</h4>
-          <p>
-            文化声誉是CultureBridge平台上衡量用户文化贡献和参与度的指标。
-            它基于区块链技术，确保透明、不可篡改，并由社区共同维护。
-          </p>
+      <div className={`notification ${notification.type}`}>
+        <div className="notification-icon">
+          {notification.type === 'success' ? '✅' : notification.type === 'error' ? '❌' : 'ℹ️'}
         </div>
-        
-        <div className="info-section">
-          <h4>如何获得声誉?</h4>
-          <ul>
-            <li>分享有价值的文化知识和见解</li>
-            <li>创作和分享原创文化作品</li>
-            <li>参与文化保护和传承活动</li>
-            <li>提供文化教育资源</li>
-            <li>促进跨文化交流和理解</li>
-            <li>获得其他用户的背书认可</li>
-          </ul>
-        </div>
-        
-        <div className="info-section">
-          <h4>声誉等级</h4>
-          <div className="level-list">
-            {reputationLevels.map((level, index) => (
-              <div key={index} className="level-item" style={{ borderLeftColor: level.color }}>
-                <span className="level-name">{level.level}</span>
-                <span className="level-range">
-                  {level.minScore} - {level.maxScore === Infinity ? '∞' : level.maxScore}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <div className="info-section">
-          <h4>声誉的作用</h4>
-          <ul>
-            <li>提高社区中的可信度和影响力</li>
-            <li>解锁特定的平台功能和权限</li>
-            <li>参与平台治理和决策</li>
-            <li>获得特定活动和资源的优先访问权</li>
-            <li>在文化市场中建立信任</li>
-            <li>获得代币奖励和其他激励</li>
-          </ul>
-        </div>
-        
-        <div className="info-section">
-          <h4>声誉与区块链</h4>
-          <p>
-            CultureBridge的声誉系统基于区块链技术，具有以下特点：
-          </p>
-          <ul>
-            <li><strong>透明性：</strong>所有声誉变动都记录在区块链上，任何人都可以查看</li>
-            <li><strong>不可篡改：</strong>一旦记录，声誉历史无法被修改</li>
-            <li><strong>去中心化：</strong>声誉系统由社区共同维护，而非单一中心控制</li>
-            <li><strong>可验证性：</strong>所有声誉贡献都可以通过区块链进行验证</li>
-            <li><strong>跨平台互操作：</strong>声誉可以在不同的兼容平台间共享和使用</li>
-          </ul>
-        </div>
+        <div className="notification-message">{notification.message}</div>
       </div>
     );
   };
@@ -1138,204 +1930,74 @@ const CulturalReputationSystem = () => {
   // 主渲染函数
   return (
     <div className="cultural-reputation-system">
-      <div className="reputation-header">
-        <h2>文化声誉系统</h2>
-        <p className="subtitle">基于区块链的文化贡献认可与信任建立机制</p>
-      </div>
-      
       {!isConnected ? (
         <div className="connect-wallet-prompt">
-          <p>请连接钱包以访问您的文化声誉信息</p>
-          <button className="connect-wallet-btn" onClick={connectWallet}>
+          <h3>连接钱包以查看您的文化声誉</h3>
+          <p>您需要连接以太坊钱包来访问文化声誉系统的功能。</p>
+          <button 
+            className="connect-button"
+            onClick={connectWallet}
+          >
             连接钱包
           </button>
         </div>
       ) : (
         <>
-          <div className="reputation-tabs">
-            <button
-              className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
+          <div className="tabs">
+            <button 
+              className={`tab-button ${activeTab === 'profile' ? 'active' : ''}`}
               onClick={() => setActiveTab('profile')}
             >
-              我的声誉
+              声誉概览
             </button>
-            <button
-              className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+            <button 
+              className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
               onClick={() => setActiveTab('history')}
             >
               声誉历史
             </button>
-            <button
-              className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
-              onClick={() => setActiveTab('stats')}
-            >
-              贡献统计
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'rewards' ? 'active' : ''}`}
-              onClick={() => setActiveTab('rewards')}
-            >
-              奖励特权
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'endorse' ? 'active' : ''}`}
-              onClick={() => setActiveTab('endorse')}
-            >
-              背书他人
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'leaderboard' ? 'active' : ''}`}
+            <button 
+              className={`tab-button ${activeTab === 'leaderboard' ? 'active' : ''}`}
               onClick={() => setActiveTab('leaderboard')}
             >
-              声誉排行
+              声誉排行榜
             </button>
-            <button
-              className={`tab-btn ${activeTab === 'info' ? 'active' : ''}`}
-              onClick={() => setActiveTab('info')}
+            <button 
+              className={`tab-button ${activeTab === 'analysis' ? 'active' : ''}`}
+              onClick={() => setActiveTab('analysis')}
             >
-              系统说明
+              贡献分析
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'rewards' ? 'active' : ''}`}
+              onClick={() => setActiveTab('rewards')}
+            >
+              声誉奖励
             </button>
           </div>
           
-          <div className="reputation-content">
-            {isLoading && !activeTab === 'endorse' ? (
-              <div className="loading-spinner">
-                <div className="spinner"></div>
-                <p>加载中...</p>
+          <div className="tab-content">
+            {isLoading ? (
+              <div className="loading-state">
+                <div className="loading-spinner"></div>
+                <p>加载中，请稍候...</p>
               </div>
             ) : (
               <>
-                {activeTab === 'profile' && (
-                  <div className="reputation-profile">
-                    <div className="reputation-summary">
-                      <div className="reputation-score">
-                        <span className="score-value">{reputationScore}</span>
-                        <span className="score-label">声誉值</span>
-                      </div>
-                      <div className="reputation-level">
-                        <span className="level-label">等级:</span>
-                        <span className="level-value" style={{ color: reputationLevels.find(l => l.level === reputationLevel)?.color }}>
-                          {reputationLevel}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {renderReputationProgress()}
-                    
-                    <div className="recent-activity">
-                      <h3>最近活动</h3>
-                      {reputationHistory.slice(0, 3).map(item => (
-                        <div key={item.id} className="activity-item">
-                          <div className="activity-icon">
-                            {getCategoryIcon(item.category)}
-                          </div>
-                          <div className="activity-content">
-                            <div className="activity-description">{item.description}</div>
-                            <div className="activity-meta">
-                              <span className="activity-date">{item.date}</span>
-                              <span className="activity-points">+{item.points} 声誉值</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      <button 
-                        className="view-all-button"
-                        onClick={() => setActiveTab('history')}
-                      >
-                        查看全部历史
-                      </button>
-                    </div>
-                    
-                    <div className="unlocked-rewards-preview">
-                      <h3>已解锁奖励</h3>
-                      <div className="rewards-preview">
-                        {unlockedRewards.slice(0, 4).map(reward => (
-                          <div 
-                            key={reward.id} 
-                            className="reward-preview-item"
-                            onClick={() => {
-                              setActiveReward(reward);
-                              setShowRewardModal(true);
-                            }}
-                          >
-                            <div className="reward-preview-icon">{reward.icon}</div>
-                            <div className="reward-preview-name">{reward.name}</div>
-                          </div>
-                        ))}
-                        {unlockedRewards.length > 4 && (
-                          <div 
-                            className="more-rewards"
-                            onClick={() => setActiveTab('rewards')}
-                          >
-                            +{unlockedRewards.length - 4} 更多
-                          </div>
-                        )}
-                        {unlockedRewards.length === 0 && (
-                          <div className="no-rewards">
-                            暂无已解锁奖励
-                          </div>
-                        )}
-                      </div>
-                      <button 
-                        className="view-all-button"
-                        onClick={() => setActiveTab('rewards')}
-                      >
-                        查看全部奖励
-                      </button>
-                    </div>
-                  </div>
-                )}
-                
-                {activeTab === 'history' && (
-                  <div className="history-tab">
-                    <h3>声誉历史记录</h3>
-                    {renderReputationHistory()}
-                  </div>
-                )}
-                
-                {activeTab === 'stats' && (
-                  <div className="stats-tab">
-                    <h3>贡献统计</h3>
-                    {renderContributionStats()}
-                    {renderReputationGrowth()}
-                  </div>
-                )}
-                
-                {activeTab === 'rewards' && (
-                  <div className="rewards-tab">
-                    <h3>奖励与特权</h3>
-                    {renderRewards()}
-                  </div>
-                )}
-                
-                {activeTab === 'endorse' && (
-                  <div className="endorse-tab">
-                    <h3>为他人背书</h3>
-                    <p className="endorse-description">
-                      通过背书，您可以认可其他用户的文化贡献，帮助建立更可信的社区。
-                      每次背书将消耗您的背书点数，并为被背书用户增加声誉值。
-                    </p>
-                    {renderEndorseForm()}
-                  </div>
-                )}
-                
-                {activeTab === 'leaderboard' && (
-                  <div className="leaderboard-tab">
-                    <h3>声誉排行榜</h3>
-                    {renderLeaderboard()}
-                  </div>
-                )}
-                
-                {activeTab === 'info' && (
-                  <div className="info-tab">
-                    {renderReputationInfo()}
-                  </div>
-                )}
+                {activeTab === 'profile' && renderReputationOverview()}
+                {activeTab === 'history' && renderReputationHistory()}
+                {activeTab === 'leaderboard' && renderLeaderboard()}
+                {activeTab === 'analysis' && renderContributionAnalysis()}
+                {activeTab === 'rewards' && renderRewards()}
               </>
             )}
           </div>
           
-          {renderRewardModal()}
+          {showEndorseModal && renderEndorseModal()}
+          {showRewardModal && renderRewardModal()}
+          {showReputationDetails && renderReputationDetailsModal()}
+          {showShareModal && renderShareModal()}
+          {renderNotification()}
         </>
       )}
     </div>

@@ -8,3 +8,4 @@ export { default as GovernanceProposal } from './GovernanceProposal';
 export { default as CrossChainBridge } from './CrossChainBridge';
 export { default as DIDManager } from './DIDManager';
 export { default as CulturalReputationSystem } from './CulturalReputationSystem';
+export { default as CopyrightProtection } from './CopyrightProtection';
