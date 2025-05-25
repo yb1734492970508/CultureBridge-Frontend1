@@ -39,6 +39,9 @@ const LANGUAGE_OPTIONS = [
 // 每页显示的服务数量
 const SERVICES_PER_PAGE = 6;
 
+// 数据刷新间隔（毫秒）
+const DATA_REFRESH_INTERVAL = 30000; // 30秒
+
 const AIServiceRegistry = () => {
   // 状态变量
   const [provider, setProvider] = useState(null);
@@ -92,6 +95,19 @@ const AIServiceRegistry = () => {
     capabilities: '',
     apiEndpoint: '',
   });
+  
+  // 批量操作状态
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [batchAction, setBatchAction] = useState('');
+  const [batchScore, setBatchScore] = useState(50);
+  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+  
+  // 数据刷新状态
+  const [lastRefreshTime, setLastRefreshTime] = useState(Date.now());
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const [refreshingServices, setRefreshingServices] = useState({});
+  const refreshTimerRef = useRef(null);
   
   // 无限滚动引用
   const observerRef = useRef(null);
@@ -147,6 +163,15 @@ const AIServiceRegistry = () => {
     if (notificationConfig.soundEnabled) {
       playNotificationSound(notification.type);
     }
+    
+    // 多端同步通知（通过自定义事件）
+    const syncEvent = new CustomEvent('notification-sync', {
+      detail: {
+        notification,
+        source: 'AIServiceRegistry'
+      }
+    });
+    window.dispatchEvent(syncEvent);
   }, [notificationConfig.groupSimilar, notificationConfig.soundEnabled]);
   
   // 播放通知声音
@@ -187,7 +212,147 @@ const AIServiceRegistry = () => {
       ...prev,
       [txHash]: status
     }));
+    
+    // 如果交易确认或失败，刷新服务数据
+    if (status === 'confirmed' || status === 'failed') {
+      refreshServiceData();
+    }
   }, [addNotification]);
+  
+  // 刷新服务数据
+  const refreshServiceData = useCallback(async (serviceIds = null) => {
+    if (!contracts.aiRegistry || !connected) return;
+    
+    try {
+      // 如果指定了服务ID，只刷新这些服务
+      if (serviceIds && serviceIds.length > 0) {
+        // 标记这些服务正在刷新
+        const refreshing = {};
+        serviceIds.forEach(id => {
+          refreshing[id] = true;
+        });
+        setRefreshingServices(refreshing);
+        
+        // 获取最新数据
+        const updatedServices = await Promise.all(
+          serviceIds.map(async (id) => {
+            const service = await contracts.aiRegistry.services(id);
+            
+            // 解析元数据
+            let metadata = {};
+            try {
+              metadata = JSON.parse(atob(service.metadataURI.replace('data:application/json;base64,', '')));
+            } catch (error) {
+              console.error(`Error parsing metadata for service ${id}:`, error);
+              metadata = {
+                name: `Service #${id}`,
+                description: 'No description available',
+                capabilities: [],
+                apiEndpoint: '',
+              };
+            }
+            
+            return {
+              id: id,
+              provider: service.provider,
+              serviceType: service.serviceType,
+              supportedLanguages: service.supportedLanguages,
+              performanceScore: service.performanceScore.toString(),
+              pricePerToken: ethers.utils.formatEther(service.pricePerToken),
+              isActive: service.isActive,
+              metadataURI: service.metadataURI,
+              name: metadata.name || `Service #${id}`,
+              description: metadata.description || '',
+              capabilities: metadata.capabilities || [],
+              apiEndpoint: metadata.apiEndpoint || '',
+              lastUpdated: Date.now(),
+            };
+          })
+        );
+        
+        // 更新服务列表
+        setServices(prev => {
+          const updated = [...prev];
+          updatedServices.forEach(service => {
+            const index = updated.findIndex(s => s.id === service.id);
+            if (index >= 0) {
+              // 检查是否有变化
+              const oldService = updated[index];
+              const hasChanged = 
+                oldService.performanceScore !== service.performanceScore ||
+                oldService.pricePerToken !== service.pricePerToken ||
+                oldService.isActive !== service.isActive;
+              
+              // 如果有变化，添加动画效果
+              if (hasChanged) {
+                service.animate = true;
+                
+                // 添加变化通知
+                if (oldService.performanceScore !== service.performanceScore) {
+                  addNotification({
+                    type: 'info',
+                    title: '性能评分已更新',
+                    message: `服务 "${service.name}" 的性能评分从 ${oldService.performanceScore} 更新为 ${service.performanceScore}`,
+                    duration: 5000
+                  });
+                }
+                
+                if (oldService.pricePerToken !== service.pricePerToken) {
+                  addNotification({
+                    type: 'info',
+                    title: '价格已更新',
+                    message: `服务 "${service.name}" 的价格从 ${oldService.pricePerToken} CULT 更新为 ${service.pricePerToken} CULT`,
+                    duration: 5000
+                  });
+                }
+                
+                if (oldService.isActive !== service.isActive) {
+                  addNotification({
+                    type: service.isActive ? 'success' : 'warning',
+                    title: service.isActive ? '服务已激活' : '服务已停用',
+                    message: `服务 "${service.name}" 已${service.isActive ? '激活' : '停用'}`,
+                    duration: 5000
+                  });
+                }
+              }
+              
+              updated[index] = service;
+            }
+          });
+          return updated;
+        });
+        
+        // 同样更新allServices
+        setAllServices(prev => {
+          const updated = [...prev];
+          updatedServices.forEach(service => {
+            const index = updated.findIndex(s => s.id === service.id);
+            if (index >= 0) {
+              updated[index] = service;
+            }
+          });
+          return updated;
+        });
+        
+        // 清除刷新状态
+        setRefreshingServices({});
+      } else {
+        // 刷新所有服务
+        setLastRefreshTime(Date.now());
+        loadServices(currentPage, true);
+      }
+    } catch (error) {
+      console.error("Error refreshing service data:", error);
+      setRefreshingServices({});
+      
+      addNotification({
+        type: 'error',
+        title: '刷新失败',
+        message: '无法刷新服务数据，请检查网络连接',
+        duration: 5000
+      });
+    }
+  }, [contracts.aiRegistry, connected, currentPage, loadServices, addNotification]);
   
   // 加载服务 - 提前声明以解决依赖顺序问题
   const loadServices = useCallback(async (page = 1, loadAll = false) => {
@@ -251,6 +416,7 @@ const AIServiceRegistry = () => {
           description: metadata.description || '',
           capabilities: metadata.capabilities || [],
           apiEndpoint: metadata.apiEndpoint || '',
+          lastUpdated: Date.now(),
         });
       }
       
@@ -298,6 +464,7 @@ const AIServiceRegistry = () => {
             description: metadata.description || '',
             capabilities: metadata.capabilities || [],
             apiEndpoint: metadata.apiEndpoint || '',
+            lastUpdated: Date.now(),
           });
         }
         
@@ -309,6 +476,9 @@ const AIServiceRegistry = () => {
       } else {
         setIsLoadingMore(false);
       }
+      
+      // 更新最后刷新时间
+      setLastRefreshTime(Date.now());
     } catch (error) {
       console.error("Error loading services:", error);
       if (page === 1) {
@@ -325,7 +495,7 @@ const AIServiceRegistry = () => {
         duration: 5000
       });
     }
-  }, [contracts.aiRegistry, account, addNotification]);
+  }, [contracts.aiRegistry, account, addNotification, applyFilters]);
   
   // 应用筛选条件
   const applyFilters = useCallback((services = allServices) => {
@@ -502,7 +672,7 @@ const AIServiceRegistry = () => {
       });
       
       // 重新加载服务列表
-      loadServices(1, true);
+      refreshServiceData();
     };
     
     // 处理服务更新事件
@@ -514,8 +684,8 @@ const AIServiceRegistry = () => {
         duration: 5000
       });
       
-      // 重新加载服务列表
-      loadServices(1, true);
+      // 刷新特定服务
+      refreshServiceData([serviceId]);
     };
     
     // 处理服务停用事件
@@ -527,8 +697,8 @@ const AIServiceRegistry = () => {
         duration: 5000
       });
       
-      // 重新加载服务列表
-      loadServices(1, true);
+      // 刷新特定服务
+      refreshServiceData([serviceId]);
     };
     
     // 处理服务激活事件
@@ -540,8 +710,8 @@ const AIServiceRegistry = () => {
         duration: 5000
       });
       
-      // 重新加载服务列表
-      loadServices(1, true);
+      // 刷新特定服务
+      refreshServiceData([serviceId]);
     };
     
     // 处理性能评分更新事件
@@ -553,8 +723,8 @@ const AIServiceRegistry = () => {
         duration: 5000
       });
       
-      // 重新加载服务列表
-      loadServices(1, true);
+      // 刷新特定服务
+      refreshServiceData([serviceId]);
     };
     
     // 添加事件监听器
@@ -564,6 +734,16 @@ const AIServiceRegistry = () => {
     contracts.aiRegistry.on(serviceActivatedFilter, handleServiceActivated);
     contracts.aiRegistry.on(performanceScoreUpdatedFilter, handlePerformanceScoreUpdated);
     
+    // 监听多端通知同步事件
+    const handleNotificationSync = (event) => {
+      // 只处理来自其他组件的通知
+      if (event.detail.source !== 'AIServiceRegistry') {
+        addNotification(event.detail.notification);
+      }
+    };
+    
+    window.addEventListener('notification-sync', handleNotificationSync);
+    
     // 清理函数
     return () => {
       contracts.aiRegistry.off(serviceRegisteredFilter, handleServiceRegistered);
@@ -571,10 +751,36 @@ const AIServiceRegistry = () => {
       contracts.aiRegistry.off(serviceDeactivatedFilter, handleServiceDeactivated);
       contracts.aiRegistry.off(serviceActivatedFilter, handleServiceActivated);
       contracts.aiRegistry.off(performanceScoreUpdatedFilter, handlePerformanceScoreUpdated);
+      window.removeEventListener('notification-sync', handleNotificationSync);
     };
-  }, [contracts.aiRegistry, addNotification, loadServices]);
+  }, [contracts.aiRegistry, addNotification, refreshServiceData]);
   
-  // 设置无限滚动观察器
+  // 设置自动刷新
+  useEffect(() => {
+    if (!connected || !autoRefreshEnabled) {
+      // 清除定时器
+      if (refreshTimerRef.current) {
+        clearInterval(refreshTimerRef.current);
+        refreshTimerRef.current = null;
+      }
+      return;
+    }
+    
+    // 设置定时刷新
+    refreshTimerRef.current = setInterval(() => {
+      refreshServiceData();
+    }, DATA_REFRESH_INTERVAL);
+    
+    // 清理函数
+    return () => {
+      if (refreshTimerRef.current) {
+        clearInterval(refreshTimerRef.current);
+        refreshTimerRef.current = null;
+      }
+    };
+  }, [connected, autoRefreshEnabled, refreshServiceData]);
+  
+  // 设置无限滚动
   useEffect(() => {
     if (viewMode !== 'infinite') return;
     
@@ -589,240 +795,140 @@ const AIServiceRegistry = () => {
     
     observerRef.current = observer;
     
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [viewMode, isLoadingMore, currentPage, totalPages]);
-  
-  // 观察最后一个服务元素
-  useEffect(() => {
-    if (viewMode !== 'infinite' || !lastServiceElementRef.current || !observerRef.current) return;
-    
-    const currentObserver = observerRef.current;
     const currentElement = lastServiceElementRef.current;
-    
-    currentObserver.observe(currentElement);
+    if (currentElement) {
+      observer.observe(currentElement);
+    }
     
     return () => {
       if (currentElement) {
-        currentObserver.unobserve(currentElement);
+        observer.unobserve(currentElement);
       }
     };
-  }, [services, viewMode]);
+  }, [viewMode, isLoadingMore, currentPage, totalPages, services]);
   
-  // 页面变化时加载服务
+  // 加载服务
   useEffect(() => {
-    if (connected && currentPage > 0) {
-      if (viewMode === 'paginated') {
-        // 分页模式下，每次加载当前页的服务
-        loadServices(currentPage);
-      } else if (viewMode === 'infinite' && currentPage > 1) {
-        // 无限滚动模式下，加载下一页服务
-        loadServices(currentPage);
-      }
+    if (connected && contracts.aiRegistry) {
+      loadServices(currentPage);
     }
-  }, [connected, currentPage, viewMode, loadServices]);
-  
-  // 初始加载所有服务（用于筛选）
-  useEffect(() => {
-    if (connected) {
-      loadServices(1, true);
-    }
-  }, [connected, loadServices]);
+  }, [connected, contracts.aiRegistry, currentPage, loadServices]);
   
   // 搜索服务
-  const searchServices = useCallback(async () => {
-    if (!contracts.aiRegistry) return;
-    
-    try {
-      setIsLoading(true);
-      
-      // 应用筛选条件
-      applyFilters();
-      
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error searching services:", error);
-      setIsLoading(false);
-      
-      // 添加搜索失败通知
-      addNotification({
-        type: 'error',
-        title: '搜索失败',
-        message: '无法完成搜索，请检查搜索参数',
-        duration: 5000
+  const searchServices = useCallback(() => {
+    applyFilters();
+  }, [applyFilters]);
+  
+  // 选择服务
+  const selectService = (service) => {
+    if (isBatchMode) {
+      // 批量模式下，切换选择状态
+      setSelectedServices(prev => {
+        const isSelected = prev.some(s => s.id === service.id);
+        if (isSelected) {
+          return prev.filter(s => s.id !== service.id);
+        } else {
+          return [...prev, service];
+        }
       });
+    } else {
+      // 普通模式下，设置选中服务
+      setSelectedService(service);
     }
-  }, [contracts.aiRegistry, applyFilters, addNotification]);
+  };
   
   // 注册服务
-  const registerService = useCallback(async () => {
-    if (!contracts.aiRegistry) return;
+  const registerService = async () => {
+    if (!connected) {
+      addNotification({
+        type: 'error',
+        title: '未连接钱包',
+        message: '请先连接钱包',
+        duration: 5000
+      });
+      return;
+    }
     
     try {
-      setIsLoading(true);
+      // 验证表单
+      if (!registrationForm.name || !registrationForm.description || !registrationForm.serviceType || 
+          registrationForm.languages.length === 0 || !registrationForm.pricePerToken) {
+        addNotification({
+          type: 'error',
+          title: '表单不完整',
+          message: '请填写所有必填字段',
+          duration: 5000
+        });
+        return;
+      }
       
       // 准备元数据
       const metadata = {
         name: registrationForm.name,
         description: registrationForm.description,
         capabilities: registrationForm.capabilities.split(',').map(cap => cap.trim()),
-        apiEndpoint: registrationForm.apiEndpoint,
+        apiEndpoint: registrationForm.apiEndpoint
       };
       
-      // 编码元数据为Base64
-      const metadataBase64 = `data:application/json;base64,${btoa(JSON.stringify(metadata))}`;
+      // 将元数据转换为Base64
+      const metadataURI = `data:application/json;base64,${btoa(JSON.stringify(metadata))}`;
       
-      // 注册服务
-      const priceWei = ethers.utils.parseEther(registrationForm.pricePerToken);
+      // 准备交易参数
+      const serviceType = registrationForm.serviceType;
+      const languages = registrationForm.languages;
+      const pricePerToken = ethers.utils.parseEther(registrationForm.pricePerToken);
       
-      // 添加交易发送通知
-      addNotification({
-        type: 'info',
-        title: '交易发送中',
-        message: '正在发送服务注册交易，请等待确认',
-        duration: 5000
-      });
-      
-      const tx = await contracts.aiRegistry.registerService(
-        registrationForm.serviceType,
-        registrationForm.languages,
-        priceWei,
-        metadataBase64
-      );
-      
-      // 添加交易待确认通知
-      addNotification({
-        type: 'info',
-        title: '交易已提交',
-        message: '服务注册交易已提交，等待区块确认',
-        txHash: tx.hash,
-        status: 'pending',
-        duration: 10000
-      });
-      
-      // 更新待处理交易
-      setPendingTransactions(prev => ({
-        ...prev,
-        [tx.hash]: 'pending'
-      }));
-      
-      // 等待交易确认
-      const receipt = await tx.wait();
-      
-      // 更新交易状态
-      updateTransactionStatus(
-        tx.hash, 
-        'confirmed', 
-        `服务 "${registrationForm.name}" 已成功注册！`
-      );
-      
-      // 重新加载服务
-      await loadServices(1, true);
-      
-      // 重置表单
-      setRegistrationForm({
-        serviceType: 'translation',
-        languages: ['zh-CN', 'en-US'],
-        pricePerToken: '10',
-        metadataURI: '',
-        name: '',
-        description: '',
-        capabilities: '',
-        apiEndpoint: '',
-      });
-      
-      setIsRegistering(false);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error registering service:", error);
-      setIsLoading(false);
-      
-      // 添加注册失败通知
-      addNotification({
-        type: 'error',
-        title: '注册失败',
-        message: `服务注册失败: ${error.message}`,
-        duration: 7000
-      });
-    }
-  }, [contracts.aiRegistry, registrationForm, loadServices, addNotification, updateTransactionStatus]);
-  
-  // 更新服务
-  const updateService = useCallback(async (serviceId) => {
-    if (!contracts.aiRegistry) return;
-    
-    try {
-      setIsLoading(true);
-      
-      // 获取当前服务
-      const service = myServices.find(s => s.id.toString() === serviceId.toString());
-      if (!service) {
-        throw new Error("Service not found");
+      // 发送交易
+      let tx;
+      if (registrationForm.metadataURI) {
+        // 更新服务
+        const serviceId = services.find(s => s.metadataURI === registrationForm.metadataURI)?.id;
+        if (serviceId === undefined) {
+          throw new Error('无法找到要更新的服务');
+        }
+        
+        tx = await contracts.aiRegistry.updateService(
+          serviceId,
+          serviceType,
+          languages,
+          pricePerToken,
+          metadataURI
+        );
+      } else {
+        // 注册新服务
+        tx = await contracts.aiRegistry.registerService(
+          serviceType,
+          languages,
+          pricePerToken,
+          metadataURI
+        );
       }
       
-      // 准备元数据
-      const metadata = {
-        name: registrationForm.name || service.name,
-        description: registrationForm.description || service.description,
-        capabilities: (registrationForm.capabilities ? 
-          registrationForm.capabilities.split(',').map(cap => cap.trim()) : 
-          service.capabilities),
-        apiEndpoint: registrationForm.apiEndpoint || service.apiEndpoint,
-      };
-      
-      // 编码元数据为Base64
-      const metadataBase64 = `data:application/json;base64,${btoa(JSON.stringify(metadata))}`;
-      
-      // 更新服务
-      const priceWei = ethers.utils.parseEther(registrationForm.pricePerToken || service.pricePerToken);
-      
-      // 添加交易发送通知
-      addNotification({
-        type: 'info',
-        title: '交易发送中',
-        message: '正在发送服务更新交易，请等待确认',
-        duration: 5000
-      });
-      
-      const tx = await contracts.aiRegistry.updateService(
-        serviceId,
-        registrationForm.serviceType || service.serviceType,
-        registrationForm.languages || service.supportedLanguages,
-        priceWei,
-        metadataBase64
-      );
-      
-      // 添加交易待确认通知
-      addNotification({
-        type: 'info',
-        title: '交易已提交',
-        message: '服务更新交易已提交，等待区块确认',
-        txHash: tx.hash,
-        status: 'pending',
-        duration: 10000
-      });
-      
-      // 更新待处理交易
+      // 添加待处理交易
       setPendingTransactions(prev => ({
         ...prev,
         [tx.hash]: 'pending'
       }));
+      
+      // 添加交易通知
+      addNotification({
+        type: 'info',
+        title: registrationForm.metadataURI ? '服务更新中' : '服务注册中',
+        message: `交易已提交，等待确认。交易哈希: ${tx.hash}`,
+        txHash: tx.hash,
+        status: 'pending',
+        duration: 10000
+      });
       
       // 等待交易确认
       const receipt = await tx.wait();
       
       // 更新交易状态
       updateTransactionStatus(
-        tx.hash, 
-        'confirmed', 
-        `服务 "${metadata.name}" 已成功更新！`
+        tx.hash,
+        'confirmed',
+        registrationForm.metadataURI ? '服务已成功更新' : '服务已成功注册'
       );
-      
-      // 重新加载服务
-      await loadServices(1, true);
       
       // 重置表单
       setRegistrationForm({
@@ -836,160 +942,493 @@ const AIServiceRegistry = () => {
         apiEndpoint: '',
       });
       
+      // 关闭注册表单
       setIsRegistering(false);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error updating service:", error);
-      setIsLoading(false);
       
-      // 添加更新失败通知
+      // 重新加载服务列表
+      loadServices(1, true);
+    } catch (error) {
+      console.error("Error registering service:", error);
+      
+      // 添加错误通知
       addNotification({
         type: 'error',
-        title: '更新失败',
-        message: `服务更新失败: ${error.message}`,
-        duration: 7000
+        title: registrationForm.metadataURI ? '服务更新失败' : '服务注册失败',
+        message: `错误: ${error.message}`,
+        duration: 5000
       });
     }
-  }, [contracts.aiRegistry, registrationForm, myServices, loadServices, addNotification, updateTransactionStatus]);
+  };
   
   // 停用服务
-  const deactivateService = useCallback(async (serviceId) => {
-    if (!contracts.aiRegistry) return;
-    
-    try {
-      setIsLoading(true);
-      
-      // 添加交易发送通知
+  const deactivateService = async (serviceId) => {
+    if (!connected) {
       addNotification({
-        type: 'info',
-        title: '交易发送中',
-        message: '正在发送服务停用交易，请等待确认',
+        type: 'error',
+        title: '未连接钱包',
+        message: '请先连接钱包',
         duration: 5000
       });
-      
+      return;
+    }
+    
+    try {
+      // 发送交易
       const tx = await contracts.aiRegistry.deactivateService(serviceId);
       
-      // 添加交易待确认通知
-      addNotification({
-        type: 'info',
-        title: '交易已提交',
-        message: '服务停用交易已提交，等待区块确认',
-        txHash: tx.hash,
-        status: 'pending',
-        duration: 10000
-      });
-      
-      // 更新待处理交易
+      // 添加待处理交易
       setPendingTransactions(prev => ({
         ...prev,
         [tx.hash]: 'pending'
       }));
+      
+      // 添加交易通知
+      addNotification({
+        type: 'info',
+        title: '服务停用中',
+        message: `交易已提交，等待确认。交易哈希: ${tx.hash}`,
+        txHash: tx.hash,
+        status: 'pending',
+        duration: 10000
+      });
       
       // 等待交易确认
       const receipt = await tx.wait();
       
       // 更新交易状态
       updateTransactionStatus(
-        tx.hash, 
-        'confirmed', 
-        `服务 ID: ${serviceId} 已成功停用！`
+        tx.hash,
+        'confirmed',
+        '服务已成功停用'
       );
       
-      // 重新加载服务
-      await loadServices(1, true);
-      
-      setIsLoading(false);
+      // 刷新特定服务
+      refreshServiceData([serviceId]);
     } catch (error) {
       console.error("Error deactivating service:", error);
-      setIsLoading(false);
       
-      // 添加停用失败通知
+      // 添加错误通知
       addNotification({
         type: 'error',
-        title: '停用失败',
-        message: `服务停用失败: ${error.message}`,
-        duration: 7000
+        title: '服务停用失败',
+        message: `错误: ${error.message}`,
+        duration: 5000
       });
     }
-  }, [contracts.aiRegistry, loadServices, addNotification, updateTransactionStatus]);
+  };
   
   // 激活服务
-  const activateService = useCallback(async (serviceId) => {
-    if (!contracts.aiRegistry) return;
+  const activateService = async (serviceId) => {
+    if (!connected) {
+      addNotification({
+        type: 'error',
+        title: '未连接钱包',
+        message: '请先连接钱包',
+        duration: 5000
+      });
+      return;
+    }
     
     try {
-      setIsLoading(true);
+      // 发送交易
+      const tx = await contracts.aiRegistry.activateService(serviceId);
       
-      // 添加交易发送通知
+      // 添加待处理交易
+      setPendingTransactions(prev => ({
+        ...prev,
+        [tx.hash]: 'pending'
+      }));
+      
+      // 添加交易通知
       addNotification({
         type: 'info',
-        title: '交易发送中',
-        message: '正在发送服务激活交易，请等待确认',
+        title: '服务激活中',
+        message: `交易已提交，等待确认。交易哈希: ${tx.hash}`,
+        txHash: tx.hash,
+        status: 'pending',
+        duration: 10000
+      });
+      
+      // 等待交易确认
+      const receipt = await tx.wait();
+      
+      // 更新交易状态
+      updateTransactionStatus(
+        tx.hash,
+        'confirmed',
+        '服务已成功激活'
+      );
+      
+      // 刷新特定服务
+      refreshServiceData([serviceId]);
+    } catch (error) {
+      console.error("Error activating service:", error);
+      
+      // 添加错误通知
+      addNotification({
+        type: 'error',
+        title: '服务激活失败',
+        message: `错误: ${error.message}`,
+        duration: 5000
+      });
+    }
+  };
+  
+  // 更新性能评分
+  const updatePerformanceScore = async (serviceId, score) => {
+    if (!connected) {
+      addNotification({
+        type: 'error',
+        title: '未连接钱包',
+        message: '请先连接钱包',
+        duration: 5000
+      });
+      return;
+    }
+    
+    try {
+      // 验证评分
+      if (score < 0 || score > 100) {
+        addNotification({
+          type: 'error',
+          title: '评分无效',
+          message: '评分必须在0-100之间',
+          duration: 5000
+        });
+        return;
+      }
+      
+      // 发送交易
+      const tx = await contracts.aiRegistry.updatePerformanceScore(serviceId, score);
+      
+      // 添加待处理交易
+      setPendingTransactions(prev => ({
+        ...prev,
+        [tx.hash]: 'pending'
+      }));
+      
+      // 添加交易通知
+      addNotification({
+        type: 'info',
+        title: '评分更新中',
+        message: `交易已提交，等待确认。交易哈希: ${tx.hash}`,
+        txHash: tx.hash,
+        status: 'pending',
+        duration: 10000
+      });
+      
+      // 等待交易确认
+      const receipt = await tx.wait();
+      
+      // 更新交易状态
+      updateTransactionStatus(
+        tx.hash,
+        'confirmed',
+        '性能评分已成功更新'
+      );
+      
+      // 刷新特定服务
+      refreshServiceData([serviceId]);
+    } catch (error) {
+      console.error("Error updating performance score:", error);
+      
+      // 添加错误通知
+      addNotification({
+        type: 'error',
+        title: '评分更新失败',
+        message: `错误: ${error.message}`,
+        duration: 5000
+      });
+    }
+  };
+  
+  // 批量激活服务
+  const batchActivateServices = async () => {
+    if (!connected || selectedServices.length === 0) {
+      addNotification({
+        type: 'error',
+        title: '操作无效',
+        message: '请先选择要激活的服务',
+        duration: 5000
+      });
+      return;
+    }
+    
+    try {
+      setIsBatchProcessing(true);
+      
+      // 获取需要激活的服务ID
+      const serviceIds = selectedServices
+        .filter(service => !service.isActive)
+        .map(service => service.id);
+      
+      if (serviceIds.length === 0) {
+        addNotification({
+          type: 'warning',
+          title: '无需操作',
+          message: '所选服务均已激活',
+          duration: 5000
+        });
+        setIsBatchProcessing(false);
+        return;
+      }
+      
+      // 批量激活
+      for (const serviceId of serviceIds) {
+        // 发送交易
+        const tx = await contracts.aiRegistry.activateService(serviceId);
+        
+        // 添加待处理交易
+        setPendingTransactions(prev => ({
+          ...prev,
+          [tx.hash]: 'pending'
+        }));
+        
+        // 添加交易通知
+        addNotification({
+          type: 'info',
+          title: '批量激活中',
+          message: `正在激活服务 ID: ${serviceId}，交易哈希: ${tx.hash}`,
+          txHash: tx.hash,
+          status: 'pending',
+          duration: 10000
+        });
+        
+        // 等待交易确认
+        const receipt = await tx.wait();
+        
+        // 更新交易状态
+        updateTransactionStatus(
+          tx.hash,
+          'confirmed',
+          `服务 ID: ${serviceId} 已成功激活`
+        );
+      }
+      
+      // 刷新服务列表
+      refreshServiceData(serviceIds);
+      
+      // 添加批量操作完成通知
+      addNotification({
+        type: 'success',
+        title: '批量激活完成',
+        message: `已成功激活 ${serviceIds.length} 个服务`,
         duration: 5000
       });
       
-      const tx = await contracts.aiRegistry.activateService(serviceId);
-      
-      // 添加交易待确认通知
-      addNotification({
-        type: 'info',
-        title: '交易已提交',
-        message: '服务激活交易已提交，等待区块确认',
-        txHash: tx.hash,
-        status: 'pending',
-        duration: 10000
-      });
-      
-      // 更新待处理交易
-      setPendingTransactions(prev => ({
-        ...prev,
-        [tx.hash]: 'pending'
-      }));
-      
-      // 等待交易确认
-      const receipt = await tx.wait();
-      
-      // 更新交易状态
-      updateTransactionStatus(
-        tx.hash, 
-        'confirmed', 
-        `服务 ID: ${serviceId} 已成功激活！`
-      );
-      
-      // 重新加载服务
-      await loadServices(1, true);
-      
-      setIsLoading(false);
+      // 清除选择
+      setSelectedServices([]);
+      setIsBatchMode(false);
+      setIsBatchProcessing(false);
     } catch (error) {
-      console.error("Error activating service:", error);
-      setIsLoading(false);
+      console.error("Error batch activating services:", error);
       
-      // 添加激活失败通知
+      // 添加错误通知
       addNotification({
         type: 'error',
-        title: '激活失败',
-        message: `服务激活失败: ${error.message}`,
-        duration: 7000
+        title: '批量激活失败',
+        message: `错误: ${error.message}`,
+        duration: 5000
       });
+      
+      setIsBatchProcessing(false);
     }
-  }, [contracts.aiRegistry, loadServices, addNotification, updateTransactionStatus]);
+  };
   
-  // 选择服务
-  const selectService = useCallback((service) => {
-    setSelectedService(service);
+  // 批量停用服务
+  const batchDeactivateServices = async () => {
+    if (!connected || selectedServices.length === 0) {
+      addNotification({
+        type: 'error',
+        title: '操作无效',
+        message: '请先选择要停用的服务',
+        duration: 5000
+      });
+      return;
+    }
     
-    // 触发自定义事件，通知其他组件
-    const event = new CustomEvent('aiServiceSelected', { detail: service });
-    window.dispatchEvent(event);
+    try {
+      setIsBatchProcessing(true);
+      
+      // 获取需要停用的服务ID
+      const serviceIds = selectedServices
+        .filter(service => service.isActive)
+        .map(service => service.id);
+      
+      if (serviceIds.length === 0) {
+        addNotification({
+          type: 'warning',
+          title: '无需操作',
+          message: '所选服务均已停用',
+          duration: 5000
+        });
+        setIsBatchProcessing(false);
+        return;
+      }
+      
+      // 批量停用
+      for (const serviceId of serviceIds) {
+        // 发送交易
+        const tx = await contracts.aiRegistry.deactivateService(serviceId);
+        
+        // 添加待处理交易
+        setPendingTransactions(prev => ({
+          ...prev,
+          [tx.hash]: 'pending'
+        }));
+        
+        // 添加交易通知
+        addNotification({
+          type: 'info',
+          title: '批量停用中',
+          message: `正在停用服务 ID: ${serviceId}，交易哈希: ${tx.hash}`,
+          txHash: tx.hash,
+          status: 'pending',
+          duration: 10000
+        });
+        
+        // 等待交易确认
+        const receipt = await tx.wait();
+        
+        // 更新交易状态
+        updateTransactionStatus(
+          tx.hash,
+          'confirmed',
+          `服务 ID: ${serviceId} 已成功停用`
+        );
+      }
+      
+      // 刷新服务列表
+      refreshServiceData(serviceIds);
+      
+      // 添加批量操作完成通知
+      addNotification({
+        type: 'success',
+        title: '批量停用完成',
+        message: `已成功停用 ${serviceIds.length} 个服务`,
+        duration: 5000
+      });
+      
+      // 清除选择
+      setSelectedServices([]);
+      setIsBatchMode(false);
+      setIsBatchProcessing(false);
+    } catch (error) {
+      console.error("Error batch deactivating services:", error);
+      
+      // 添加错误通知
+      addNotification({
+        type: 'error',
+        title: '批量停用失败',
+        message: `错误: ${error.message}`,
+        duration: 5000
+      });
+      
+      setIsBatchProcessing(false);
+    }
+  };
+  
+  // 批量更新评分
+  const batchUpdateScore = async () => {
+    if (!connected || selectedServices.length === 0) {
+      addNotification({
+        type: 'error',
+        title: '操作无效',
+        message: '请先选择要更新评分的服务',
+        duration: 5000
+      });
+      return;
+    }
     
-    // 添加服务选择通知
-    addNotification({
-      type: 'info',
-      title: '服务已选择',
-      message: `已选择服务: ${service.name}`,
-      duration: 3000
-    });
-  }, [addNotification]);
+    try {
+      setIsBatchProcessing(true);
+      
+      // 获取服务ID
+      const serviceIds = selectedServices.map(service => service.id);
+      
+      // 批量更新评分
+      for (const serviceId of serviceIds) {
+        // 发送交易
+        const tx = await contracts.aiRegistry.updatePerformanceScore(serviceId, batchScore);
+        
+        // 添加待处理交易
+        setPendingTransactions(prev => ({
+          ...prev,
+          [tx.hash]: 'pending'
+        }));
+        
+        // 添加交易通知
+        addNotification({
+          type: 'info',
+          title: '批量评分中',
+          message: `正在更新服务 ID: ${serviceId} 的评分为 ${batchScore}，交易哈希: ${tx.hash}`,
+          txHash: tx.hash,
+          status: 'pending',
+          duration: 10000
+        });
+        
+        // 等待交易确认
+        const receipt = await tx.wait();
+        
+        // 更新交易状态
+        updateTransactionStatus(
+          tx.hash,
+          'confirmed',
+          `服务 ID: ${serviceId} 的评分已成功更新为 ${batchScore}`
+        );
+      }
+      
+      // 刷新服务列表
+      refreshServiceData(serviceIds);
+      
+      // 添加批量操作完成通知
+      addNotification({
+        type: 'success',
+        title: '批量评分完成',
+        message: `已成功更新 ${serviceIds.length} 个服务的评分为 ${batchScore}`,
+        duration: 5000
+      });
+      
+      // 清除选择
+      setSelectedServices([]);
+      setIsBatchMode(false);
+      setIsBatchProcessing(false);
+    } catch (error) {
+      console.error("Error batch updating scores:", error);
+      
+      // 添加错误通知
+      addNotification({
+        type: 'error',
+        title: '批量评分失败',
+        message: `错误: ${error.message}`,
+        duration: 5000
+      });
+      
+      setIsBatchProcessing(false);
+    }
+  };
+  
+  // 执行批量操作
+  const executeBatchAction = async () => {
+    switch (batchAction) {
+      case 'activate':
+        await batchActivateServices();
+        break;
+      case 'deactivate':
+        await batchDeactivateServices();
+        break;
+      case 'score':
+        await batchUpdateScore();
+        break;
+      default:
+        addNotification({
+          type: 'error',
+          title: '操作无效',
+          message: '请选择要执行的批量操作',
+          duration: 5000
+        });
+    }
+  };
   
   // 处理表单变化
   const handleFormChange = (e) => {
@@ -1050,6 +1489,25 @@ const AIServiceRegistry = () => {
     setCurrentPage(1);
   };
   
+  // 切换批量模式
+  const toggleBatchMode = () => {
+    setIsBatchMode(prev => !prev);
+    if (isBatchMode) {
+      setSelectedServices([]);
+    }
+  };
+  
+  // 全选/取消全选
+  const toggleSelectAll = () => {
+    if (selectedServices.length === services.length) {
+      // 取消全选
+      setSelectedServices([]);
+    } else {
+      // 全选
+      setSelectedServices([...services]);
+    }
+  };
+  
   // 渲染钱包连接按钮
   const renderWalletButton = () => {
     if (!connected) {
@@ -1092,13 +1550,30 @@ const AIServiceRegistry = () => {
       const isLastElement = index === displayedServices.length - 1;
       const ref = isLastElement && viewMode === 'infinite' ? lastServiceElementRef : null;
       
+      // 检查是否选中（批量模式）
+      const isSelected = selectedServices.some(s => s.id === service.id);
+      
+      // 检查是否正在刷新
+      const isRefreshing = refreshingServices[service.id];
+      
       return (
         <div 
           key={service.id} 
           ref={ref}
-          className={`service-card ${selectedService && selectedService.id === service.id ? 'selected' : ''} ${!service.isActive ? 'inactive' : ''}`}
+          className={`service-card ${selectedService && selectedService.id === service.id ? 'selected' : ''} ${!service.isActive ? 'inactive' : ''} ${isSelected ? 'batch-selected' : ''} ${service.animate ? 'animate' : ''} ${isRefreshing ? 'refreshing' : ''}`}
           onClick={() => selectService(service)}
         >
+          {isBatchMode && (
+            <div className="batch-checkbox">
+              <input 
+                type="checkbox" 
+                checked={isSelected}
+                onChange={() => selectService(service)}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          )}
+          
           <div className="service-header">
             <h3>{service.name}</h3>
             <div className="service-type-badge">{SERVICE_TYPES.find(t => t.value === service.serviceType)?.label || service.serviceType}</div>
@@ -1156,9 +1631,15 @@ const AIServiceRegistry = () => {
               </svg>
               {service.pricePerToken} CULT/token
             </div>
+            
+            {service.lastUpdated && (
+              <div className="last-updated">
+                更新于 {new Date(service.lastUpdated).toLocaleTimeString()}
+              </div>
+            )}
           </div>
           
-          {service.provider.toLowerCase() === account.toLowerCase() && (
+          {!isBatchMode && service.provider.toLowerCase() === account.toLowerCase() && (
             <div className="service-actions">
               <button 
                 className="edit-button"
@@ -1201,6 +1682,25 @@ const AIServiceRegistry = () => {
                   激活
                 </button>
               )}
+              
+              <button 
+                className="refresh-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  refreshServiceData([service.id]);
+                }}
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M23 4v6h-6M1 20v-6h6" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+              </button>
+            </div>
+          )}
+          
+          {isRefreshing && (
+            <div className="refreshing-overlay">
+              <div className="refreshing-spinner"></div>
             </div>
           )}
         </div>
@@ -1388,6 +1888,19 @@ const AIServiceRegistry = () => {
           />
         </div>
         
+        <div className="setting-group">
+          <label>自动刷新数据</label>
+          <div className="toggle-switch">
+            <input
+              type="checkbox"
+              id="autoRefresh"
+              checked={autoRefreshEnabled}
+              onChange={(e) => setAutoRefreshEnabled(e.target.checked)}
+            />
+            <label htmlFor="autoRefresh"></label>
+          </div>
+        </div>
+        
         <button 
           className="test-notification-button"
           onClick={() => {
@@ -1401,6 +1914,73 @@ const AIServiceRegistry = () => {
         >
           发送测试通知
         </button>
+      </div>
+    );
+  };
+  
+  // 渲染批量操作面板
+  const renderBatchOperations = () => {
+    if (!isBatchMode) return null;
+    
+    return (
+      <div className="batch-operations">
+        <div className="batch-header">
+          <h3>批量操作</h3>
+          <div className="batch-selection-info">
+            已选择 {selectedServices.length} 个服务
+          </div>
+          <button 
+            className="select-all-button"
+            onClick={toggleSelectAll}
+          >
+            {selectedServices.length === services.length ? '取消全选' : '全选'}
+          </button>
+        </div>
+        
+        <div className="batch-actions">
+          <div className="batch-action-group">
+            <label>操作类型</label>
+            <select
+              value={batchAction}
+              onChange={(e) => setBatchAction(e.target.value)}
+              disabled={isBatchProcessing}
+            >
+              <option value="">请选择操作</option>
+              <option value="activate">批量激活</option>
+              <option value="deactivate">批量停用</option>
+              <option value="score">批量评分</option>
+            </select>
+          </div>
+          
+          {batchAction === 'score' && (
+            <div className="batch-action-group">
+              <label>评分值 (0-100)</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={batchScore}
+                onChange={(e) => setBatchScore(parseInt(e.target.value))}
+                disabled={isBatchProcessing}
+              />
+            </div>
+          )}
+          
+          <button 
+            className="execute-batch-button"
+            onClick={executeBatchAction}
+            disabled={isBatchProcessing || !batchAction || selectedServices.length === 0}
+          >
+            {isBatchProcessing ? (
+              <>
+                <div className="button-spinner"></div>
+                处理中...
+              </>
+            ) : (
+              '执行批量操作'
+            )}
+          </button>
+        </div>
       </div>
     );
   };
@@ -1501,45 +2081,47 @@ const AIServiceRegistry = () => {
               name="apiEndpoint" 
               value={registrationForm.apiEndpoint} 
               onChange={handleFormChange} 
-              required 
             />
           </div>
           
           <div className="form-actions">
             <button 
+              type="button" 
               className="cancel-button" 
-              onClick={() => {
-                setIsRegistering(false);
-                setRegistrationForm({
-                  serviceType: 'translation',
-                  languages: ['zh-CN', 'en-US'],
-                  pricePerToken: '10',
-                  metadataURI: '',
-                  name: '',
-                  description: '',
-                  capabilities: '',
-                  apiEndpoint: '',
-                });
-              }}
+              onClick={() => setIsRegistering(false)}
             >
               取消
             </button>
-            
             <button 
+              type="button" 
               className="submit-button" 
-              onClick={() => {
-                if (registrationForm.metadataURI) {
-                  updateService(selectedService.id);
-                } else {
-                  registerService();
-                }
-              }}
-              disabled={isLoading}
+              onClick={registerService}
             >
-              {isLoading ? '处理中...' : (registrationForm.metadataURI ? '更新' : '注册')}
+              {registrationForm.metadataURI ? '更新服务' : '注册服务'}
             </button>
           </div>
         </div>
+      </div>
+    );
+  };
+  
+  // 渲染刷新状态
+  const renderRefreshStatus = () => {
+    return (
+      <div className="refresh-status">
+        <div className="last-refresh">
+          上次刷新: {new Date(lastRefreshTime).toLocaleTimeString()}
+        </div>
+        <button 
+          className="manual-refresh-button"
+          onClick={() => refreshServiceData()}
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M23 4v6h-6M1 20v-6h6" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
+          刷新数据
+        </button>
       </div>
     );
   };
@@ -1548,110 +2130,92 @@ const AIServiceRegistry = () => {
     <div className="ai-service-registry">
       <ToastNotification 
         notifications={notifications} 
-        position={notificationConfig.position}
-        persistOnHover={notificationConfig.persistOnHover}
-        maxVisible={notificationConfig.maxVisible}
+        setNotifications={setNotifications}
+        config={notificationConfig}
       />
       
-      <div className="header">
+      <div className="registry-header">
         <h1>AI服务注册中心</h1>
         {renderWalletButton()}
       </div>
       
       {connected && (
-        <div className="content">
-          <div className="sidebar">
-            <div className="view-mode-toggle">
-              <span>视图模式:</span>
-              <button 
-                className={`view-mode-button ${viewMode === 'paginated' ? 'active' : ''}`}
-                onClick={() => viewMode !== 'paginated' && toggleViewMode()}
-              >
-                分页
-              </button>
-              <button 
-                className={`view-mode-button ${viewMode === 'infinite' ? 'active' : ''}`}
-                onClick={() => viewMode !== 'infinite' && toggleViewMode()}
-              >
-                无限滚动
-              </button>
-            </div>
-            
-            {renderAdvancedFilters()}
-            
-            {renderNotificationSettings()}
-            
-            <div className="my-services">
-              <h2>我的服务</h2>
-              
-              {myServices.length === 0 ? (
-                <div className="empty-message">您还没有注册服务</div>
-              ) : (
-                <div className="my-services-list">
-                  {myServices.map(service => (
-                    <div 
-                      key={service.id} 
-                      className={`my-service-item ${!service.isActive ? 'inactive' : ''}`}
-                      onClick={() => selectService(service)}
-                    >
-                      <div className="my-service-name">{service.name}</div>
-                      <div className="my-service-type">{SERVICE_TYPES.find(t => t.value === service.serviceType)?.label || service.serviceType}</div>
-                      {!service.isActive && <div className="inactive-badge small">已停用</div>}
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              <button 
-                className="register-button" 
-                onClick={() => setIsRegistering(true)}
-              >
-                注册新服务
-              </button>
-            </div>
-          </div>
+        <div className="registry-actions">
+          <button 
+            className="register-button"
+            onClick={() => {
+              setRegistrationForm({
+                serviceType: 'translation',
+                languages: ['zh-CN', 'en-US'],
+                pricePerToken: '10',
+                metadataURI: '',
+                name: '',
+                description: '',
+                capabilities: '',
+                apiEndpoint: '',
+              });
+              setIsRegistering(true);
+            }}
+          >
+            注册新服务
+          </button>
           
-          <div className="services-container">
-            <div className="services-header">
-              <h2>可用服务</h2>
-              <div className="services-stats">
-                {totalServices > 0 && (
-                  <span className="services-count">
-                    共 {totalServices} 个服务
-                    {viewMode === 'paginated' && `, 当前显示 ${Math.min(SERVICES_PER_PAGE, services.length)} 个`}
-                  </span>
-                )}
-              </div>
+          <button 
+            className={`view-mode-button ${viewMode === 'infinite' ? 'infinite' : 'paginated'}`}
+            onClick={toggleViewMode}
+          >
+            {viewMode === 'paginated' ? '切换到无限滚动' : '切换到分页模式'}
+          </button>
+          
+          <button 
+            className={`batch-mode-button ${isBatchMode ? 'active' : ''}`}
+            onClick={toggleBatchMode}
+          >
+            {isBatchMode ? '退出批量模式' : '批量操作'}
+          </button>
+        </div>
+      )}
+      
+      {connected && renderRefreshStatus()}
+      
+      {connected && renderBatchOperations()}
+      
+      <div className="registry-content">
+        <div className="services-container">
+          <h2>服务列表</h2>
+          
+          {isLoading ? (
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+              <p>加载中...</p>
             </div>
-            
-            <div className="services-grid">
-              {isLoading ? (
-                <div className="loading-spinner">
-                  <div className="spinner"></div>
-                  <span>加载中...</span>
-                </div>
-              ) : (
-                renderServices()
-              )}
+          ) : (
+            <>
+              {renderServices()}
               
               {isLoadingMore && (
                 <div className="loading-more">
-                  <div className="spinner small"></div>
-                  <span>加载更多...</span>
+                  <div className="spinner"></div>
+                  <p>加载更多...</p>
                 </div>
               )}
-            </div>
-            
-            {viewMode === 'paginated' && totalPages > 1 && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            )}
-          </div>
+              
+              {viewMode === 'paginated' && totalPages > 1 && (
+                <Pagination 
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              )}
+            </>
+          )}
         </div>
-      )}
+        
+        <div className="sidebar">
+          {renderAdvancedFilters()}
+          {renderNotificationSettings()}
+        </div>
+      </div>
       
       {renderRegistrationForm()}
     </div>
