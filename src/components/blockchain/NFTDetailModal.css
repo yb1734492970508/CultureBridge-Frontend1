@@ -1,0 +1,500 @@
+/* NFT详情模态框样式 */
+.nft-detail-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.nft-detail-modal {
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--shadow-large);
+  width: 90%;
+  max-width: 1000px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-medium);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: var(--font-size-large);
+  color: var(--color-text-primary);
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+
+.favorite-button, .share-button, .close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-size-large);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.favorite-button:hover, .share-button:hover, .close-button:hover {
+  background-color: var(--color-background-hover);
+  color: var(--color-text-primary);
+}
+
+.favorite-button.active {
+  color: var(--color-primary);
+}
+
+.share-container {
+  position: relative;
+}
+
+.share-options {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-medium);
+  box-shadow: var(--shadow-medium);
+  padding: var(--spacing-small);
+  z-index: 10;
+  min-width: 120px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.share-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--spacing-small);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  border-radius: var(--border-radius-small);
+  transition: background-color 0.2s ease;
+}
+
+.share-option:hover {
+  background-color: var(--color-background-hover);
+}
+
+.copy-success {
+  position: absolute;
+  bottom: -30px;
+  right: 0;
+  background-color: var(--color-success);
+  color: white;
+  padding: var(--spacing-small);
+  border-radius: var(--border-radius-small);
+  font-size: var(--font-size-small);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-medium);
+}
+
+@media (min-width: 768px) {
+  .modal-content {
+    flex-direction: row;
+    gap: var(--spacing-large);
+  }
+}
+
+.nft-preview-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nft-image-container {
+  position: relative;
+  width: 100%;
+  border-radius: var(--border-radius-medium);
+  overflow: hidden;
+  box-shadow: var(--shadow-medium);
+}
+
+.nft-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.auction-badge {
+  position: absolute;
+  top: var(--spacing-small);
+  right: var(--spacing-small);
+  background-color: var(--color-primary);
+  color: white;
+  padding: var(--spacing-small) var(--spacing-medium);
+  border-radius: var(--border-radius-small);
+  font-size: var(--font-size-small);
+  font-weight: bold;
+}
+
+.nft-action-buttons {
+  margin-top: var(--spacing-medium);
+  display: flex;
+  justify-content: center;
+}
+
+.purchase-button, .bid-button {
+  padding: var(--spacing-medium) var(--spacing-large);
+  border-radius: var(--border-radius-medium);
+  font-size: var(--font-size-medium);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  border: none;
+}
+
+.purchase-button {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.purchase-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.bid-button {
+  background-color: var(--color-secondary);
+  color: white;
+}
+
+.bid-button:hover {
+  background-color: var(--color-secondary-dark);
+}
+
+.purchase-button:disabled, .bid-button:disabled {
+  background-color: var(--color-disabled);
+  cursor: not-allowed;
+}
+
+.owner-badge {
+  background-color: var(--color-success);
+  color: white;
+  padding: var(--spacing-medium);
+  border-radius: var(--border-radius-medium);
+  text-align: center;
+  font-weight: bold;
+}
+
+.nft-info-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nft-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--spacing-medium);
+}
+
+.tab-button {
+  padding: var(--spacing-small) var(--spacing-medium);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-medium);
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.tab-button:hover {
+  color: var(--color-text-primary);
+}
+
+.tab-button.active {
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-primary);
+}
+
+.tab-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nft-title {
+  margin-top: 0;
+  margin-bottom: var(--spacing-small);
+  font-size: var(--font-size-xlarge);
+  color: var(--color-text-primary);
+}
+
+.nft-price-container, .nft-creator, .nft-owner, .auction-end-time {
+  display: flex;
+  margin-bottom: var(--spacing-small);
+  align-items: center;
+}
+
+.price-label, .creator-label, .owner-label, .time-label {
+  font-weight: bold;
+  color: var(--color-text-secondary);
+  width: 100px;
+}
+
+.price-value {
+  font-size: var(--font-size-large);
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+.auction-note {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+  margin-left: var(--spacing-small);
+  font-weight: normal;
+}
+
+.nft-description {
+  margin-top: var(--spacing-medium);
+  margin-bottom: var(--spacing-medium);
+}
+
+.nft-description h4 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-small);
+  color: var(--color-text-primary);
+}
+
+.nft-description p {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.nft-metadata {
+  margin-top: var(--spacing-medium);
+}
+
+.nft-metadata h4 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-small);
+  color: var(--color-text-primary);
+}
+
+.metadata-item {
+  display: flex;
+  margin-bottom: var(--spacing-small);
+}
+
+.metadata-label {
+  font-weight: bold;
+  color: var(--color-text-secondary);
+  width: 120px;
+}
+
+.metadata-value {
+  color: var(--color-text-primary);
+}
+
+.metadata-value.address {
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.properties-tab h4, .history-tab h4 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-medium);
+  color: var(--color-text-primary);
+}
+
+.properties-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--spacing-medium);
+  margin-bottom: var(--spacing-large);
+}
+
+.property-item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-medium);
+  padding: var(--spacing-medium);
+  text-align: center;
+  background-color: var(--color-background-alt);
+  transition: transform 0.2s ease;
+}
+
+.property-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-small);
+}
+
+.property-type {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  margin-bottom: var(--spacing-small);
+}
+
+.property-value {
+  color: var(--color-primary);
+  font-weight: bold;
+  font-size: var(--font-size-medium);
+  margin-bottom: var(--spacing-small);
+}
+
+.property-rarity {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xsmall);
+}
+
+.nft-stats {
+  margin-top: var(--spacing-large);
+}
+
+.stat-item {
+  display: flex;
+  margin-bottom: var(--spacing-small);
+}
+
+.stat-label {
+  font-weight: bold;
+  color: var(--color-text-secondary);
+  width: 120px;
+}
+
+.stat-value {
+  color: var(--color-text-primary);
+}
+
+.transaction-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+}
+
+.transaction-item {
+  display: flex;
+  padding: var(--spacing-medium);
+  border-radius: var(--border-radius-medium);
+  background-color: var(--color-background-alt);
+  gap: var(--spacing-medium);
+}
+
+.transaction-type {
+  padding: var(--spacing-small) var(--spacing-medium);
+  border-radius: var(--border-radius-small);
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  color: white;
+  text-align: center;
+  min-width: 80px;
+}
+
+.transaction-type.mint {
+  background-color: var(--color-success);
+}
+
+.transaction-type.list {
+  background-color: var(--color-info);
+}
+
+.transaction-type.sale {
+  background-color: var(--color-primary);
+}
+
+.transaction-type.auction {
+  background-color: var(--color-secondary);
+}
+
+.transaction-details {
+  flex: 1;
+}
+
+.transaction-from {
+  margin-bottom: var(--spacing-small);
+  color: var(--color-text-primary);
+}
+
+.transaction-price {
+  color: var(--color-primary);
+  font-weight: bold;
+  margin-bottom: var(--spacing-small);
+}
+
+.transaction-date {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* 响应式调整 */
+@media (max-width: 767px) {
+  .nft-detail-modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .modal-content {
+    padding: var(--spacing-small);
+  }
+  
+  .nft-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .properties-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  
+  .price-label, .creator-label, .owner-label, .time-label,
+  .metadata-label, .stat-label {
+    width: 80px;
+  }
+}

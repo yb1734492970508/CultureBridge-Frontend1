@@ -1,0 +1,99 @@
+/* NFT市场列表样式 */
+.nft-marketplace-list {
+  width: 100%;
+}
+
+/* 网格视图 */
+.nft-marketplace-list.grid-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--spacing-medium);
+}
+
+/* 列表视图 */
+.nft-marketplace-list.list-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+}
+
+.nft-marketplace-list.list-view .nft-item-wrapper {
+  width: 100%;
+}
+
+.nft-marketplace-list.list-view .nft-marketplace-item {
+  display: flex;
+  flex-direction: row;
+  height: auto;
+}
+
+.nft-marketplace-list.list-view .nft-image-container {
+  width: 150px;
+  padding-top: 150px;
+  flex-shrink: 0;
+}
+
+.nft-marketplace-list.list-view .nft-info {
+  flex: 1;
+  padding: var(--spacing-medium);
+}
+
+.nft-marketplace-list.list-view .nft-actions {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: auto;
+  background: none;
+  padding: var(--spacing-medium);
+  opacity: 1;
+  transform: none;
+}
+
+/* 空状态 */
+.nft-marketplace-empty {
+  width: 100%;
+  padding: var(--spacing-xlarge);
+  text-align: center;
+  background-color: var(--color-background-alt);
+  border-radius: var(--border-radius-medium);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--spacing-medium);
+}
+
+.nft-marketplace-empty h3 {
+  margin: 0 0 var(--spacing-small) 0;
+  color: var(--color-text-primary);
+}
+
+.nft-marketplace-empty p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+/* 响应式调整 */
+@media (max-width: 767px) {
+  .nft-marketplace-list.grid-view {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--spacing-small);
+  }
+  
+  .nft-marketplace-list.list-view .nft-image-container {
+    width: 100px;
+    padding-top: 100px;
+  }
+  
+  .nft-marketplace-list.list-view .nft-info {
+    padding: var(--spacing-small);
+  }
+  
+  .nft-marketplace-list.list-view .nft-actions {
+    position: relative;
+    padding: var(--spacing-small);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-small);
+  }
+}
