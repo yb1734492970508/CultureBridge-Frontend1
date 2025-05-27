@@ -1,0 +1,47 @@
+{
+  "testnet": {
+    "network": {
+      "name": "BNB Chain Testnet",
+      "chainId": 97,
+      "rpcUrl": "https://data-seed-prebsc-1-s1.binance.org:8545/",
+      "explorer": "https://testnet.bscscan.com",
+      "faucet": "https://testnet.bnbchain.org/faucet-smart"
+    },
+    "contracts": {
+      "CultureToken": "",
+      "AIRegistry": "",
+      "CulturalNFT": "",
+      "TranslationMarket": ""
+    },
+    "deploymentDate": "",
+    "deploymentAccount": "",
+    "verificationStatus": {
+      "CultureToken": false,
+      "AIRegistry": false,
+      "CulturalNFT": false,
+      "TranslationMarket": false
+    }
+  },
+  "mainnet": {
+    "network": {
+      "name": "BNB Chain Mainnet",
+      "chainId": 56,
+      "rpcUrl": "https://bsc-dataseed.binance.org/",
+      "explorer": "https://bscscan.com"
+    },
+    "contracts": {
+      "CultureToken": "",
+      "AIRegistry": "",
+      "CulturalNFT": "",
+      "TranslationMarket": ""
+    },
+    "deploymentDate": "",
+    "deploymentAccount": "",
+    "verificationStatus": {
+      "CultureToken": false,
+      "AIRegistry": false,
+      "CulturalNFT": false,
+      "TranslationMarket": false
+    }
+  }
+}
