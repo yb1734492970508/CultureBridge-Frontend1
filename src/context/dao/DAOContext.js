@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useBlockchain } from '../blockchain';
+import { useBlockchain } from '../blockchain/BlockchainContext';
+import { useIdentity } from '../identity/IdentityContext';
 import { 
   getProposals, 
   getProposalDetails, 
@@ -7,7 +8,10 @@ import {
   castVote, 
   queueProposal, 
   executeProposal, 
-  getVoteReceipt 
+  getVoteReceipt,
+  getVotingPower,
+  getVotingPowerWithReputation,
+  cancelProposal
 } from '../../contracts/dao/CultureDAO';
 
 // 创建上下文
@@ -25,16 +29,24 @@ export const useDAO = () => {
 // DAOProvider组件
 export const DAOProvider = ({ children }) => {
   const { account, active, library, chainId } = useBlockchain();
+  const { userReputation } = useIdentity();
   
   // 状态
   const [proposals, setProposals] = useState([]);
   const [currentProposal, setCurrentProposal] = useState(null);
   const [userVotes, setUserVotes] = useState({});
+  const [votingPower, setVotingPower] = useState('0');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [statistics, setStatistics] = useState({
+    activeProposals: 0,
+    totalProposals: 0,
+    executedProposals: 0,
+    participationRate: '0%'
+  });
   
   // 加载提案列表
   const loadProposals = useCallback(async (currentPage = 1) => {
@@ -51,6 +63,22 @@ export const DAOProvider = ({ children }) => {
       } else {
         setProposals(prev => currentPage === 1 ? newProposals : [...prev, ...newProposals]);
         setHasMore(newProposals.length === 10);
+      }
+      
+      // 更新统计信息
+      if (currentPage === 1) {
+        const activeProposals = newProposals.filter(p => p.state === 1).length;
+        const executedProposals = newProposals.filter(p => p.state === 7).length;
+        const participationRate = newProposals.length > 0 ? 
+          Math.round((newProposals.reduce((sum, p) => sum + parseFloat(p.forVotes) + parseFloat(p.againstVotes) + parseFloat(p.abstainVotes), 0) / newProposals.length) * 100) + '%' : 
+          '0%';
+        
+        setStatistics({
+          activeProposals,
+          totalProposals: newProposals.length,
+          executedProposals,
+          participationRate
+        });
       }
       
       setPage(currentPage);
@@ -237,6 +265,71 @@ export const DAOProvider = ({ children }) => {
     }
   };
   
+  // 取消提案
+  const cancelProposalAction = async (proposalId) => {
+    if (!active || !account || !library || !chainId) {
+      setError('请先连接钱包');
+      return { success: false, error: '请先连接钱包' };
+    }
+    
+    try {
+      setIsLoading(true);
+      setError('');
+      setSuccessMessage('');
+      
+      const result = await cancelProposal(library, chainId, proposalId);
+      
+      if (result.success) {
+        setSuccessMessage('提案已成功取消');
+        
+        // 刷新提案详情
+        await loadProposalDetails(proposalId);
+        
+        return { success: true };
+      } else {
+        setError(`取消提案失败: ${result.error}`);
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error('取消提案失败:', error);
+      setError(`取消提案失败: ${error.message}`);
+      return { success: false, error: error.message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // 获取用户投票权重
+  const getUserVotingPower = useCallback(async () => {
+    if (!active || !account || !library || !chainId) {
+      return '0';
+    }
+    
+    try {
+      // 获取基础投票权重
+      const baseVotingPower = await getVotingPower(library, chainId, account);
+      
+      // 如果有声誉评分，计算带声誉加成的投票权重
+      if (userReputation) {
+        const votingPowerWithRep = await getVotingPowerWithReputation(
+          library, 
+          chainId, 
+          account, 
+          userReputation
+        );
+        
+        setVotingPower(votingPowerWithRep);
+        return votingPowerWithRep;
+      }
+      
+      setVotingPower(baseVotingPower);
+      return baseVotingPower;
+    } catch (error) {
+      console.error('获取投票权重失败:', error);
+      return '0';
+    }
+  }, [active, account, library, chainId, userReputation]);
+  
   // 加载更多提案
   const loadMoreProposals = () => {
     if (hasMore && !isLoading) {
@@ -254,24 +347,36 @@ export const DAOProvider = ({ children }) => {
   useEffect(() => {
     if (active && library && chainId) {
       loadProposals(1);
+      getUserVotingPower();
     }
-  }, [active, library, chainId, loadProposals]);
+  }, [active, library, chainId, loadProposals, getUserVotingPower]);
+  
+  // 当用户声誉变化时，重新计算投票权重
+  useEffect(() => {
+    if (active && account && library && chainId && userReputation) {
+      getUserVotingPower();
+    }
+  }, [userReputation, getUserVotingPower, active, account, library, chainId]);
   
   // 上下文值
   const value = {
     proposals,
     currentProposal,
     userVotes,
+    votingPower,
     isLoading,
     error,
     successMessage,
     hasMore,
+    statistics,
     loadProposals,
     loadProposalDetails,
     submitProposal,
     vote,
     queueProposalAction,
     executeProposalAction,
+    cancelProposalAction,
+    getUserVotingPower,
     loadMoreProposals,
     clearMessages
   };
