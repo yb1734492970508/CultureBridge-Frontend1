@@ -1,4 +1,4 @@
-# CB-DESIGN 进度报告 - 2025-05-31（DAO治理系统）
+# CultureBridge DAO治理系统开发总结报告
 
 ## 开发概述
 
