@@ -59,10 +59,9 @@ async function deployCultureToken() {
     // 初始化部署状态
     deploymentManager.initDeployment('testnet', deployer.address);
     
-    // 部署合约
+    // 部署合约 - 修正：CultureToken构造函数不需要参数，ERC20名称和符号在构造函数内部设置
     const CultureToken = await ethers.getContractFactory("CultureToken");
-    const initialSupply = ethers.utils.parseEther("1000000"); // 100万代币初始供应量
-    const token = await CultureToken.deploy("CultureToken", "CULT", initialSupply);
+    const token = await CultureToken.deploy();
     
     await token.deployed();
     console.log(`CultureToken部署成功: ${token.address}`);
@@ -76,12 +75,12 @@ async function deployCultureToken() {
     // 更新前端配置
     await updateContractConfig("CultureToken", token.address);
     
-    // 验证合约
+    // 验证合约 - 修正：验证参数为空数组，与构造函数一致
     try {
       console.log("正在验证CultureToken合约...");
       await hre.run("verify:verify", {
         address: token.address,
-        constructorArguments: ["CultureToken", "CULT", initialSupply],
+        constructorArguments: [],
       });
       console.log("CultureToken合约验证成功");
       await writeDeploymentLog(`- CultureToken: 已验证`);
