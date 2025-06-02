@@ -1,35 +1,85 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/auth/AuthContext';
 import WalletConnector from './components/blockchain/WalletConnector';
 import NFTMinter from './components/blockchain/NFTMinter';
 import NFTGallery from './components/blockchain/NFTGallery';
 import NFTDetail from './components/blockchain/NFTDetail';
 import CopyrightProtection from './components/blockchain/CopyrightProtection';
+import CrossChainBridge from './components/blockchain/CrossChainBridge';
+import Register from './pages/auth/Register';
+import Login from './pages/auth/Login';
+import Profile from './pages/auth/Profile';
+import SecuritySettings from './pages/auth/SecuritySettings';
 import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>CultureBridge</h1>
-        <div className="wallet-section">
-          <WalletConnector />
+    <AuthProvider>
+      <div className="App">
+        <header className="App-header">
+          <h1>CultureBridge</h1>
+          <div className="header-actions">
+            <WalletConnector />
+            <UserMenu />
+          </div>
+        </header>
+        
+        <main className="App-main">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/mint" element={<NFTMinter />} />
+            <Route path="/gallery" element={<NFTGallery />} />
+            <Route path="/nft/:tokenId" element={<NFTDetailWrapper />} />
+            <Route path="/copyright" element={<CopyrightProtection />} />
+            <Route path="/bridge" element={<CrossChainBridge />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/security" element={<SecuritySettings />} />
+          </Routes>
+        </main>
+        
+        <footer className="App-footer">
+          <p>CultureBridge - 基于区块链的跨文化交流平台</p>
+        </footer>
+      </div>
+    </AuthProvider>
+  );
+}
+
+// 用户菜单组件
+function UserMenu() {
+  const { isAuthenticated, user, logout } = React.useContext(AuthProvider);
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+  
+  return (
+    <div className="user-menu">
+      {isAuthenticated ? (
+        <>
+          <button className="user-button" onClick={toggleMenu}>
+            <div className="user-avatar" style={{ backgroundImage: `url(${user?.avatar || '/images/default-avatar.png'})` }}></div>
+            <span className="user-name">{user?.name || '用户'}</span>
+          </button>
+          
+          {menuOpen && (
+            <div className="user-dropdown">
+              <a href="/profile" className="dropdown-item">个人资料</a>
+              <a href="/security" className="dropdown-item">安全设置</a>
+              <button className="dropdown-item logout" onClick={logout}>退出登录</button>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="auth-buttons">
+          <a href="/login" className="login-button">登录</a>
+          <a href="/register" className="register-button">注册</a>
         </div>
-      </header>
-      
-      <main className="App-main">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/mint" element={<NFTMinter />} />
-          <Route path="/gallery" element={<NFTGallery />} />
-          <Route path="/nft/:tokenId" element={<NFTDetailWrapper />} />
-          <Route path="/copyright" element={<CopyrightProtection />} />
-        </Routes>
-      </main>
-      
-      <footer className="App-footer">
-        <p>CultureBridge - 基于区块链的跨文化交流平台</p>
-      </footer>
+      )}
     </div>
   );
 }
@@ -58,6 +108,12 @@ function Home() {
           <h3>文化知识产权保护</h3>
           <p>基于区块链的文化作品版权登记与验证</p>
           <a href="/copyright" className="feature-link">保护作品</a>
+        </div>
+        
+        <div className="feature-card">
+          <h3>跨链资产桥</h3>
+          <p>在多个区块链网络间安全转移您的资产</p>
+          <a href="/bridge" className="feature-link">开始跨链</a>
         </div>
       </div>
     </div>
