@@ -1,1189 +1,519 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { ethers } from 'ethers';
-import { useBlockchain } from '../../context/blockchain';
+import { BlockchainContext } from '../../context/blockchain/BlockchainContext';
 import './CrossChainBridge.css';
-
-// 跨链桥ABI（简化版）
-const BRIDGE_ABI = [
-  "function bridgeToken(address token, uint256 amount, uint256 targetChainId) payable returns (uint256)",
-  "function claimToken(bytes32 txHash, uint256 amount, address token, uint256 sourceChainId) returns (bool)",
-  "function getBridgeFee(uint256 targetChainId) view returns (uint256)",
-  "function getSupportedTokens(uint256 chainId) view returns (address[])",
-  "function getTokenInfo(address token) view returns (string name, string symbol, uint8 decimals)",
-  "function getPendingTransactions(address user) view returns (bytes32[])",
-  "event TokenBridged(address indexed user, address indexed token, uint256 amount, uint256 targetChainId, bytes32 txHash)",
-  "event TokenClaimed(address indexed user, address indexed token, uint256 amount, uint256 sourceChainId, bytes32 txHash)"
-];
-
-// 跨链桥合约地址（测试网）
-const BRIDGE_ADDRESS = "0x8B3d9F0653D3e4aC0A9C7bEB5a5503A6E25D99E2";
 
 /**
  * 跨链桥组件
  * 允许用户在不同区块链网络间转移资产
  */
 const CrossChainBridge = () => {
-  const { active, account, library, chainId } = useBlockchain();
-  
-  // 跨链状态
-  const [sourceChainId, setSourceChainId] = useState(chainId || 1);
-  const [targetChainId, setTargetChainId] = useState(56); // 默认目标链为BSC
-  const [selectedToken, setSelectedToken] = useState('');
+  // 区块链上下文
+  const { 
+    account, 
+    connectWallet, 
+    chainId,
+    switchNetwork,
+    getTokenBalance
+  } = useContext(BlockchainContext);
+
+  // 组件状态
+  const [sourceChain, setSourceChain] = useState('bnb');
+  const [targetChain, setTargetChain] = useState('ethereum');
   const [amount, setAmount] = useState('');
-  const [bridgeFee, setBridgeFee] = useState('0');
-  const [supportedTokens, setSupportedTokens] = useState([]);
-  const [tokenInfo, setTokenInfo] = useState({});
-  const [tokenBalance, setTokenBalance] = useState('0');
-  const [isApproved, setIsApproved] = useState(false);
-  
-  // 交易状态
-  const [pendingTxs, setPendingTxs] = useState([]);
-  const [isBridging, setIsBridging] = useState(false);
-  const [isClaiming, setIsClaiming] = useState(false);
-  const [isApproving, setIsApproving] = useState(false);
-  const [bridgeError, setBridgeError] = useState(null);
-  const [claimError, setClaimError] = useState(null);
-  const [approveError, setApproveError] = useState(null);
-  
-  // 显示状态
-  const [activeTab, setActiveTab] = useState('bridge'); // 'bridge' 或 'history'
-  const [showNetworkSelector, setShowNetworkSelector] = useState(false);
-  
-  // 多链资产余额
-  const [multiChainBalances, setMultiChainBalances] = useState({});
-  
-  // 交易历史过滤器
-  const [historyFilter, setHistoryFilter] = useState('all'); // 'all', 'pending', 'completed'
-  
-  // 安全提示状态
-  const [showSecurityTips, setShowSecurityTips] = useState(false);
-  const [securityAcknowledged, setSecurityAcknowledged] = useState(false);
-  
-  // 支持的区块链网络
-  const supportedNetworks = [
-    { id: 1, name: '以太坊主网', icon: '🔷', currency: 'ETH' },
-    { id: 56, name: '币安智能链', icon: '🟡', currency: 'BNB' },
-    { id: 137, name: 'Polygon', icon: '🟣', currency: 'MATIC' },
-    { id: 42161, name: 'Arbitrum', icon: '🔶', currency: 'ETH' },
-    { id: 10, name: 'Optimism', icon: '🔴', currency: 'ETH' },
-    { id: 43114, name: 'Avalanche', icon: '❄️', currency: 'AVAX' },
-    // 测试网络
-    { id: 5, name: 'Goerli测试网', icon: '🔷', currency: 'ETH' },
-    { id: 97, name: 'BSC测试网', icon: '🟡', currency: 'BNB' },
-    { id: 80001, name: 'Mumbai测试网', icon: '🟣', currency: 'MATIC' }
+  const [maxAmount, setMaxAmount] = useState('0');
+  const [step, setStep] = useState(1);
+  const [status, setStatus] = useState('idle');
+  const [txHash, setTxHash] = useState('');
+  const [error, setError] = useState('');
+  const [fee, setFee] = useState('0');
+  const [transferId, setTransferId] = useState('');
+  const [transferHistory, setTransferHistory] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 支持的链
+  const supportedChains = [
+    { id: 'bnb', name: 'BNB Chain', icon: '/images/bnb-chain-logo.png', chainId: '0x38' },
+    { id: 'ethereum', name: 'Ethereum', icon: '/images/ethereum-logo.png', chainId: '0x1' },
+    { id: 'polygon', name: 'Polygon', icon: '/images/polygon-logo.png', chainId: '0x89' }
   ];
-  
-  // 获取网络信息
-  const getNetworkInfo = (id) => {
-    return supportedNetworks.find(network => network.id === id) || { name: '未知网络', icon: '❓', currency: 'ETH' };
-  };
-  
-  // 获取跨链桥合约实例
-  const getBridgeContract = () => {
-    if (!active || !library) return null;
+
+  // 初始化
+  useEffect(() => {
+    if (account) {
+      loadUserBalance();
+      loadTransferHistory();
+    }
+  }, [account, sourceChain]);
+
+  // 加载用户余额
+  const loadUserBalance = async () => {
+    if (!account) return;
     
     try {
-      return new ethers.Contract(
-        BRIDGE_ADDRESS,
-        BRIDGE_ABI,
-        library.getSigner()
-      );
-    } catch (err) {
-      console.error('创建跨链桥合约实例失败:', err);
-      return null;
+      const balance = await getTokenBalance(sourceChain);
+      setMaxAmount(ethers.utils.formatEther(balance));
+    } catch (error) {
+      console.error('Error loading balance:', error);
     }
   };
-  
-  // 获取ERC20代币合约实例
-  const getTokenContract = (tokenAddress) => {
-    if (!active || !library || !tokenAddress) return null;
+
+  // 加载转账历史
+  const loadTransferHistory = async () => {
+    if (!account) return;
     
     try {
-      const tokenAbi = [
-        "function balanceOf(address owner) view returns (uint256)",
-        "function decimals() view returns (uint8)",
-        "function symbol() view returns (string)",
-        "function name() view returns (string)",
-        "function approve(address spender, uint256 amount) returns (bool)",
-        "function allowance(address owner, address spender) view returns (uint256)"
+      setIsLoading(true);
+      
+      // 这里应该从API或本地存储加载历史记录
+      // 示例数据
+      const history = [
+        {
+          id: '0x1234...5678',
+          sourceChain: 'bnb',
+          targetChain: 'ethereum',
+          amount: '10.5',
+          status: 'completed',
+          timestamp: Date.now() - 86400000
+        },
+        {
+          id: '0xabcd...ef01',
+          sourceChain: 'ethereum',
+          targetChain: 'polygon',
+          amount: '5.0',
+          status: 'pending',
+          timestamp: Date.now() - 3600000
+        }
       ];
       
-      return new ethers.Contract(
-        tokenAddress,
-        tokenAbi,
-        library.getSigner()
-      );
-    } catch (err) {
-      console.error('创建代币合约实例失败:', err);
-      return null;
-    }
-  };
-  
-  // 当链ID变化时更新源链
-  useEffect(() => {
-    if (chainId) {
-      setSourceChainId(chainId);
-      
-      // 如果目标链与源链相同，则切换到另一个常用链
-      if (targetChainId === chainId) {
-        setTargetChainId(chainId === 1 ? 56 : 1);
-      }
-    }
-  }, [chainId]);
-  
-  // 加载支持的代币列表
-  useEffect(() => {
-    const loadSupportedTokens = async () => {
-      if (!active || !library) return;
-      
-      try {
-        const bridgeContract = getBridgeContract();
-        if (!bridgeContract) return;
-        
-        // 在实际应用中，这里应该调用合约获取支持的代币列表
-        // 这里我们使用模拟数据
-        
-        // 以太坊主网支持的代币
-        const ethereumTokens = [
-          { address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', name: 'Tether', symbol: 'USDT', decimals: 6 },
-          { address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', name: 'USD Coin', symbol: 'USDC', decimals: 6 },
-          { address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', name: 'Dai', symbol: 'DAI', decimals: 18 },
-          { address: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', name: 'Uniswap', symbol: 'UNI', decimals: 18 }
-        ];
-        
-        // BSC支持的代币
-        const bscTokens = [
-          { address: '0x55d398326f99059fF775485246999027B3197955', name: 'Binance-Peg USDT', symbol: 'USDT', decimals: 18 },
-          { address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d', name: 'Binance-Peg USDC', symbol: 'USDC', decimals: 18 },
-          { address: '0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3', name: 'Binance-Peg DAI', symbol: 'DAI', decimals: 18 },
-          { address: '0xBf5140A22578168FD562DCcF235E5D43A02ce9B1', name: 'Binance-Peg UNI', symbol: 'UNI', decimals: 18 }
-        ];
-        
-        // Polygon支持的代币
-        const polygonTokens = [
-          { address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', name: 'Polygon USDT', symbol: 'USDT', decimals: 6 },
-          { address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', name: 'Polygon USDC', symbol: 'USDC', decimals: 6 },
-          { address: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063', name: 'Polygon DAI', symbol: 'DAI', decimals: 18 },
-          { address: '0xb33EaAd8d922B1083446DC23f610c2567fB5180f', name: 'Polygon UNI', symbol: 'UNI', decimals: 18 }
-        ];
-        
-        // 测试网支持的代币（模拟数据）
-        const testnetTokens = [
-          { address: '0x1111111111111111111111111111111111111111', name: 'Test USDT', symbol: 'USDT', decimals: 6 },
-          { address: '0x2222222222222222222222222222222222222222', name: 'Test USDC', symbol: 'USDC', decimals: 6 },
-          { address: '0x3333333333333333333333333333333333333333', name: 'Test DAI', symbol: 'DAI', decimals: 18 },
-          { address: '0x4444444444444444444444444444444444444444', name: 'Test UNI', symbol: 'UNI', decimals: 18 }
-        ];
-        
-        // 根据当前链ID选择对应的代币列表
-        let tokens = [];
-        switch (sourceChainId) {
-          case 1:
-            tokens = ethereumTokens;
-            break;
-          case 56:
-            tokens = bscTokens;
-            break;
-          case 137:
-            tokens = polygonTokens;
-            break;
-          case 5:
-          case 97:
-          case 80001:
-            tokens = testnetTokens;
-            break;
-          default:
-            tokens = testnetTokens;
-        }
-        
-        // 更新状态
-        setSupportedTokens(tokens);
-        
-        // 构建代币信息映射
-        const tokenInfoMap = {};
-        tokens.forEach(token => {
-          tokenInfoMap[token.address] = token;
-        });
-        setTokenInfo(tokenInfoMap);
-        
-        // 如果已选择代币不在支持列表中，重置选择
-        if (selectedToken && !tokens.find(t => t.address === selectedToken)) {
-          setSelectedToken('');
-          setTokenBalance('0');
-        }
-        
-      } catch (err) {
-        console.error('加载支持的代币失败:', err);
-      }
-    };
-    
-    loadSupportedTokens();
-  }, [sourceChainId, active, library]);
-  
-  // 加载桥接费用
-  useEffect(() => {
-    const loadBridgeFee = async () => {
-      if (!active || !library || !targetChainId) return;
-      
-      try {
-        const bridgeContract = getBridgeContract();
-        if (!bridgeContract) return;
-        
-        // 在实际应用中，这里应该调用合约获取桥接费用
-        // 这里我们使用模拟数据
-        
-        // 模拟不同目标链的费用（以wei为单位）
-        let fee;
-        switch (targetChainId) {
-          case 1:
-            fee = ethers.utils.parseEther('0.005'); // 以太坊主网费用较高
-            break;
-          case 56:
-            fee = ethers.utils.parseEther('0.001'); // BSC费用适中
-            break;
-          case 137:
-            fee = ethers.utils.parseEther('0.0005'); // Polygon费用较低
-            break;
-          default:
-            fee = ethers.utils.parseEther('0.001'); // 默认费用
-        }
-        
-        setBridgeFee(fee.toString());
-        
-      } catch (err) {
-        console.error('加载桥接费用失败:', err);
-      }
-    };
-    
-    loadBridgeFee();
-  }, [targetChainId, active, library]);
-  
-  // 加载代币余额
-  useEffect(() => {
-    const loadTokenBalance = async () => {
-      if (!active || !account || !library || !selectedToken) {
-        setTokenBalance('0');
-        return;
-      }
-      
-      try {
-        const tokenContract = getTokenContract(selectedToken);
-        if (!tokenContract) {
-          setTokenBalance('0');
-          return;
-        }
-        
-        const balance = await tokenContract.balanceOf(account);
-        setTokenBalance(balance.toString());
-        
-        // 检查授权状态
-        const allowance = await tokenContract.allowance(account, BRIDGE_ADDRESS);
-        const requiredAmount = ethers.utils.parseUnits(
-          amount || '0',
-          tokenInfo[selectedToken]?.decimals || 18
-        );
-        
-        setIsApproved(allowance.gte(requiredAmount) && requiredAmount.gt(0));
-        
-      } catch (err) {
-        console.error('加载代币余额失败:', err);
-        setTokenBalance('0');
-      }
-    };
-    
-    loadTokenBalance();
-    
-    // 设置定时器定期刷新余额
-    const intervalId = setInterval(loadTokenBalance, 15000);
-    
-    return () => clearInterval(intervalId);
-  }, [selectedToken, account, active, library, amount]);
-  
-  // 加载多链资产余额
-  useEffect(() => {
-    const loadMultiChainBalances = async () => {
-      if (!active || !account || !library) {
-        setMultiChainBalances({});
-        return;
-      }
-      
-      try {
-        // 在实际应用中，这里应该调用跨链API或RPC获取多链资产余额
-        // 这里我们使用模拟数据
-        
-        // 模拟多链资产余额
-        const mockBalances = {
-          // 以太坊主网资产
-          1: {
-            'ETH': ethers.utils.parseEther('1.5').toString(),
-            'USDT': ethers.utils.parseUnits('500', 6).toString(),
-            'USDC': ethers.utils.parseUnits('750', 6).toString(),
-            'DAI': ethers.utils.parseEther('1000').toString()
-          },
-          // BSC资产
-          56: {
-            'BNB': ethers.utils.parseEther('5').toString(),
-            'USDT': ethers.utils.parseEther('1200').toString(),
-            'USDC': ethers.utils.parseEther('800').toString(),
-            'DAI': ethers.utils.parseEther('600').toString()
-          },
-          // Polygon资产
-          137: {
-            'MATIC': ethers.utils.parseEther('1000').toString(),
-            'USDT': ethers.utils.parseUnits('300', 6).toString(),
-            'USDC': ethers.utils.parseUnits('450', 6).toString(),
-            'DAI': ethers.utils.parseEther('200').toString()
-          }
-        };
-        
-        setMultiChainBalances(mockBalances);
-        
-      } catch (err) {
-        console.error('加载多链资产余额失败:', err);
-        setMultiChainBalances({});
-      }
-    };
-    
-    loadMultiChainBalances();
-    
-    // 设置定时器定期刷新多链资产余额
-    const intervalId = setInterval(loadMultiChainBalances, 30000);
-    
-    return () => clearInterval(intervalId);
-  }, [active, account, library]);
-  
-  // 加载待处理交易
-  useEffect(() => {
-    const loadPendingTransactions = async () => {
-      if (!active || !account || !library) {
-        setPendingTxs([]);
-        return;
-      }
-      
-      try {
-        const bridgeContract = getBridgeContract();
-        if (!bridgeContract) {
-          setPendingTxs([]);
-          return;
-        }
-        
-        // 在实际应用中，这里应该调用合约获取待处理交易
-        // 这里我们使用模拟数据
-        
-        // 模拟待处理交易
-        const mockPendingTxs = [
-          {
-            txHash: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-            sourceChainId: 1,
-            targetChainId: 56,
-            token: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-            tokenSymbol: 'USDT',
-            amount: ethers.utils.parseUnits('100', 6).toString(),
-            timestamp: Math.floor(Date.now() / 1000) - 3600,
-            status: 'pending', // pending, completed, failed
-            canClaim: true
-          },
-          {
-            txHash: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-            sourceChainId: 56,
-            targetChainId: 1,
-            token: '0x55d398326f99059fF775485246999027B3197955',
-            tokenSymbol: 'USDT',
-            amount: ethers.utils.parseUnits('50', 18).toString(),
-            timestamp: Math.floor(Date.now() / 1000) - 7200,
-            status: 'completed',
-            canClaim: false
-          },
-          {
-            txHash: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-            sourceChainId: 137,
-            targetChainId: 1,
-            token: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
-            tokenSymbol: 'USDT',
-            amount: ethers.utils.parseUnits('75', 6).toString(),
-            timestamp: Math.floor(Date.now() / 1000) - 10800,
-            status: 'pending',
-            canClaim: true
-          },
-          {
-            txHash: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-            sourceChainId: 1,
-            targetChainId: 137,
-            token: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-            tokenSymbol: 'USDC',
-            amount: ethers.utils.parseUnits('200', 6).toString(),
-            timestamp: Math.floor(Date.now() / 1000) - 14400,
-            status: 'completed',
-            canClaim: false
-          },
-          {
-            txHash: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-            sourceChainId: 56,
-            targetChainId: 137,
-            token: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
-            tokenSymbol: 'USDC',
-            amount: ethers.utils.parseUnits('150', 18).toString(),
-            timestamp: Math.floor(Date.now() / 1000) - 18000,
-            status: 'failed',
-            canClaim: false,
-            failReason: '目标链验证失败'
-          }
-        ];
-        
-        setPendingTxs(mockPendingTxs);
-        
-      } catch (err) {
-        console.error('加载待处理交易失败:', err);
-        setPendingTxs([]);
-      }
-    };
-    
-    loadPendingTransactions();
-    
-    // 设置定时器定期刷新待处理交易
-    const intervalId = setInterval(loadPendingTransactions, 30000);
-    
-    return () => clearInterval(intervalId);
-  }, [active, account, library]);
-  
-  // 授权代币
-  const approveToken = async () => {
-    if (!active || !account || !library || !selectedToken || !amount) {
-      setApproveError('请先连接钱包并选择代币和金额');
-      return;
-    }
-    
-    setIsApproving(true);
-    setApproveError(null);
-    
-    try {
-      const tokenContract = getTokenContract(selectedToken);
-      if (!tokenContract) {
-        throw new Error('无法连接代币合约');
-      }
-      
-      const decimals = tokenInfo[selectedToken]?.decimals || 18;
-      const amountToApprove = ethers.utils.parseUnits(amount, decimals);
-      
-      // 授权代币
-      const tx = await tokenContract.approve(BRIDGE_ADDRESS, amountToApprove);
-      
-      // 等待交易确认
-      await tx.wait();
-      
-      // 更新授权状态
-      setIsApproved(true);
-      
-    } catch (err) {
-      console.error('授权代币失败:', err);
-      
-      if (err.code === 'ACTION_REJECTED') {
-        setApproveError('您拒绝了交易签名');
-      } else {
-        setApproveError(`授权失败: ${err.message || '请稍后重试'}`);
-      }
+      setTransferHistory(history);
+    } catch (error) {
+      console.error('Error loading transfer history:', error);
     } finally {
-      setIsApproving(false);
+      setIsLoading(false);
     }
   };
-  
-  // 桥接代币
-  const bridgeToken = async () => {
-    if (!active || !account || !library || !selectedToken || !amount || !targetChainId) {
-      setBridgeError('请先连接钱包并填写所有必要信息');
+
+  // 切换源链和目标链
+  const handleSwitchChains = () => {
+    const temp = sourceChain;
+    setSourceChain(targetChain);
+    setTargetChain(temp);
+  };
+
+  // 设置最大金额
+  const handleSetMaxAmount = () => {
+    setAmount(maxAmount);
+  };
+
+  // 估算跨链费用
+  const estimateFee = async () => {
+    // 这里应该调用API或合约来估算费用
+    // 示例实现
+    const baseFee = 0.001;
+    const amountValue = parseFloat(amount) || 0;
+    
+    let chainFactor = 1;
+    if (sourceChain === 'ethereum') {
+      chainFactor = 2; // Ethereum费用较高
+    } else if (sourceChain === 'polygon') {
+      chainFactor = 0.5; // Polygon费用较低
+    }
+    
+    const estimatedFee = baseFee * chainFactor;
+    setFee(estimatedFee.toFixed(6));
+  };
+
+  // 当金额变化时重新估算费用
+  useEffect(() => {
+    if (amount) {
+      estimateFee();
+    }
+  }, [amount, sourceChain, targetChain]);
+
+  // 处理跨链转移
+  const handleTransfer = async () => {
+    if (!account) {
+      alert('请先连接钱包');
       return;
     }
     
-    if (!isApproved) {
-      setBridgeError('请先授权代币');
+    if (!amount || parseFloat(amount) <= 0) {
+      setError('请输入有效金额');
       return;
     }
     
-    // 安全检查
-    if (!securityAcknowledged) {
-      setShowSecurityTips(true);
+    if (parseFloat(amount) > parseFloat(maxAmount)) {
+      setError('余额不足');
       return;
     }
-    
-    setIsBridging(true);
-    setBridgeError(null);
     
     try {
-      const bridgeContract = getBridgeContract();
-      if (!bridgeContract) {
-        throw new Error('无法连接跨链桥合约');
+      setStatus('processing');
+      setError('');
+      
+      // 步骤1: 确保连接到正确的网络
+      setStep(1);
+      const sourceChainConfig = supportedChains.find(chain => chain.id === sourceChain);
+      if (chainId !== sourceChainConfig.chainId) {
+        await switchNetwork(sourceChainConfig.chainId);
       }
       
-      const decimals = tokenInfo[selectedToken]?.decimals || 18;
-      const amountToBridge = ethers.utils.parseUnits(amount, decimals);
+      // 步骤2: 授权代币
+      setStep(2);
+      // 这里应该调用合约授权代币
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 模拟授权过程
       
-      // 桥接代币
-      const tx = await bridgeContract.bridgeToken(
-        selectedToken,
-        amountToBridge,
-        targetChainId,
-        { value: bridgeFee }
-      );
+      // 步骤3: 发起跨链转移
+      setStep(3);
+      // 这里应该调用合约发起跨链转移
+      await new Promise(resolve => setTimeout(resolve, 3000)); // 模拟转移过程
       
-      // 等待交易确认
-      await tx.wait();
+      // 生成模拟交易哈希和转账ID
+      const mockTxHash = '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+      const mockTransferId = '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
       
-      // 重置表单
-      setAmount('');
-      setIsApproved(false);
+      setTxHash(mockTxHash);
+      setTransferId(mockTransferId);
       
-      // 切换到历史记录标签
-      setActiveTab('history');
+      // 步骤4: 监控交易状态
+      setStep(4);
+      await new Promise(resolve => setTimeout(resolve, 5000)); // 模拟监控过程
       
-    } catch (err) {
-      console.error('桥接代币失败:', err);
+      // 步骤5: 完成
+      setStep(5);
+      setStatus('completed');
       
-      if (err.code === 'ACTION_REJECTED') {
-        setBridgeError('您拒绝了交易签名');
-      } else if (err.code === 'INSUFFICIENT_FUNDS') {
-        setBridgeError('余额不足，无法支付桥接费用');
-      } else {
-        setBridgeError(`桥接失败: ${err.message || '请稍后重试'}`);
-      }
-    } finally {
-      setIsBridging(false);
+      // 更新转账历史
+      const newTransfer = {
+        id: mockTransferId,
+        sourceChain,
+        targetChain,
+        amount,
+        status: 'pending',
+        timestamp: Date.now()
+      };
+      
+      setTransferHistory([newTransfer, ...transferHistory]);
+      
+    } catch (error) {
+      console.error('Transfer error:', error);
+      setStatus('error');
+      setError(error.message || '跨链转移失败');
     }
   };
-  
-  // 领取代币
-  const claimToken = async (tx) => {
-    if (!active || !account || !library) {
-      setClaimError('请先连接钱包');
-      return;
-    }
-    
-    setIsClaiming(true);
-    setClaimError(null);
-    
-    try {
-      const bridgeContract = getBridgeContract();
-      if (!bridgeContract) {
-        throw new Error('无法连接跨链桥合约');
-      }
-      
-      // 领取代币
-      const claimTx = await bridgeContract.claimToken(
-        tx.txHash,
-        tx.amount,
-        tx.token,
-        tx.sourceChainId
-      );
-      
-      // 等待交易确认
-      await claimTx.wait();
-      
-      // 更新交易状态
-      setPendingTxs(prev => prev.map(t => {
-        if (t.txHash === tx.txHash) {
-          return { ...t, status: 'completed', canClaim: false };
-        }
-        return t;
-      }));
-      
-    } catch (err) {
-      console.error('领取代币失败:', err);
-      
-      if (err.code === 'ACTION_REJECTED') {
-        setClaimError('您拒绝了交易签名');
-      } else {
-        setClaimError(`领取失败: ${err.message || '请稍后重试'}`);
-      }
-    } finally {
-      setIsClaiming(false);
-    }
+
+  // 获取链图标
+  const getChainIcon = (chainId) => {
+    const chain = supportedChains.find(chain => chain.id === chainId);
+    return chain ? chain.icon : '';
   };
-  
-  // 格式化金额
-  const formatAmount = (amount, decimals = 18) => {
-    if (!amount) return '0';
-    
-    try {
-      const formattedAmount = ethers.utils.formatUnits(amount, decimals);
-      
-      // 如果金额很大，使用千分位分隔符
-      if (parseFloat(formattedAmount) >= 1000) {
-        return parseFloat(formattedAmount).toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 6
-        });
-      }
-      
-      return parseFloat(formattedAmount).toFixed(6);
-    } catch (err) {
-      console.error('格式化金额失败:', err);
-      return '0';
-    }
+
+  // 获取链名称
+  const getChainName = (chainId) => {
+    const chain = supportedChains.find(chain => chain.id === chainId);
+    return chain ? chain.name : '';
   };
-  
-  // 格式化日期
-  const formatDate = (timestamp) => {
-    if (!timestamp) return '';
-    
-    const date = new Date(timestamp * 1000);
+
+  // 格式化时间戳
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
     return date.toLocaleString();
   };
-  
-  // 计算时间差
-  const getTimeAgo = (timestamp) => {
-    if (!timestamp) return '';
-    
-    const seconds = Math.floor(Date.now() / 1000) - timestamp;
-    
-    if (seconds < 60) {
-      return `${seconds}秒前`;
-    } else if (seconds < 3600) {
-      return `${Math.floor(seconds / 60)}分钟前`;
-    } else if (seconds < 86400) {
-      return `${Math.floor(seconds / 3600)}小时前`;
-    } else {
-      return `${Math.floor(seconds / 86400)}天前`;
+
+  // 获取交易状态类名
+  const getStatusClassName = (status) => {
+    switch (status) {
+      case 'completed':
+        return 'status-completed';
+      case 'pending':
+        return 'status-pending';
+      case 'failed':
+        return 'status-failed';
+      default:
+        return '';
     }
   };
-  
-  // 估算跨链时间
-  const estimateBridgeTime = (sourceChainId, targetChainId) => {
-    // 不同链组合的预估时间（分钟）
-    const timeEstimates = {
-      '1-56': 15, // ETH -> BSC
-      '56-1': 20, // BSC -> ETH
-      '1-137': 10, // ETH -> Polygon
-      '137-1': 15, // Polygon -> ETH
-      '56-137': 12, // BSC -> Polygon
-      '137-56': 12, // Polygon -> BSC
-      'default': 15 // 默认时间
-    };
-    
-    const key = `${sourceChainId}-${targetChainId}`;
-    const estimateMinutes = timeEstimates[key] || timeEstimates.default;
-    
-    if (estimateMinutes < 60) {
-      return `约${estimateMinutes}分钟`;
-    } else {
-      const hours = Math.floor(estimateMinutes / 60);
-      const minutes = estimateMinutes % 60;
-      return `约${hours}小时${minutes > 0 ? ` ${minutes}分钟` : ''}`;
-    }
-  };
-  
-  // 比较不同链的桥接费用
-  const compareFees = () => {
-    // 不同链的桥接费用（美元）
-    const feeComparison = [
-      { from: 1, to: 56, fee: 5.00, token: 'ETH' },
-      { from: 1, to: 137, fee: 3.50, token: 'ETH' },
-      { from: 56, to: 1, fee: 1.00, token: 'BNB' },
-      { from: 56, to: 137, fee: 0.80, token: 'BNB' },
-      { from: 137, to: 1, fee: 0.50, token: 'MATIC' },
-      { from: 137, to: 56, fee: 0.40, token: 'MATIC' }
-    ];
-    
-    return feeComparison;
-  };
-  
-  // 渲染网络选择器
-  const renderNetworkSelector = (isSource) => {
-    const title = isSource ? '选择源链网络' : '选择目标链网络';
-    const currentId = isSource ? sourceChainId : targetChainId;
-    const setChainId = isSource ? setSourceChainId : setTargetChainId;
-    
-    return (
-      <div className="network-selector">
-        <div className="network-selector-header">
-          <h4>{title}</h4>
-          <button 
-            className="close-button"
-            onClick={() => setShowNetworkSelector(false)}
-          >
-            ×
-          </button>
-        </div>
-        
-        <div className="network-list">
-          {supportedNetworks.map(network => (
-            <div
-              key={network.id}
-              className={`network-item ${network.id === currentId ? 'selected' : ''}`}
-              onClick={() => {
-                setChainId(network.id);
-                setShowNetworkSelector(false);
-                
-                // 如果源链和目标链相同，则切换目标链
-                if (!isSource && network.id === sourceChainId) {
-                  setTargetChainId(sourceChainId === 1 ? 56 : 1);
-                } else if (isSource && network.id === targetChainId) {
-                  setTargetChainId(network.id === 1 ? 56 : 1);
-                }
-              }}
-            >
-              <span className="network-icon">{network.icon}</span>
-              <span className="network-name">{network.name}</span>
-              {network.id === currentId && (
-                <span className="network-selected">✓</span>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-  
-  // 渲染多链资产余额
-  const renderMultiChainBalances = () => {
-    return (
-      <div className="multi-chain-balances">
-        <h4>多链资产余额</h4>
-        
-        <div className="balances-container">
-          {Object.entries(multiChainBalances).map(([chainId, tokens]) => {
-            const network = getNetworkInfo(parseInt(chainId));
-            
-            return (
-              <div key={chainId} className="chain-balance">
-                <div className="chain-header">
-                  <span className="chain-icon">{network.icon}</span>
-                  <span className="chain-name">{network.name}</span>
-                </div>
-                
-                <div className="token-balances">
-                  {Object.entries(tokens).map(([symbol, balance]) => (
-                    <div key={symbol} className="token-balance">
-                      <span className="token-symbol">{symbol}</span>
-                      <span className="token-amount">
-                        {formatAmount(balance, symbol === 'USDT' || symbol === 'USDC' ? 6 : 18)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-  
-  // 渲染桥接表单
-  const renderBridgeForm = () => {
-    const sourceNetwork = getNetworkInfo(sourceChainId);
-    const targetNetwork = getNetworkInfo(targetChainId);
-    
-    return (
-      <div className="bridge-form">
-        <div className="network-selection">
-          <div className="network-from">
-            <label>从</label>
-            <div 
-              className="network-display"
-              onClick={() => setShowNetworkSelector(true)}
-            >
-              <span className="network-icon">{sourceNetwork.icon}</span>
-              <span className="network-name">{sourceNetwork.name}</span>
-              <span className="network-arrow">▼</span>
-            </div>
-          </div>
-          
-          <div className="network-switch">
-            <button 
-              className="switch-button"
-              onClick={() => {
-                const temp = sourceChainId;
-                setSourceChainId(targetChainId);
-                setTargetChainId(temp);
-              }}
-            >
-              ⇄
-            </button>
-          </div>
-          
-          <div className="network-to">
-            <label>到</label>
-            <div 
-              className="network-display"
-              onClick={() => setShowNetworkSelector(true)}
-            >
-              <span className="network-icon">{targetNetwork.icon}</span>
-              <span className="network-name">{targetNetwork.name}</span>
-              <span className="network-arrow">▼</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="token-selection">
-          <label>选择代币</label>
-          <select
-            value={selectedToken}
-            onChange={(e) => setSelectedToken(e.target.value)}
-          >
-            <option value="">选择代币</option>
-            {supportedTokens.map(token => (
-              <option key={token.address} value={token.address}>
-                {token.symbol} - {token.name}
-              </option>
-            ))}
-          </select>
-          
-          {selectedToken && (
-            <div className="token-balance-display">
-              余额: {formatAmount(tokenBalance, tokenInfo[selectedToken]?.decimals)} {tokenInfo[selectedToken]?.symbol}
-            </div>
-          )}
-        </div>
-        
-        <div className="amount-input">
-          <label>金额</label>
-          <div className="amount-input-container">
-            <input
-              type="text"
-              value={amount}
-              onChange={(e) => {
-                // 只允许数字和小数点
-                const value = e.target.value.replace(/[^0-9.]/g, '');
-                setAmount(value);
-                
-                // 重置授权状态
-                if (value !== amount) {
-                  setIsApproved(false);
-                }
-              }}
-              placeholder="输入金额"
-            />
-            
-            <button
-              className="max-button"
-              onClick={() => {
-                if (!selectedToken || !tokenBalance) return;
-                
-                const decimals = tokenInfo[selectedToken]?.decimals || 18;
-                const maxAmount = ethers.utils.formatUnits(tokenBalance, decimals);
-                setAmount(maxAmount);
-                setIsApproved(false);
-              }}
-            >
-              最大
-            </button>
-          </div>
-        </div>
-        
-        <div className="fee-display">
-          <div className="fee-item">
-            <span className="fee-label">桥接费用:</span>
-            <span className="fee-value">
-              {formatAmount(bridgeFee)} {sourceNetwork.currency}
-            </span>
-          </div>
-          
-          <div className="fee-item">
-            <span className="fee-label">预计时间:</span>
-            <span className="fee-value">
-              {estimateBridgeTime(sourceChainId, targetChainId)}
-            </span>
-          </div>
-        </div>
-        
-        <div className="bridge-actions">
-          {selectedToken && amount && !isApproved && (
-            <button
-              className="approve-button"
-              onClick={approveToken}
-              disabled={isApproving || !selectedToken || !amount}
-            >
-              {isApproving ? '授权中...' : '授权'}
-            </button>
-          )}
-          
-          <button
-            className="bridge-button"
-            onClick={bridgeToken}
-            disabled={isBridging || !selectedToken || !amount || !isApproved}
-          >
-            {isBridging ? '桥接中...' : '桥接'}
-          </button>
-        </div>
-        
-        {approveError && (
-          <div className="error-message">{approveError}</div>
-        )}
-        
-        {bridgeError && (
-          <div className="error-message">{bridgeError}</div>
-        )}
-      </div>
-    );
-  };
-  
-  // 渲染交易历史
-  const renderTransactionHistory = () => {
-    // 根据过滤器筛选交易
-    const filteredTxs = pendingTxs.filter(tx => {
-      if (historyFilter === 'all') return true;
-      if (historyFilter === 'pending') return tx.status === 'pending';
-      if (historyFilter === 'completed') return tx.status === 'completed';
-      return true;
-    });
-    
-    return (
-      <div className="transaction-history">
-        <div className="history-header">
-          <h4>交易历史</h4>
-          
-          <div className="history-filter">
-            <button
-              className={`filter-button ${historyFilter === 'all' ? 'active' : ''}`}
-              onClick={() => setHistoryFilter('all')}
-            >
-              全部
-            </button>
-            <button
-              className={`filter-button ${historyFilter === 'pending' ? 'active' : ''}`}
-              onClick={() => setHistoryFilter('pending')}
-            >
-              待处理
-            </button>
-            <button
-              className={`filter-button ${historyFilter === 'completed' ? 'active' : ''}`}
-              onClick={() => setHistoryFilter('completed')}
-            >
-              已完成
-            </button>
-          </div>
-        </div>
-        
-        {filteredTxs.length === 0 ? (
-          <div className="no-transactions">
-            暂无交易记录
-          </div>
-        ) : (
-          <div className="transactions-list">
-            {filteredTxs.map(tx => {
-              const sourceNetwork = getNetworkInfo(tx.sourceChainId);
-              const targetNetwork = getNetworkInfo(tx.targetChainId);
-              
-              return (
-                <div 
-                  key={tx.txHash} 
-                  className={`transaction-item ${tx.status === 'pending' ? 'pending' : tx.status === 'completed' ? 'completed' : 'failed'}`}
-                >
-                  <div className="transaction-header">
-                    <div className="transaction-networks">
-                      <span className="network-icon">{sourceNetwork.icon}</span>
-                      <span className="network-name">{sourceNetwork.name}</span>
-                      <span className="network-arrow">→</span>
-                      <span className="network-icon">{targetNetwork.icon}</span>
-                      <span className="network-name">{targetNetwork.name}</span>
-                    </div>
-                    
-                    <div className="transaction-time">
-                      {getTimeAgo(tx.timestamp)}
-                    </div>
-                  </div>
-                  
-                  <div className="transaction-details">
-                    <div className="transaction-amount">
-                      {formatAmount(tx.amount, tx.tokenSymbol === 'USDT' || tx.tokenSymbol === 'USDC' ? 6 : 18)} {tx.tokenSymbol}
-                    </div>
-                    
-                    <div className="transaction-status">
-                      {tx.status === 'pending' ? '处理中' : tx.status === 'completed' ? '已完成' : '失败'}
-                      {tx.status === 'failed' && tx.failReason && (
-                        <div className="failure-reason">
-                          原因: {tx.failReason}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="transaction-hash">
-                    交易哈希: {tx.txHash.substring(0, 10)}...{tx.txHash.substring(tx.txHash.length - 8)}
-                  </div>
-                  
-                  {tx.canClaim && (
-                    <div className="transaction-actions">
-                      <button
-                        className="claim-button"
-                        onClick={() => claimToken(tx)}
-                        disabled={isClaiming}
-                      >
-                        {isClaiming ? '领取中...' : '领取代币'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-        
-        {claimError && (
-          <div className="error-message">{claimError}</div>
-        )}
-      </div>
-    );
-  };
-  
-  // 渲染费用比较
-  const renderFeeComparison = () => {
-    const fees = compareFees();
-    
-    return (
-      <div className="fee-comparison">
-        <h4>跨链费用比较</h4>
-        
-        <div className="fee-table">
-          <div className="fee-table-header">
-            <div className="fee-column">源链</div>
-            <div className="fee-column">目标链</div>
-            <div className="fee-column">费用</div>
-            <div className="fee-column">代币</div>
-          </div>
-          
-          {fees.map((fee, index) => {
-            const sourceNetwork = getNetworkInfo(fee.from);
-            const targetNetwork = getNetworkInfo(fee.to);
-            
-            return (
-              <div key={index} className="fee-table-row">
-                <div className="fee-column">
-                  <span className="network-icon">{sourceNetwork.icon}</span>
-                  <span className="network-name">{sourceNetwork.name}</span>
-                </div>
-                <div className="fee-column">
-                  <span className="network-icon">{targetNetwork.icon}</span>
-                  <span className="network-name">{targetNetwork.name}</span>
-                </div>
-                <div className="fee-column">${fee.fee.toFixed(2)}</div>
-                <div className="fee-column">{fee.token}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-  
-  // 渲染安全提示
-  const renderSecurityTips = () => {
-    return (
-      <div className="security-tips-modal">
-        <div className="security-tips-content">
-          <div className="security-tips-header">
-            <h3>跨链安全提示</h3>
-            <button 
-              className="close-button"
-              onClick={() => setShowSecurityTips(false)}
-            >
-              ×
-            </button>
-          </div>
-          
-          <div className="security-tips-body">
-            <div className="security-warning">
-              <span className="warning-icon">⚠️</span>
-              <span className="warning-text">跨链操作存在一定风险，请仔细阅读以下提示</span>
-            </div>
-            
-            <ul className="security-list">
-              <li>跨链桥接可能需要5-30分钟完成，具体时间取决于网络拥堵情况</li>
-              <li>请确保目标链地址正确，错误的地址可能导致资产永久丢失</li>
-              <li>首次使用建议先尝试小额转账，确认安全后再进行大额转账</li>
-              <li>跨链过程中请勿关闭钱包或断开连接，以免影响交易确认</li>
-              <li>部分链可能收取额外的网络费用，实际到账金额可能略有差异</li>
-              <li>如遇到问题，请保存交易哈希并联系客服支持</li>
-            </ul>
-            
-            <div className="security-checkbox">
-              <input
-                type="checkbox"
-                id="security-acknowledge"
-                checked={securityAcknowledged}
-                onChange={(e) => setSecurityAcknowledged(e.target.checked)}
-              />
-              <label htmlFor="security-acknowledge">
-                我已阅读并理解上述风险提示
-              </label>
-            </div>
-            
-            <div className="security-actions">
-              <button
-                className="cancel-button"
-                onClick={() => setShowSecurityTips(false)}
-              >
-                取消
-              </button>
-              
-              <button
-                className="proceed-button"
-                onClick={() => {
-                  if (securityAcknowledged) {
-                    setShowSecurityTips(false);
-                    bridgeToken();
-                  }
-                }}
-                disabled={!securityAcknowledged}
-              >
-                继续桥接
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-  
-  // 渲染组件
+
   return (
     <div className="cross-chain-bridge">
-      <div className="bridge-header">
-        <h2>跨链桥</h2>
-        <p>在不同区块链网络间安全转移您的资产</p>
-      </div>
+      <h2>跨链资产桥</h2>
+      <p className="description">
+        在BNB Chain、Ethereum和Polygon之间安全转移您的资产
+      </p>
       
-      {!active ? (
-        <div className="connect-wallet-message">
-          <p>请连接您的钱包以使用跨链桥</p>
+      {!account ? (
+        <div className="connect-wallet-container">
+          <p>请连接钱包以使用跨链桥</p>
+          <button className="connect-button" onClick={connectWallet}>
+            连接钱包
+          </button>
         </div>
       ) : (
-        <div className="bridge-content">
-          <div className="bridge-tabs">
-            <button
-              className={`tab-button ${activeTab === 'bridge' ? 'active' : ''}`}
-              onClick={() => setActiveTab('bridge')}
-            >
-              桥接
-            </button>
-            <button
-              className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
-              onClick={() => setActiveTab('history')}
-            >
-              历史记录
-              {pendingTxs.filter(tx => tx.status === 'pending').length > 0 && (
-                <span className="pending-badge">
-                  {pendingTxs.filter(tx => tx.status === 'pending').length}
-                </span>
-              )}
-            </button>
-          </div>
+        <>
+          {status === 'idle' && (
+            <div className="transfer-form">
+              <div className="chain-selector">
+                <div className="chain-select">
+                  <label>从</label>
+                  <div className="chain-dropdown">
+                    <div className="selected-chain">
+                      <img src={getChainIcon(sourceChain)} alt={sourceChain} />
+                      <span>{getChainName(sourceChain)}</span>
+                    </div>
+                    <div className="chain-options">
+                      {supportedChains.map(chain => (
+                        chain.id !== targetChain && (
+                          <div 
+                            key={chain.id} 
+                            className="chain-option" 
+                            onClick={() => setSourceChain(chain.id)}
+                          >
+                            <img src={chain.icon} alt={chain.name} />
+                            <span>{chain.name}</span>
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <button className="switch-button" onClick={handleSwitchChains}>
+                  ⇄
+                </button>
+                
+                <div className="chain-select">
+                  <label>到</label>
+                  <div className="chain-dropdown">
+                    <div className="selected-chain">
+                      <img src={getChainIcon(targetChain)} alt={targetChain} />
+                      <span>{getChainName(targetChain)}</span>
+                    </div>
+                    <div className="chain-options">
+                      {supportedChains.map(chain => (
+                        chain.id !== sourceChain && (
+                          <div 
+                            key={chain.id} 
+                            className="chain-option" 
+                            onClick={() => setTargetChain(chain.id)}
+                          >
+                            <img src={chain.icon} alt={chain.name} />
+                            <span>{chain.name}</span>
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="amount-input">
+                <label>
+                  <span>转移金额</span>
+                  <span className="balance">余额: {maxAmount} CBT</span>
+                </label>
+                <div className="input-with-max">
+                  <input 
+                    type="number" 
+                    value={amount} 
+                    onChange={(e) => setAmount(e.target.value)} 
+                    placeholder="输入CBT金额" 
+                  />
+                  <button onClick={handleSetMaxAmount}>最大</button>
+                </div>
+              </div>
+              
+              <div className="fee-estimator">
+                <div className="fee-row">
+                  <span>预估跨链费用:</span>
+                  <span>{fee} CBT</span>
+                </div>
+                <div className="fee-row">
+                  <span>预计到账金额:</span>
+                  <span>{amount ? (parseFloat(amount) - parseFloat(fee)).toFixed(6) : '0'} CBT</span>
+                </div>
+              </div>
+              
+              {error && <div className="error-message">{error}</div>}
+              
+              <button 
+                className="transfer-button" 
+                onClick={handleTransfer} 
+                disabled={!amount || parseFloat(amount) <= 0 || parseFloat(amount) > parseFloat(maxAmount)}
+              >
+                开始跨链转移
+              </button>
+            </div>
+          )}
           
-          <div className="bridge-tab-content">
-            {activeTab === 'bridge' ? (
-              <>
-                {renderBridgeForm()}
-                {renderMultiChainBalances()}
-                {renderFeeComparison()}
-              </>
+          {status === 'processing' && (
+            <div className="transfer-progress">
+              <h3>跨链转移进行中</h3>
+              
+              <div className="progress-steps">
+                <div className={`progress-step ${step >= 1 ? 'active' : ''}`}>
+                  <div className="step-number">1</div>
+                  <div className="step-content">
+                    <h4>连接网络</h4>
+                    <p>确保连接到 {getChainName(sourceChain)}</p>
+                  </div>
+                  {step > 1 && <div className="step-check">✓</div>}
+                </div>
+                
+                <div className={`progress-step ${step >= 2 ? 'active' : ''}`}>
+                  <div className="step-number">2</div>
+                  <div className="step-content">
+                    <h4>授权代币</h4>
+                    <p>授权跨链桥合约使用您的CBT代币</p>
+                  </div>
+                  {step > 2 && <div className="step-check">✓</div>}
+                </div>
+                
+                <div className={`progress-step ${step >= 3 ? 'active' : ''}`}>
+                  <div className="step-number">3</div>
+                  <div className="step-content">
+                    <h4>发起跨链转移</h4>
+                    <p>在 {getChainName(sourceChain)} 上锁定代币</p>
+                  </div>
+                  {step > 3 && <div className="step-check">✓</div>}
+                </div>
+                
+                <div className={`progress-step ${step >= 4 ? 'active' : ''}`}>
+                  <div className="step-number">4</div>
+                  <div className="step-content">
+                    <h4>等待确认</h4>
+                    <p>等待跨链验证和确认</p>
+                  </div>
+                  {step > 4 && <div className="step-check">✓</div>}
+                </div>
+                
+                <div className={`progress-step ${step >= 5 ? 'active' : ''}`}>
+                  <div className="step-number">5</div>
+                  <div className="step-content">
+                    <h4>完成</h4>
+                    <p>在 {getChainName(targetChain)} 上接收代币</p>
+                  </div>
+                  {step > 5 && <div className="step-check">✓</div>}
+                </div>
+              </div>
+              
+              {txHash && (
+                <div className="transaction-info">
+                  <p>交易哈希: <a href={`https://explorer.example.com/tx/${txHash}`} target="_blank" rel="noopener noreferrer">{txHash.substring(0, 10)}...{txHash.substring(txHash.length - 8)}</a></p>
+                </div>
+              )}
+              
+              <div className="loading-spinner"></div>
+              <p className="processing-message">请不要关闭此页面，跨链转移正在处理中...</p>
+            </div>
+          )}
+          
+          {status === 'completed' && (
+            <div className="transfer-complete">
+              <div className="success-icon">✓</div>
+              <h3>跨链转移成功!</h3>
+              <p>您已成功将 {amount} CBT 从 {getChainName(sourceChain)} 转移到 {getChainName(targetChain)}</p>
+              
+              <div className="transaction-details">
+                <div className="detail-row">
+                  <span>转账ID:</span>
+                  <span>{transferId.substring(0, 10)}...{transferId.substring(transferId.length - 8)}</span>
+                </div>
+                <div className="detail-row">
+                  <span>交易哈希:</span>
+                  <span>
+                    <a href={`https://explorer.example.com/tx/${txHash}`} target="_blank" rel="noopener noreferrer">
+                      {txHash.substring(0, 10)}...{txHash.substring(txHash.length - 8)}
+                    </a>
+                  </span>
+                </div>
+                <div className="detail-row">
+                  <span>转移金额:</span>
+                  <span>{amount} CBT</span>
+                </div>
+                <div className="detail-row">
+                  <span>跨链费用:</span>
+                  <span>{fee} CBT</span>
+                </div>
+                <div className="detail-row">
+                  <span>到账金额:</span>
+                  <span>{(parseFloat(amount) - parseFloat(fee)).toFixed(6)} CBT</span>
+                </div>
+              </div>
+              
+              <button className="new-transfer-button" onClick={() => setStatus('idle')}>
+                发起新的跨链转移
+              </button>
+            </div>
+          )}
+          
+          {status === 'error' && (
+            <div className="transfer-error">
+              <div className="error-icon">✗</div>
+              <h3>跨链转移失败</h3>
+              <p>{error || '处理您的跨链转移请求时发生错误'}</p>
+              
+              <button className="retry-button" onClick={() => setStatus('idle')}>
+                重试
+              </button>
+            </div>
+          )}
+          
+          <div className="transfer-history">
+            <h3>跨链转移历史</h3>
+            
+            {isLoading ? (
+              <div className="loading-spinner"></div>
+            ) : transferHistory.length > 0 ? (
+              <table className="history-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>从</th>
+                    <th>到</th>
+                    <th>金额</th>
+                    <th>状态</th>
+                    <th>时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transferHistory.map(transfer => (
+                    <tr key={transfer.id}>
+                      <td title={transfer.id}>
+                        {transfer.id.substring(0, 6)}...{transfer.id.substring(transfer.id.length - 4)}
+                      </td>
+                      <td>
+                        <div className="chain-cell">
+                          <img src={getChainIcon(transfer.sourceChain)} alt={transfer.sourceChain} />
+                          <span>{getChainName(transfer.sourceChain)}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="chain-cell">
+                          <img src={getChainIcon(transfer.targetChain)} alt={transfer.targetChain} />
+                          <span>{getChainName(transfer.targetChain)}</span>
+                        </div>
+                      </td>
+                      <td>{transfer.amount} CBT</td>
+                      <td>
+                        <span className={`status-badge ${getStatusClassName(transfer.status)}`}>
+                          {transfer.status === 'completed' ? '已完成' : 
+                           transfer.status === 'pending' ? '处理中' : '失败'}
+                        </span>
+                      </td>
+                      <td>{formatTimestamp(transfer.timestamp)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             ) : (
-              renderTransactionHistory()
+              <div className="no-history">
+                <p>暂无跨链转移记录</p>
+              </div>
             )}
           </div>
-        </div>
+        </>
       )}
-      
-      {showNetworkSelector && renderNetworkSelector(true)}
-      {showSecurityTips && renderSecurityTips()}
     </div>
   );
 };
