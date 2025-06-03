@@ -1,670 +1,692 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { ethers } from 'ethers';
-import { BlockchainContext } from '../../context/blockchain';
-import NFTMarketplaceContract from './NFTMarketplaceContract';
-import NFTMarketplaceABI from './NFTMarketplaceABI';
-import NFTMarketplaceList from './NFTMarketplaceList';
-import NFTMarketplaceFilters from './NFTMarketplaceFilters';
-import NFTDetailModal from './NFTDetailModal';
-import NFTPurchaseModal from './NFTPurchaseModal';
-import NFTBidModal from './NFTBidModal';
-import './NFTMarketplace.css';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useBlockchain } from '../../context/blockchain';
+import { formatAddress } from '../../utils/formatters';
+import '../../styles/marketplace.css';
+
+// 懒加载组件
+const NFTDetailModal = lazy(() => import('./NFTDetailModal'));
+const NFTBidModal = lazy(() => import('./NFTBidModal'));
+const NFTPurchaseModal = lazy(() => import('./NFTPurchaseModal'));
+const NFTMarketplaceList = lazy(() => import('./NFTMarketplaceList'));
+
+// 骨架屏组件
+const NFTMarketplaceSkeleton = () => (
+  <div className="nft-marketplace-container">
+    <div className="marketplace-header-skeleton">
+      <div className="skeleton-title"></div>
+      <div className="skeleton-actions">
+        <div className="skeleton-search"></div>
+        <div className="skeleton-filter"></div>
+      </div>
+    </div>
+    <div className="marketplace-content-skeleton">
+      <div className="skeleton-sidebar">
+        <div className="skeleton-category"></div>
+        <div className="skeleton-category"></div>
+        <div className="skeleton-category"></div>
+        <div className="skeleton-price-range"></div>
+      </div>
+      <div className="skeleton-items-grid">
+        {Array(8).fill(0).map((_, index) => (
+          <div key={index} className="skeleton-nft-card">
+            <div className="skeleton-image"></div>
+            <div className="skeleton-info">
+              <div className="skeleton-title"></div>
+              <div className="skeleton-price"></div>
+              <div className="skeleton-actions"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
 
 /**
- * NFT市场主容器组件
- * 整合所有NFT市场相关子组件，管理全局市场状态
+ * NFT市场组件
+ * 提供NFT浏览、筛选、购买和竞价功能
+ * 
+ * @component
+ * @version 2.0.0
  */
 const NFTMarketplace = () => {
+  const navigate = useNavigate();
+  const { account, active } = useBlockchain();
+  
   // 状态管理
-  const [listedNFTs, setListedNFTs] = useState([]);
-  const [filteredNFTs, setFilteredNFTs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [activeView, setActiveView] = useState('grid'); // 'grid' 或 'list'
-  const [sortOption, setSortOption] = useState('newest');
+  const [nfts, setNfts] = useState([]);
+  const [filteredNfts, setFilteredNfts] = useState([]);
+  const [selectedNFT, setSelectedNFT] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     category: 'all',
-    priceRange: { min: 0, max: 0 },
-    saleType: 'all', // 'fixed', 'auction', 'all'
-    creator: '',
-    searchQuery: '',
-    onlyFavorites: false
+    priceRange: [0, 1000],
+    sortBy: 'newest',
+    onlyVerified: false,
+    showOwned: false
   });
-  
-  // 模态框状态
-  const [selectedNFT, setSelectedNFT] = useState(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
-  const [isBidModalOpen, setIsBidModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [modalState, setModalState] = useState({
+    detail: false,
+    bid: false,
+    purchase: false
+  });
   const [favorites, setFavorites] = useState([]);
-  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [error, setError] = useState(null);
+  const [notification, setNotification] = useState(null);
   
-  // 合约状态
-  const [marketplaceContract, setMarketplaceContract] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  // 区块链上下文
-  const { account, provider, isConnected } = useContext(BlockchainContext);
+  // 从NFTMarketplaceContract导入的合约接口
+  const { 
+    fetchMarketItems, 
+    fetchUserNFTs,
+    fetchItemMetadata,
+    purchaseItem,
+    placeBid,
+    cancelListing,
+    isApprovedForAll,
+    approveMarketplace
+  } = require('./NFTMarketplaceContract');
   
-  // NFT市场合约地址（实际应用中应从配置或环境变量获取）
-  const MARKETPLACE_ADDRESS = '0x123456789abcdef123456789abcdef123456789a';
-
-  // 初始化合约
+  // 加载NFT数据
   useEffect(() => {
-    if (provider) {
+    let isMounted = true;
+    
+    const loadNFTs = async () => {
       try {
-        const contract = new NFTMarketplaceContract(
-          provider,
-          MARKETPLACE_ADDRESS,
-          NFTMarketplaceABI
+        setIsLoading(true);
+        setError(null);
+        
+        // 获取市场上的NFT
+        const marketItems = await fetchMarketItems();
+        
+        // 获取NFT元数据
+        const itemsWithMetadata = await Promise.all(
+          marketItems.map(async (item) => {
+            const metadata = await fetchItemMetadata(item.tokenURI);
+            return { ...item, ...metadata };
+          })
         );
-        setMarketplaceContract(contract);
-      } catch (err) {
-        console.error('初始化合约失败:', err);
-        setError('初始化NFT市场合约失败，请刷新页面重试');
-      }
-    }
-  }, [provider]);
-
-  // 加载NFT列表
-  useEffect(() => {
-    if (marketplaceContract) {
-      fetchListedNFTs();
-    }
-  }, [marketplaceContract, account]);
-
-  // 应用筛选条件
-  useEffect(() => {
-    if (listedNFTs.length > 0) {
-      applyFilters();
-    }
-  }, [listedNFTs, filters, sortOption, favorites]);
-  
-  // 加载收藏列表
-  useEffect(() => {
-    const savedFavorites = JSON.parse(localStorage.getItem('nftFavorites') || '[]');
-    setFavorites(savedFavorites);
-  }, []);
-  
-  // 监听链上事件
-  useEffect(() => {
-    if (marketplaceContract) {
-      // 监听NFT上架事件
-      const listingCleanup = marketplaceContract.listenToListingEvents((event) => {
-        console.log('New NFT listed:', event);
-        // 刷新NFT列表或添加新上架的NFT
-        fetchListedNFTs();
-        showNotification('有新的NFT上架了！', 'info');
-      });
-      
-      // 监听NFT售出事件
-      const saleCleanup = marketplaceContract.listenToSaleEvents((event) => {
-        console.log('NFT sold:', event);
-        // 刷新NFT列表或更新已售出的NFT
-        fetchListedNFTs();
         
-        // 如果是当前用户购买的，显示通知
-        if (account && event.buyer.toLowerCase() === account.toLowerCase()) {
-          showNotification('恭喜！您成功购买了NFT', 'success');
+        if (isMounted) {
+          setNfts(itemsWithMetadata);
+          setFilteredNfts(itemsWithMetadata);
         }
-      });
-      
-      // 监听竞价事件
-      const bidCleanup = marketplaceContract.listenToBidEvents((event) => {
-        console.log('New bid placed:', event);
-        // 更新拍卖中的NFT
-        updateAuctionNFT(event.tokenAddress, event.tokenId, event.bidder, event.bidAmount);
-        
-        // 如果是当前用户的出价被超过，显示通知
-        if (account && 
-            selectedNFT && 
-            selectedNFT.contractAddress === event.tokenAddress && 
-            selectedNFT.tokenId === event.tokenId && 
-            selectedNFT.highestBidder && 
-            selectedNFT.highestBidder.toLowerCase() === account.toLowerCase() && 
-            event.bidder.toLowerCase() !== account.toLowerCase()) {
-          showNotification('您的出价已被超过！', 'warning');
+      } catch (error) {
+        console.error('加载NFT失败:', error);
+        if (isMounted) {
+          setError('加载NFT时出错，请刷新页面重试');
         }
-      });
-      
-      // 清理函数
-      return () => {
-        listingCleanup();
-        saleCleanup();
-        bidCleanup();
-      };
-    }
-  }, [marketplaceContract, account, selectedNFT]);
+      } finally {
+        if (isMounted) {
+          // 使用setTimeout模拟更真实的加载体验，实际生产环境可移除
+          setTimeout(() => {
+            setIsLoading(false);
+          }, 800);
+        }
+      }
+    };
+    
+    loadNFTs();
+    
+    // 加载用户收藏
+    const loadFavorites = () => {
+      const savedFavorites = localStorage.getItem('nftFavorites');
+      if (savedFavorites) {
+        setFavorites(JSON.parse(savedFavorites));
+      }
+    };
+    
+    loadFavorites();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchMarketItems, fetchItemMetadata]);
   
-  // 通知计时器
+  // 监听筛选条件变化
   useEffect(() => {
-    if (notification.show) {
-      const timer = setTimeout(() => {
-        setNotification({ show: false, message: '', type: '' });
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [notification]);
-
-  // 获取所有上架的NFT
-  const fetchListedNFTs = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      if (!marketplaceContract) {
-        throw new Error('合约未初始化');
-      }
-      
-      // 从区块链获取上架的NFT
-      const nfts = await marketplaceContract.getListedNFTs();
-      
-      setListedNFTs(nfts);
-      setFilteredNFTs(nfts);
-      setIsLoading(false);
-    } catch (err) {
-      console.error('获取NFT列表失败:', err);
-      setError('加载NFT列表失败，请稍后再试');
-      setIsLoading(false);
-      
-      // 如果链上调用失败，使用模拟数据（仅用于开发和测试）
-      if (process.env.NODE_ENV === 'development') {
-        useMockData();
-      }
-    }
-  };
+    filterNFTs();
+  }, [filters, searchTerm, nfts]);
   
-  // 使用模拟数据（仅用于开发和测试）
-  const useMockData = () => {
-    const mockNFTs = [
-      {
-        id: '1',
-        name: '传统中国水墨画',
-        description: '融合传统与现代的水墨艺术作品',
-        image: 'https://example.com/nft1.jpg',
-        price: ethers.utils.parseEther('0.5'),
-        seller: '0x1234...5678',
-        owner: '0x1234...5678',
-        tokenId: '1',
-        contractAddress: '0xabcd...efgh',
-        isAuction: false,
-        category: 'visual-art',
-        creator: '张艺术家',
-        createdAt: Date.now() - 86400000 * 2, // 2天前
-        likes: 24
-      },
-      {
-        id: '2',
-        name: '非洲部落面具',
-        description: '来自西非的传统部落面具数字复刻',
-        image: 'https://example.com/nft2.jpg',
-        price: ethers.utils.parseEther('0.8'),
-        seller: '0x2345...6789',
-        owner: '0x2345...6789',
-        tokenId: '2',
-        contractAddress: '0xbcde...fghi',
-        isAuction: true,
-        auctionEndTime: Date.now() + 86400000 * 3, // 3天后结束
-        highestBid: ethers.utils.parseEther('0.8'),
-        highestBidder: '0x3456...7890',
-        category: 'sculpture',
-        creator: 'Adebayo Olatunji',
-        createdAt: Date.now() - 86400000 * 5, // 5天前
-        likes: 18
-      },
-      {
-        id: '3',
-        name: '印度古典舞蹈瞬间',
-        description: '记录印度古典舞蹈中的优美姿态',
-        image: 'https://example.com/nft3.jpg',
-        price: ethers.utils.parseEther('0.3'),
-        seller: '0x3456...7890',
-        owner: '0x3456...7890',
-        tokenId: '3',
-        contractAddress: '0xcdef...ghij',
-        isAuction: false,
-        category: 'photography',
-        creator: 'Priya Sharma',
-        createdAt: Date.now() - 86400000, // 1天前
-        likes: 32
-      },
-      {
-        id: '4',
-        name: '日本浮世绘现代诠释',
-        description: '传统浮世绘艺术的数字化现代演绎',
-        image: 'https://example.com/nft4.jpg',
-        price: ethers.utils.parseEther('1.2'),
-        seller: '0x4567...8901',
-        owner: '0x4567...8901',
-        tokenId: '4',
-        contractAddress: '0xdefg...hijk',
-        isAuction: true,
-        auctionEndTime: Date.now() + 86400000 * 1, // 1天后结束
-        highestBid: ethers.utils.parseEther('1.2'),
-        highestBidder: '0x5678...9012',
-        category: 'visual-art',
-        creator: '佐藤雅人',
-        createdAt: Date.now() - 86400000 * 7, // 7天前
-        likes: 45
-      }
-    ];
-    
-    setListedNFTs(mockNFTs);
-    setFilteredNFTs(mockNFTs);
-    setIsLoading(false);
-    setError('使用模拟数据（链上数据获取失败）');
-  };
+  // 保存收藏到本地存储
+  useEffect(() => {
+    localStorage.setItem('nftFavorites', JSON.stringify(favorites));
+  }, [favorites]);
   
-  // 更新拍卖中的NFT
-  const updateAuctionNFT = (tokenAddress, tokenId, bidder, bidAmount) => {
-    setListedNFTs(prev => prev.map(nft => {
-      if (nft.contractAddress === tokenAddress && nft.tokenId === tokenId) {
-        return {
-          ...nft,
-          highestBid: bidAmount,
-          highestBidder: bidder,
-          price: bidAmount // 更新当前价格为最高出价
-        };
-      }
-      return nft;
-    }));
-  };
-
-  // 应用筛选条件
-  const applyFilters = () => {
-    let result = [...listedNFTs];
+  // 筛选NFT
+  const filterNFTs = () => {
+    let result = [...nfts];
     
-    // 应用类别筛选
+    // 搜索筛选
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(nft => 
+        nft.name.toLowerCase().includes(term) || 
+        nft.description.toLowerCase().includes(term) ||
+        nft.creator.toLowerCase().includes(term)
+      );
+    }
+    
+    // 类别筛选
     if (filters.category !== 'all') {
       result = result.filter(nft => nft.category === filters.category);
     }
     
-    // 应用价格范围筛选
-    if (filters.priceRange.max > 0) {
-      result = result.filter(nft => {
-        const priceInEth = parseFloat(ethers.utils.formatEther(nft.price));
-        return priceInEth >= filters.priceRange.min && priceInEth <= filters.priceRange.max;
-      });
+    // 价格范围筛选
+    result = result.filter(nft => 
+      parseFloat(nft.price) >= filters.priceRange[0] && 
+      parseFloat(nft.price) <= filters.priceRange[1]
+    );
+    
+    // 仅显示已验证筛选
+    if (filters.onlyVerified) {
+      result = result.filter(nft => nft.isVerified);
     }
     
-    // 应用销售类型筛选
-    if (filters.saleType !== 'all') {
-      const isAuction = filters.saleType === 'auction';
-      result = result.filter(nft => nft.isAuction === isAuction);
+    // 仅显示拥有的NFT
+    if (filters.showOwned && account) {
+      result = result.filter(nft => nft.seller.toLowerCase() === account.toLowerCase());
     }
     
-    // 应用创作者筛选
-    if (filters.creator) {
-      result = result.filter(nft => 
-        nft.creator.toLowerCase().includes(filters.creator.toLowerCase())
-      );
-    }
-    
-    // 应用搜索查询
-    if (filters.searchQuery) {
-      const query = filters.searchQuery.toLowerCase();
-      result = result.filter(nft => 
-        nft.name.toLowerCase().includes(query) || 
-        nft.description.toLowerCase().includes(query)
-      );
-    }
-    
-    // 应用收藏筛选
-    if (filters.onlyFavorites) {
-      result = result.filter(nft => favorites.includes(nft.id));
-    }
-    
-    // 应用排序
-    switch (sortOption) {
+    // 排序
+    switch (filters.sortBy) {
       case 'newest':
         result.sort((a, b) => b.createdAt - a.createdAt);
         break;
       case 'oldest':
         result.sort((a, b) => a.createdAt - b.createdAt);
         break;
-      case 'priceHighToLow':
-        result.sort((a, b) => {
-          const priceA = ethers.BigNumber.from(a.price);
-          const priceB = ethers.BigNumber.from(b.price);
-          return priceB.gt(priceA) ? 1 : -1;
-        });
+      case 'priceAsc':
+        result.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
         break;
-      case 'priceLowToHigh':
-        result.sort((a, b) => {
-          const priceA = ethers.BigNumber.from(a.price);
-          const priceB = ethers.BigNumber.from(b.price);
-          return priceA.gt(priceB) ? 1 : -1;
-        });
+      case 'priceDesc':
+        result.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
         break;
-      case 'mostLiked':
-        result.sort((a, b) => b.likes - a.likes);
+      case 'popular':
+        result.sort((a, b) => b.views - a.views);
         break;
       default:
         break;
     }
     
-    setFilteredNFTs(result);
-  };
-
-  // 处理筛选条件变更
-  const handleFilterChange = (newFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  };
-
-  // 处理排序选项变更
-  const handleSortChange = (option) => {
-    setSortOption(option);
-  };
-
-  // 处理视图切换
-  const handleViewChange = (view) => {
-    setActiveView(view);
-  };
-
-  // 处理搜索查询
-  const handleSearch = (query) => {
-    setFilters(prev => ({ ...prev, searchQuery: query }));
+    setFilteredNfts(result);
   };
   
-  // 处理查看NFT详情
-  const handleViewDetails = (nft) => {
+  // 处理搜索
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
+  
+  // 处理筛选变化
+  const handleFilterChange = (filterName, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterName]: value
+    }));
+  };
+  
+  // 处理视图模式切换
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+  };
+  
+  // 处理NFT点击
+  const handleNFTClick = (nft) => {
     setSelectedNFT(nft);
-    setIsDetailModalOpen(true);
-  };
-  
-  // 处理购买NFT
-  const handlePurchase = (nft) => {
-    if (!isConnected) {
-      showNotification('请先连接钱包', 'error');
-      return;
-    }
+    setModalState(prev => ({ ...prev, detail: true }));
     
-    setSelectedNFT(nft);
-    setIsPurchaseModalOpen(true);
-  };
-  
-  // 处理竞价NFT
-  const handleBid = (nft) => {
-    if (!isConnected) {
-      showNotification('请先连接钱包', 'error');
-      return;
-    }
+    // 增加浏览量
+    const updatedNfts = nfts.map(item => {
+      if (item.id === nft.id) {
+        return { ...item, views: (item.views || 0) + 1 };
+      }
+      return item;
+    });
     
-    setSelectedNFT(nft);
-    setIsBidModalOpen(true);
+    setNfts(updatedNfts);
   };
   
   // 处理收藏切换
-  const handleToggleFavorite = (nftId, isFavorite) => {
-    let newFavorites = [...favorites];
-    
-    if (isFavorite) {
-      if (!newFavorites.includes(nftId)) {
-        newFavorites.push(nftId);
-        showNotification('已添加到收藏', 'success');
+  const handleToggleFavorite = (nftId) => {
+    setFavorites(prev => {
+      if (prev.includes(nftId)) {
+        return prev.filter(id => id !== nftId);
+      } else {
+        return [...prev, nftId];
       }
-    } else {
-      newFavorites = newFavorites.filter(id => id !== nftId);
-      showNotification('已从收藏中移除', 'info');
-    }
-    
-    setFavorites(newFavorites);
-    localStorage.setItem('nftFavorites', JSON.stringify(newFavorites));
-    
-    // 如果当前正在筛选收藏，需要重新应用筛选
-    if (filters.onlyFavorites) {
-      applyFilters();
-    }
+    });
   };
   
-  // 处理分享NFT
-  const handleShare = (nftId, platform) => {
-    showNotification(`已分享到 ${platform}`, 'success');
+  // 处理购买
+  const handlePurchase = async (nft) => {
+    if (!active) {
+      showNotification('请先连接钱包', 'warning');
+      return;
+    }
+    
+    setSelectedNFT(nft);
+    setModalState(prev => ({ ...prev, purchase: true }));
   };
   
-  // 处理购买完成
-  const handlePurchaseComplete = async (purchaseData) => {
+  // 处理竞价
+  const handleBid = (nft) => {
+    if (!active) {
+      showNotification('请先连接钱包', 'warning');
+      return;
+    }
+    
+    setSelectedNFT(nft);
+    setModalState(prev => ({ ...prev, bid: true }));
+  };
+  
+  // 处理购买确认
+  const handleConfirmPurchase = async (nft, amount) => {
     try {
-      setIsProcessing(true);
+      setIsLoading(true);
+      const result = await purchaseItem(nft.itemId, amount);
       
-      if (!marketplaceContract) {
-        throw new Error('合约未初始化');
+      if (result.success) {
+        showNotification(`成功购买 ${nft.name}!`, 'success');
+        
+        // 更新NFT列表
+        const updatedNfts = nfts.filter(item => item.id !== nft.id);
+        setNfts(updatedNfts);
+        setFilteredNfts(prev => prev.filter(item => item.id !== nft.id));
+      } else {
+        showNotification(`购买失败: ${result.error}`, 'error');
       }
-      
-      // 调用合约购买方法
-      const result = await marketplaceContract.purchaseNFT(
-        selectedNFT.contractAddress,
-        selectedNFT.tokenId,
-        selectedNFT.price
-      );
-      
-      console.log('Purchase completed:', result);
-      showNotification('购买成功！NFT已添加到您的收藏中', 'success');
-      
-      // 关闭模态框
-      setIsPurchaseModalOpen(false);
-      setIsDetailModalOpen(false);
-      
-      // 刷新NFT列表
-      fetchListedNFTs();
-    } catch (err) {
-      console.error('购买NFT失败:', err);
-      showNotification(`购买失败: ${err.message || '请稍后再试'}`, 'error');
+    } catch (error) {
+      console.error('购买失败:', error);
+      showNotification('购买过程中发生错误', 'error');
     } finally {
-      setIsProcessing(false);
+      setIsLoading(false);
+      closeAllModals();
     }
   };
   
-  // 处理竞价完成
-  const handleBidPlaced = async (bidData) => {
+  // 处理竞价确认
+  const handleConfirmBid = async (nft, amount) => {
     try {
-      setIsProcessing(true);
+      setIsLoading(true);
+      const result = await placeBid(nft.itemId, amount);
       
-      if (!marketplaceContract) {
-        throw new Error('合约未初始化');
+      if (result.success) {
+        showNotification(`成功对 ${nft.name} 出价!`, 'success');
+        
+        // 更新NFT竞价信息
+        const updatedNfts = nfts.map(item => {
+          if (item.id === nft.id) {
+            return { 
+              ...item, 
+              highestBid: amount,
+              highestBidder: account
+            };
+          }
+          return item;
+        });
+        
+        setNfts(updatedNfts);
+        setFilteredNfts(updatedNfts.filter(nft => 
+          // 应用当前筛选条件
+          (filters.category === 'all' || nft.category === filters.category) &&
+          parseFloat(nft.price) >= filters.priceRange[0] && 
+          parseFloat(nft.price) <= filters.priceRange[1]
+        ));
+      } else {
+        showNotification(`出价失败: ${result.error}`, 'error');
       }
-      
-      // 调用合约竞价方法
-      const result = await marketplaceContract.placeBid(
-        selectedNFT.contractAddress,
-        selectedNFT.tokenId,
-        bidData.bidAmount
-      );
-      
-      console.log('Bid placed:', result);
-      showNotification('出价成功！您现在是最高出价者', 'success');
-      
-      // 关闭模态框
-      setIsBidModalOpen(false);
-      
-      // 更新NFT数据
-      updateAuctionNFT(
-        selectedNFT.contractAddress,
-        selectedNFT.tokenId,
-        account,
-        bidData.bidAmount
-      );
-    } catch (err) {
-      console.error('出价失败:', err);
-      showNotification(`出价失败: ${err.message || '请稍后再试'}`, 'error');
+    } catch (error) {
+      console.error('出价失败:', error);
+      showNotification('出价过程中发生错误', 'error');
     } finally {
-      setIsProcessing(false);
+      setIsLoading(false);
+      closeAllModals();
+    }
+  };
+  
+  // 处理取消上架
+  const handleCancelListing = async (nft) => {
+    try {
+      setIsLoading(true);
+      const result = await cancelListing(nft.itemId);
+      
+      if (result.success) {
+        showNotification(`成功取消 ${nft.name} 的上架!`, 'success');
+        
+        // 更新NFT列表
+        const updatedNfts = nfts.filter(item => item.id !== nft.id);
+        setNfts(updatedNfts);
+        setFilteredNfts(prev => prev.filter(item => item.id !== nft.id));
+      } else {
+        showNotification(`取消上架失败: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('取消上架失败:', error);
+      showNotification('取消上架过程中发生错误', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
   
   // 显示通知
-  const showNotification = (message, type) => {
-    setNotification({
-      show: true,
-      message,
-      type
+  const showNotification = (message, type = 'info') => {
+    setNotification({ message, type });
+    
+    // 5秒后自动关闭
+    setTimeout(() => {
+      setNotification(null);
+    }, 5000);
+  };
+  
+  // 关闭所有模态框
+  const closeAllModals = () => {
+    setModalState({
+      detail: false,
+      bid: false,
+      purchase: false
     });
   };
-
+  
+  // 检查NFT是否已收藏
+  const isNFTFavorite = (nftId) => {
+    return favorites.includes(nftId);
+  };
+  
+  // 使用useMemo缓存类别列表
+  const categories = useMemo(() => {
+    const categorySet = new Set(nfts.map(nft => nft.category));
+    return ['all', ...Array.from(categorySet)];
+  }, [nfts]);
+  
+  // 使用useMemo缓存价格范围
+  const priceRange = useMemo(() => {
+    if (nfts.length === 0) return [0, 1000];
+    
+    const prices = nfts.map(nft => parseFloat(nft.price));
+    return [
+      Math.floor(Math.min(...prices)),
+      Math.ceil(Math.max(...prices))
+    ];
+  }, [nfts]);
+  
   // 渲染加载状态
-  if (isLoading) {
-    return (
-      <div className="nft-marketplace-container">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>正在加载NFT市场...</p>
-        </div>
-      </div>
-    );
+  if (isLoading && nfts.length === 0) {
+    return <NFTMarketplaceSkeleton />;
   }
-
-  // 渲染错误状态
-  if (error && !listedNFTs.length) {
-    return (
-      <div className="nft-marketplace-container">
-        <div className="error-container">
-          <div className="error-icon">⚠️</div>
-          <p>{error}</p>
-          <button className="retry-button" onClick={fetchListedNFTs}>
-            重试
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // 渲染未连接钱包状态
-  if (!isConnected) {
-    return (
-      <div className="nft-marketplace-container">
-        <div className="wallet-connect-prompt">
-          <h2>连接钱包以访问NFT市场</h2>
-          <p>请连接您的钱包以浏览、购买和出售文化NFT</p>
-          <button className="connect-wallet-button">
-            连接钱包
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  
   return (
     <div className="nft-marketplace-container">
+      {/* 顶部导航和搜索 */}
       <div className="marketplace-header">
-        <h1>文化NFT市场</h1>
-        <p className="marketplace-description">
-          探索和交易来自世界各地的文化艺术品、音乐、文学和传统工艺NFT
-        </p>
+        <h1>NFT 市场</h1>
+        
+        <div className="marketplace-actions">
+          <div className="search-container">
+            <input
+              type="text"
+              placeholder="搜索NFT、创作者..."
+              value={searchTerm}
+              onChange={handleSearch}
+              aria-label="搜索NFT"
+            />
+            <span className="search-icon">🔍</span>
+          </div>
+          
+          <div className="view-toggle">
+            <button
+              className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+              onClick={() => handleViewModeChange('grid')}
+              aria-label="网格视图"
+              aria-pressed={viewMode === 'grid'}
+            >
+              <span className="view-icon">▦</span>
+            </button>
+            <button
+              className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+              onClick={() => handleViewModeChange('list')}
+              aria-label="列表视图"
+              aria-pressed={viewMode === 'list'}
+            >
+              <span className="view-icon">☰</span>
+            </button>
+          </div>
+          
+          {active && (
+            <button
+              className="create-nft-btn"
+              onClick={() => navigate('/create-nft')}
+              aria-label="创建NFT"
+            >
+              创建NFT
+            </button>
+          )}
+        </div>
       </div>
       
+      {/* 错误消息 */}
       {error && (
-        <div className="warning-banner">
+        <div className="error-message" role="alert">
           <p>{error}</p>
-          <button className="retry-button" onClick={fetchListedNFTs}>
-            重试
-          </button>
+          <button onClick={() => setError(null)}>关闭</button>
         </div>
       )}
       
-      <div className="marketplace-controls">
-        <div className="view-controls">
-          <button 
-            className={`view-button ${activeView === 'grid' ? 'active' : ''}`}
-            onClick={() => handleViewChange('grid')}
-          >
-            网格视图
-          </button>
-          <button 
-            className={`view-button ${activeView === 'list' ? 'active' : ''}`}
-            onClick={() => handleViewChange('list')}
-          >
-            列表视图
-          </button>
+      {/* 通知消息 */}
+      {notification && (
+        <div className={`notification ${notification.type}`} role="status">
+          <p>{notification.message}</p>
+          <button onClick={() => setNotification(null)}>×</button>
         </div>
-        
-        <div className="sort-controls">
-          <label htmlFor="sort-select">排序方式:</label>
-          <select 
-            id="sort-select" 
-            value={sortOption}
-            onChange={(e) => handleSortChange(e.target.value)}
-          >
-            <option value="newest">最新上架</option>
-            <option value="oldest">最早上架</option>
-            <option value="priceHighToLow">价格从高到低</option>
-            <option value="priceLowToHigh">价格从低到高</option>
-            <option value="mostLiked">最受欢迎</option>
-          </select>
-        </div>
-      </div>
+      )}
       
+      {/* 主要内容 */}
       <div className="marketplace-content">
-        <NFTMarketplaceFilters 
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onSearch={handleSearch}
-        />
+        {/* 侧边栏筛选器 */}
+        <div className="marketplace-sidebar">
+          <div className="filter-section">
+            <h3>类别</h3>
+            <div className="category-filters">
+              {categories.map(category => (
+                <button
+                  key={category}
+                  className={`category-btn ${filters.category === category ? 'active' : ''}`}
+                  onClick={() => handleFilterChange('category', category)}
+                  aria-pressed={filters.category === category}
+                >
+                  {category === 'all' ? '全部' : category}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="filter-section">
+            <h3>价格范围</h3>
+            <div className="price-range-filter">
+              <div className="price-inputs">
+                <input
+                  type="number"
+                  min={priceRange[0]}
+                  max={priceRange[1]}
+                  value={filters.priceRange[0]}
+                  onChange={(e) => handleFilterChange('priceRange', [
+                    parseFloat(e.target.value),
+                    filters.priceRange[1]
+                  ])}
+                  aria-label="最低价格"
+                />
+                <span>至</span>
+                <input
+                  type="number"
+                  min={priceRange[0]}
+                  max={priceRange[1]}
+                  value={filters.priceRange[1]}
+                  onChange={(e) => handleFilterChange('priceRange', [
+                    filters.priceRange[0],
+                    parseFloat(e.target.value)
+                  ])}
+                  aria-label="最高价格"
+                />
+              </div>
+              <input
+                type="range"
+                min={priceRange[0]}
+                max={priceRange[1]}
+                value={filters.priceRange[1]}
+                onChange={(e) => handleFilterChange('priceRange', [
+                  filters.priceRange[0],
+                  parseFloat(e.target.value)
+                ])}
+                className="price-slider"
+                aria-label="价格滑块"
+              />
+            </div>
+          </div>
+          
+          <div className="filter-section">
+            <h3>排序方式</h3>
+            <select
+              value={filters.sortBy}
+              onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+              aria-label="排序方式"
+            >
+              <option value="newest">最新上架</option>
+              <option value="oldest">最早上架</option>
+              <option value="priceAsc">价格从低到高</option>
+              <option value="priceDesc">价格从高到低</option>
+              <option value="popular">最受欢迎</option>
+            </select>
+          </div>
+          
+          <div className="filter-section">
+            <h3>其他筛选</h3>
+            <div className="checkbox-filter">
+              <input
+                type="checkbox"
+                id="verified-filter"
+                checked={filters.onlyVerified}
+                onChange={(e) => handleFilterChange('onlyVerified', e.target.checked)}
+                aria-label="仅显示已验证"
+              />
+              <label htmlFor="verified-filter">仅显示已验证</label>
+            </div>
+            
+            {active && (
+              <div className="checkbox-filter">
+                <input
+                  type="checkbox"
+                  id="owned-filter"
+                  checked={filters.showOwned}
+                  onChange={(e) => handleFilterChange('showOwned', e.target.checked)}
+                  aria-label="仅显示我的NFT"
+                />
+                <label htmlFor="owned-filter">仅显示我的NFT</label>
+              </div>
+            )}
+          </div>
+          
+          <div className="filter-section">
+            <button
+              className="reset-filters-btn"
+              onClick={() => setFilters({
+                category: 'all',
+                priceRange: priceRange,
+                sortBy: 'newest',
+                onlyVerified: false,
+                showOwned: false
+              })}
+              aria-label="重置筛选"
+            >
+              重置筛选
+            </button>
+          </div>
+        </div>
         
-        <NFTMarketplaceList 
-          nfts={filteredNFTs}
-          viewType={activeView}
-          onViewDetails={handleViewDetails}
-          onPurchase={handlePurchase}
-          onBid={handleBid}
-          onToggleFavorite={handleToggleFavorite}
-        />
+        {/* NFT列表 */}
+        <div className="marketplace-main">
+          {filteredNfts.length === 0 ? (
+            <div className="no-results">
+              <p>没有找到符合条件的NFT</p>
+              <button
+                onClick={() => setFilters({
+                  category: 'all',
+                  priceRange: priceRange,
+                  sortBy: 'newest',
+                  onlyVerified: false,
+                  showOwned: false
+                })}
+              >
+                清除筛选条件
+              </button>
+            </div>
+          ) : (
+            <Suspense fallback={<div className="loading-container"><div className="loading-spinner"></div></div>}>
+              <NFTMarketplaceList
+                nfts={filteredNfts}
+                viewMode={viewMode}
+                onNFTClick={handleNFTClick}
+                onToggleFavorite={handleToggleFavorite}
+                onPurchase={handlePurchase}
+                onBid={handleBid}
+                onCancelListing={handleCancelListing}
+                isNFTFavorite={isNFTFavorite}
+                currentAccount={account}
+                isLoading={isLoading}
+              />
+            </Suspense>
+          )}
+        </div>
       </div>
       
-      {filteredNFTs.length === 0 && !isLoading && (
-        <div className="no-results">
-          <p>没有找到符合条件的NFT</p>
-          <button 
-            className="clear-filters-button"
-            onClick={() => setFilters({
-              category: 'all',
-              priceRange: { min: 0, max: 0 },
-              saleType: 'all',
-              creator: '',
-              searchQuery: '',
-              onlyFavorites: false
-            })}
-          >
-            清除所有筛选条件
-          </button>
-        </div>
+      {/* 模态框 */}
+      {modalState.detail && selectedNFT && (
+        <Suspense fallback={<div className="loading-overlay"><div className="loading-spinner"></div></div>}>
+          <NFTDetailModal
+            nft={selectedNFT}
+            onClose={() => setModalState(prev => ({ ...prev, detail: false }))}
+            onPurchase={() => {
+              setModalState({
+                detail: false,
+                purchase: true,
+                bid: false
+              });
+            }}
+            onBid={() => {
+              setModalState({
+                detail: false,
+                purchase: false,
+                bid: true
+              });
+            }}
+            onToggleFavorite={() => handleToggleFavorite(selectedNFT.id)}
+            isFavorite={isNFTFavorite(selectedNFT.id)}
+            currentAccount={account}
+          />
+        </Suspense>
       )}
       
-      {/* 通知提示 */}
-      {notification.show && (
-        <div className={`notification ${notification.type}`}>
-          {notification.message}
-        </div>
+      {modalState.purchase && selectedNFT && (
+        <Suspense fallback={<div className="loading-overlay"><div className="loading-spinner"></div></div>}>
+          <NFTPurchaseModal
+            nft={selectedNFT}
+            onClose={() => setModalState(prev => ({ ...prev, purchase: false }))}
+            onConfirm={handleConfirmPurchase}
+            isLoading={isLoading}
+          />
+        </Suspense>
       )}
       
-      {/* NFT详情模态框 */}
-      <NFTDetailModal 
-        nft={selectedNFT}
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        onPurchase={handlePurchase}
-        onBid={handleBid}
-        onShare={handleShare}
-        onToggleFavorite={handleToggleFavorite}
-      />
-      
-      {/* NFT购买模态框 */}
-      <NFTPurchaseModal 
-        nft={selectedNFT}
-        isOpen={isPurchaseModalOpen}
-        onClose={() => setIsPurchaseModalOpen(false)}
-        onPurchaseComplete={handlePurchaseComplete}
-        isProcessing={isProcessing}
-      />
-      
-      {/* NFT竞价模态框 */}
-      <NFTBidModal 
-        nft={selectedNFT}
-        isOpen={isBidModalOpen}
-        onClose={() => setIsBidModalOpen(false)}
-        onBidPlaced={handleBidPlaced}
-        isProcessing={isProcessing}
-      />
+      {modalState.bid && selectedNFT && (
+        <Suspense fallback={<div className="loading-overlay"><div className="loading-spinner"></div></div>}>
+          <NFTBidModal
+            nft={selectedNFT}
+            onClose={() => setModalState(prev => ({ ...prev, bid: false }))}
+            onConfirm={handleConfirmBid}
+            isLoading={isLoading}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };
