@@ -1,610 +1,689 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useWeb3React } from '@web3-react/core';
-import { IdentityContext } from '../../context/identity/IdentityContext';
-import { Button, Steps, Form, Input, Upload, message, Card, Alert, Spin, Result, Divider, Typography, Space } from 'antd';
-import { UploadOutlined, CheckCircleOutlined, SyncOutlined, LinkOutlined, SafetyOutlined } from '@ant-design/icons';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useBlockchain } from '../../context/blockchain';
+import { useIdentity } from '../../context/identity/IdentityContext';
+import '../../styles/identity.css';
 
-const { Step } = Steps;
-const { TextArea } = Input;
-const { Title, Paragraph, Text } = Typography;
+// 懒加载组件
+const CredentialGallery = lazy(() => import('./CredentialGallery'));
+
+// 骨架屏组件
+const IdentityVerifierSkeleton = () => (
+  <div className="identity-container">
+    <div className="identity-header-skeleton">
+      <div className="skeleton-title"></div>
+      <div className="skeleton-subtitle"></div>
+    </div>
+    <div className="identity-content-skeleton">
+      <div className="skeleton-card">
+        <div className="skeleton-avatar"></div>
+        <div className="skeleton-info">
+          <div className="skeleton-line"></div>
+          <div className="skeleton-line"></div>
+          <div className="skeleton-line"></div>
+        </div>
+      </div>
+      <div className="skeleton-verification">
+        <div className="skeleton-section-title"></div>
+        <div className="skeleton-steps">
+          <div className="skeleton-step"></div>
+          <div className="skeleton-step"></div>
+          <div className="skeleton-step"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 /**
  * 身份验证组件
- * 引导用户完成不同类型的身份验证流程
+ * 提供用户身份验证、声誉查看和凭证管理功能
+ * 
+ * @component
+ * @version 2.0.0
  */
-const IdentityVerifier = ({ identityId, onSuccess }) => {
-  const { account, active } = useWeb3React();
+const IdentityVerifier = () => {
+  const navigate = useNavigate();
+  const { account, active, chainId } = useBlockchain();
   const { 
-    addVerification, 
-    verifyIdentity, 
-    getVerifications, 
-    currentIdentity, 
-    identityLoading 
-  } = useContext(IdentityContext);
+    userIdentity, 
+    userReputation, 
+    userCredentials,
+    isLoading,
+    error,
+    verifyIdentity,
+    checkIdentityStatus,
+    getReputationScore,
+    getUserCredentials
+  } = useIdentity();
   
-  const [currentStep, setCurrentStep] = useState(0);
-  const [verificationType, setVerificationType] = useState('basic');
-  const [verifications, setVerifications] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [form] = Form.useForm();
-  const [verificationCode, setVerificationCode] = useState('');
-  const [verificationFile, setVerificationFile] = useState(null);
-  const [verificationComplete, setVerificationComplete] = useState(false);
+  // 本地状态
+  const [verificationStep, setVerificationStep] = useState(0);
+  const [verificationData, setVerificationData] = useState({
+    name: '',
+    email: '',
+    proofType: 'document',
+    proofFile: null,
+    agreeTerms: false
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCredentials, setShowCredentials] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const [verificationProgress, setVerificationProgress] = useState(0);
   
-  // 验证类型选项
-  const verificationTypes = [
-    { key: 'basic', title: '基础验证', description: '验证钱包所有权和基本信息' },
-    { key: 'social', title: '社交验证', description: '验证社交媒体账号' },
-    { key: 'professional', title: '专业验证', description: '验证专业资质和证书' },
-    { key: 'community', title: '社区验证', description: '获取社区成员背书' }
-  ];
-  
-  // 加载已有验证信息
+  // 加载用户身份数据
   useEffect(() => {
-    const loadVerifications = async () => {
+    let isMounted = true;
+    
+    const loadIdentityData = async () => {
+      if (!active || !account) return;
+      
       try {
-        setLoading(true);
+        // 检查身份状态
+        await checkIdentityStatus(account);
         
-        // 使用传入的identityId或当前身份的ID
-        const targetId = identityId || (currentIdentity ? currentIdentity.identityId : null);
-        
-        if (!targetId) {
-          setError('未找到有效的身份ID');
-          setLoading(false);
-          return;
+        // 如果用户已有身份，获取声誉分数
+        if (userIdentity && userIdentity.verified) {
+          await getReputationScore(account);
+          await getUserCredentials(account);
         }
-        
-        const result = await getVerifications(targetId);
-        if (result.success) {
-          setVerifications(result.verifications);
-        } else {
-          throw new Error(result.error || '获取验证信息失败');
-        }
-        
-        setLoading(false);
       } catch (error) {
-        console.error('加载验证信息失败:', error);
-        setError(error.message || '加载验证信息失败');
-        setLoading(false);
+        console.error('加载身份数据失败:', error);
+        if (isMounted) {
+          showNotification('加载身份数据失败，请刷新页面重试', 'error');
+        }
       }
     };
     
-    loadVerifications();
-  }, [identityId, currentIdentity, getVerifications]);
-
-  // 生成验证码
-  const generateVerificationCode = () => {
-    const code = `CBID-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-    setVerificationCode(code);
-    return code;
-  };
-
-  // 处理验证类型选择
-  const handleTypeSelect = (type) => {
-    setVerificationType(type);
-    setCurrentStep(1);
+    loadIdentityData();
     
-    // 如果选择基础验证，自动生成验证码
-    if (type === 'basic') {
-      generateVerificationCode();
+    return () => {
+      isMounted = false;
+    };
+  }, [active, account, checkIdentityStatus, getReputationScore, getUserCredentials, userIdentity]);
+  
+  // 处理表单输入变化
+  const handleInputChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+    
+    if (type === 'checkbox') {
+      setVerificationData(prev => ({
+        ...prev,
+        [name]: checked
+      }));
+    } else if (type === 'file') {
+      setVerificationData(prev => ({
+        ...prev,
+        [name]: files[0]
+      }));
+    } else {
+      setVerificationData(prev => ({
+        ...prev,
+        [name]: value
+      }));
     }
   };
-
-  // 处理文件上传
-  const handleFileChange = (info) => {
-    if (info.file.status === 'done') {
-      setVerificationFile(info.file.originFileObj);
-      message.success(`${info.file.name} 上传成功`);
-    } else if (info.file.status === 'error') {
-      message.error(`${info.file.name} 上传失败`);
+  
+  // 处理验证步骤
+  const handleNextStep = () => {
+    if (verificationStep < 3) {
+      setVerificationStep(prev => prev + 1);
     }
   };
-
-  // 提交验证申请
-  const handleSubmit = async (values) => {
-    if (!active || !account) {
-      message.error('请先连接钱包');
+  
+  const handlePrevStep = () => {
+    if (verificationStep > 0) {
+      setVerificationStep(prev => prev - 1);
+    }
+  };
+  
+  // 处理身份验证提交
+  const handleSubmitVerification = async (e) => {
+    e.preventDefault();
+    
+    if (!active) {
+      showNotification('请先连接钱包', 'warning');
       return;
     }
     
-    setLoading(true);
+    // 表单验证
+    if (!verificationData.name || !verificationData.email || !verificationData.proofFile || !verificationData.agreeTerms) {
+      showNotification('请填写所有必填字段并同意条款', 'warning');
+      return;
+    }
     
     try {
-      // 使用传入的identityId或当前身份的ID
-      const targetId = identityId || (currentIdentity ? currentIdentity.identityId : null);
+      setIsSubmitting(true);
       
-      if (!targetId) {
-        throw new Error('未找到有效的身份ID');
-      }
-      
-      let proof = '';
-      
-      // 根据验证类型处理不同的验证流程
-      switch (verificationType) {
-        case 'basic':
-          // 基础验证：签名消息
-          proof = verificationCode;
-          break;
-          
-        case 'social':
-          // 社交验证：社交媒体链接
-          proof = values.socialLink;
-          break;
-          
-        case 'professional':
-          // 专业验证：上传证书
-          if (!verificationFile) {
-            throw new Error('请上传验证文件');
+      // 模拟上传进度
+      const progressInterval = setInterval(() => {
+        setVerificationProgress(prev => {
+          if (prev >= 95) {
+            clearInterval(progressInterval);
+            return 95;
           }
-          
-          // 上传文件到IPFS（实际实现中需要调用IPFS上传函数）
-          // const ipfsHash = await uploadToIPFS(verificationFile);
-          // proof = ipfsHash;
-          
-          // 模拟IPFS哈希
-          proof = `ipfs://QmXyz...${Math.random().toString(36).substring(2, 10)}`;
-          break;
-          
-        case 'community':
-          // 社区验证：社区成员背书
-          proof = values.communityEndorsement;
-          break;
-          
-        default:
-          throw new Error('不支持的验证类型');
-      }
+          return prev + 5;
+        });
+      }, 200);
       
-      // 添加验证
-      const result = await addVerification(targetId, verificationType, proof);
+      // 提交身份验证
+      const result = await verifyIdentity({
+        address: account,
+        name: verificationData.name,
+        email: verificationData.email,
+        proofType: verificationData.proofType,
+        proofFile: verificationData.proofFile
+      });
+      
+      clearInterval(progressInterval);
+      setVerificationProgress(100);
       
       if (result.success) {
-        message.success('验证申请提交成功');
-        setCurrentStep(2);
-        
-        // 如果是基础验证，自动完成验证
-        if (verificationType === 'basic') {
-          const verifyResult = await verifyIdentity(targetId, verificationType, true);
-          
-          if (verifyResult.success) {
-            message.success('基础验证完成');
-            setVerificationComplete(true);
-            
-            // 刷新验证列表
-            const refreshResult = await getVerifications(targetId);
-            if (refreshResult.success) {
-              setVerifications(refreshResult.verifications);
-            }
-            
-            if (onSuccess) {
-              onSuccess({
-                identityId: targetId,
-                verificationType,
-                verified: true
-              });
-            }
-          } else {
-            throw new Error(verifyResult.error || '验证失败');
-          }
-        }
+        showNotification('身份验证申请已提交，等待审核', 'success');
+        setTimeout(() => {
+          setVerificationStep(3); // 移动到完成步骤
+        }, 1000);
       } else {
-        throw new Error(result.error || '提交验证申请失败');
+        showNotification(`身份验证失败: ${result.error}`, 'error');
       }
     } catch (error) {
-      console.error('验证操作失败:', error);
-      setError(error.message || '验证操作失败');
+      console.error('身份验证失败:', error);
+      showNotification('身份验证过程中发生错误', 'error');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
-
-  // 渲染验证类型选择
-  const renderTypeSelection = () => {
-    return (
-      <div className="verification-type-selection">
-        <Title level={4}>选择验证类型</Title>
-        <Paragraph>
-          不同类型的验证可以增强您身份的可信度。您可以完成多种验证以获得更高的信任度。
-        </Paragraph>
-        
-        <Space direction="vertical" style={{ width: '100%' }}>
-          {verificationTypes.map(type => {
-            // 检查该类型验证是否已完成
-            const isVerified = verifications.some(v => 
-              v.verificationType === type.key && v.valid
-            );
+  
+  // 显示通知
+  const showNotification = (message, type = 'info') => {
+    setNotification({ message, type });
+    
+    // 5秒后自动关闭
+    setTimeout(() => {
+      setNotification(null);
+    }, 5000);
+  };
+  
+  // 使用useMemo缓存声誉等级计算
+  const reputationLevel = useMemo(() => {
+    if (!userReputation) return { level: 0, title: '未知', nextLevel: 0 };
+    
+    const score = userReputation.score;
+    
+    if (score < 100) {
+      return { 
+        level: 1, 
+        title: '新手', 
+        nextLevel: 100,
+        progress: score / 100 * 100
+      };
+    } else if (score < 300) {
+      return { 
+        level: 2, 
+        title: '贡献者', 
+        nextLevel: 300,
+        progress: (score - 100) / 200 * 100
+      };
+    } else if (score < 600) {
+      return { 
+        level: 3, 
+        title: '专家', 
+        nextLevel: 600,
+        progress: (score - 300) / 300 * 100
+      };
+    } else if (score < 1000) {
+      return { 
+        level: 4, 
+        title: '大师', 
+        nextLevel: 1000,
+        progress: (score - 600) / 400 * 100
+      };
+    } else {
+      return { 
+        level: 5, 
+        title: '传奇', 
+        nextLevel: null,
+        progress: 100
+      };
+    }
+  }, [userReputation]);
+  
+  // 渲染加载状态
+  if (isLoading && !userIdentity) {
+    return <IdentityVerifierSkeleton />;
+  }
+  
+  return (
+    <div className="identity-container">
+      <div className="identity-header">
+        <h1>身份与声誉系统</h1>
+        <p className="subtitle">验证您的身份，建立声誉，获取专属凭证</p>
+      </div>
+      
+      {/* 错误消息 */}
+      {error && (
+        <div className="error-message" role="alert">
+          <div className="error-icon">⚠️</div>
+          <p>{error}</p>
+          <button onClick={() => navigate(0)} className="refresh-btn">刷新</button>
+        </div>
+      )}
+      
+      {/* 通知消息 */}
+      {notification && (
+        <div className={`notification ${notification.type}`} role="status">
+          <p>{notification.message}</p>
+          <button onClick={() => setNotification(null)}>×</button>
+        </div>
+      )}
+      
+      {/* 未连接钱包提示 */}
+      {!active && (
+        <div className="wallet-warning" role="alert">
+          <div className="warning-icon">🔒</div>
+          <div className="warning-content">
+            <h3>请先连接钱包</h3>
+            <p>您需要连接钱包以访问身份验证和声誉系统</p>
+          </div>
+          <button 
+            onClick={() => navigate('/wallet')} 
+            className="connect-wallet-btn"
+            aria-label="连接钱包"
+          >
+            连接钱包
+          </button>
+        </div>
+      )}
+      
+      {/* 已验证身份展示 */}
+      {active && userIdentity && userIdentity.verified && (
+        <div className="identity-verified-section">
+          <div className="identity-card">
+            <div className="identity-avatar">
+              <img 
+                src={userIdentity.avatar || `https://avatars.dicebear.com/api/identicon/${account}.svg`} 
+                alt="用户头像" 
+              />
+              <div className="verified-badge" title="已验证身份">✓</div>
+            </div>
             
-            return (
-              <Card 
-                key={type.key}
-                hoverable
-                className={`verification-type-card ${isVerified ? 'verified' : ''}`}
-                onClick={() => !isVerified && handleTypeSelect(type.key)}
-              >
-                <div className="verification-type-content">
-                  <div className="verification-type-info">
-                    <Title level={5}>{type.title}</Title>
-                    <Paragraph>{type.description}</Paragraph>
+            <div className="identity-info">
+              <h2>{userIdentity.name}</h2>
+              <p className="identity-address" title={account}>{account.substring(0, 6)}...{account.substring(account.length - 4)}</p>
+              <p className="identity-since">身份验证时间: {new Date(userIdentity.verifiedAt).toLocaleDateString()}</p>
+              
+              <div className="identity-actions">
+                <button 
+                  className="view-credentials-btn"
+                  onClick={() => setShowCredentials(!showCredentials)}
+                  aria-expanded={showCredentials}
+                >
+                  {showCredentials ? '隐藏凭证' : '查看凭证'}
+                </button>
+                <button 
+                  className="edit-profile-btn"
+                  onClick={() => navigate('/profile')}
+                >
+                  编辑资料
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* 声誉展示 */}
+          {userReputation && (
+            <div className="reputation-section">
+              <h3>文化声誉</h3>
+              
+              <div className="reputation-card">
+                <div className="reputation-header">
+                  <div className="reputation-score">
+                    <span className="score-value">{userReputation.score}</span>
+                    <span className="score-label">声誉分</span>
                   </div>
-                  <div className="verification-type-status">
-                    {isVerified ? (
-                      <CheckCircleOutlined className="verified-icon" />
+                  
+                  <div className="reputation-level">
+                    <span className="level-badge">Lv.{reputationLevel.level}</span>
+                    <span className="level-title">{reputationLevel.title}</span>
+                  </div>
+                </div>
+                
+                <div className="reputation-progress">
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill"
+                      style={{ width: `${reputationLevel.progress}%` }}
+                      role="progressbar"
+                      aria-valuenow={reputationLevel.progress}
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    ></div>
+                  </div>
+                  
+                  <div className="progress-info">
+                    {reputationLevel.nextLevel ? (
+                      <span>距离下一级还需 {reputationLevel.nextLevel - userReputation.score} 分</span>
                     ) : (
-                      <Button type="primary">开始验证</Button>
+                      <span>已达到最高等级</span>
                     )}
                   </div>
                 </div>
-              </Card>
-            );
-          })}
-        </Space>
-      </div>
-    );
-  };
-
-  // 渲染验证表单
-  const renderVerificationForm = () => {
-    switch (verificationType) {
-      case 'basic':
-        return (
-          <div className="basic-verification-form">
-            <Title level={4}>基础验证</Title>
-            <Paragraph>
-              基础验证将确认您对此钱包地址的所有权，并将其与您的身份绑定。
-            </Paragraph>
-            
-            <Card className="verification-code-card">
-              <div className="verification-code">
-                <Text strong>验证码: </Text>
-                <Text code copyable>{verificationCode}</Text>
-              </div>
-              <Paragraph type="secondary">
-                请使用您的钱包签名此验证码，以证明您是钱包的所有者。
-              </Paragraph>
-              <Button 
-                type="primary" 
-                onClick={handleSubmit}
-                loading={loading}
-                disabled={!active}
-              >
-                签名并验证
-              </Button>
-            </Card>
-          </div>
-        );
-        
-      case 'social':
-        return (
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-          >
-            <Title level={4}>社交验证</Title>
-            <Paragraph>
-              社交验证将确认您对特定社交媒体账号的所有权，增强您身份的可信度。
-            </Paragraph>
-            
-            <Form.Item
-              label="选择社交平台"
-              name="socialPlatform"
-              rules={[{ required: true, message: '请选择社交平台' }]}
-            >
-              <select>
-                <option value="twitter">Twitter</option>
-                <option value="facebook">Facebook</option>
-                <option value="instagram">Instagram</option>
-                <option value="linkedin">LinkedIn</option>
-                <option value="github">GitHub</option>
-              </select>
-            </Form.Item>
-            
-            <Form.Item
-              label="社交账号链接"
-              name="socialLink"
-              rules={[{ required: true, message: '请输入社交账号链接' }]}
-            >
-              <Input placeholder="例如: https://twitter.com/yourusername" />
-            </Form.Item>
-            
-            <Alert
-              message="验证步骤"
-              description={
-                <ol>
-                  <li>在您的社交媒体账号上发布包含以下验证码的公开内容: <Text code copyable>{verificationCode || generateVerificationCode()}</Text></li>
-                  <li>确保该内容是公开可见的</li>
-                  <li>复制内容链接并粘贴到上方输入框</li>
-                  <li>点击提交验证申请</li>
-                </ol>
-              }
-              type="info"
-              showIcon
-            />
-            
-            <Form.Item>
-              <Button type="primary" htmlType="submit" loading={loading} disabled={!active}>
-                提交验证申请
-              </Button>
-            </Form.Item>
-          </Form>
-        );
-        
-      case 'professional':
-        return (
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-          >
-            <Title level={4}>专业验证</Title>
-            <Paragraph>
-              专业验证将确认您的专业资质和证书，提升您在相关领域的可信度。
-            </Paragraph>
-            
-            <Form.Item
-              label="专业类型"
-              name="professionalType"
-              rules={[{ required: true, message: '请选择专业类型' }]}
-            >
-              <select>
-                <option value="artist">艺术家</option>
-                <option value="musician">音乐家</option>
-                <option value="writer">作家</option>
-                <option value="filmmaker">电影制作人</option>
-                <option value="designer">设计师</option>
-                <option value="other">其他</option>
-              </select>
-            </Form.Item>
-            
-            <Form.Item
-              label="资质描述"
-              name="professionalDescription"
-              rules={[{ required: true, message: '请描述您的专业资质' }]}
-            >
-              <TextArea rows={4} placeholder="请描述您的专业背景、资质和经验" />
-            </Form.Item>
-            
-            <Form.Item
-              label="上传证明文件"
-              name="professionalProof"
-              rules={[{ required: true, message: '请上传证明文件' }]}
-            >
-              <Upload
-                name="file"
-                beforeUpload={() => false}
-                onChange={handleFileChange}
-                maxCount={1}
-              >
-                <Button icon={<UploadOutlined />}>上传文件</Button>
-              </Upload>
-            </Form.Item>
-            
-            <Paragraph type="secondary">
-              请上传能够证明您专业资质的文件，如证书、作品集、获奖证明等。文件将被安全地存储在IPFS上。
-            </Paragraph>
-            
-            <Form.Item>
-              <Button type="primary" htmlType="submit" loading={loading} disabled={!active}>
-                提交验证申请
-              </Button>
-            </Form.Item>
-          </Form>
-        );
-        
-      case 'community':
-        return (
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-          >
-            <Title level={4}>社区验证</Title>
-            <Paragraph>
-              社区验证通过获取社区成员的背书来增强您的身份可信度。
-            </Paragraph>
-            
-            <Form.Item
-              label="社区选择"
-              name="community"
-              rules={[{ required: true, message: '请选择社区' }]}
-            >
-              <select>
-                <option value="artists">艺术家社区</option>
-                <option value="musicians">音乐家社区</option>
-                <option value="writers">作家社区</option>
-                <option value="filmmakers">电影制作人社区</option>
-                <option value="designers">设计师社区</option>
-              </select>
-            </Form.Item>
-            
-            <Form.Item
-              label="背书申请说明"
-              name="communityEndorsement"
-              rules={[{ required: true, message: '请填写背书申请说明' }]}
-            >
-              <TextArea rows={4} placeholder="请说明您为什么申请该社区的背书，以及您与该社区的关系" />
-            </Form.Item>
-            
-            <Alert
-              message="社区验证流程"
-              description={
-                <ol>
-                  <li>提交背书申请</li>
-                  <li>社区成员将对您的申请进行投票</li>
-                  <li>达到背书阈值后，您将获得社区验证</li>
-                  <li>验证结果将在7天内通知您</li>
-                </ol>
-              }
-              type="info"
-              showIcon
-            />
-            
-            <Form.Item>
-              <Button type="primary" htmlType="submit" loading={loading} disabled={!active}>
-                提交背书申请
-              </Button>
-            </Form.Item>
-          </Form>
-        );
-        
-      default:
-        return <Alert message="不支持的验证类型" type="error" />;
-    }
-  };
-
-  // 渲染验证状态
-  const renderVerificationStatus = () => {
-    // 查找当前验证类型的验证记录
-    const verification = verifications.find(v => v.verificationType === verificationType);
-    
-    if (verification && verification.valid) {
-      return (
-        <Result
-          status="success"
-          title="验证成功"
-          subTitle={`您已成功完成${verificationTypes.find(t => t.key === verificationType)?.title || verificationType}验证`}
-          extra={[
-            <Button type="primary" key="back" onClick={() => setCurrentStep(0)}>
-              返回验证类型选择
-            </Button>
-          ]}
-        />
-      );
-    }
-    
-    if (verificationComplete) {
-      return (
-        <Result
-          status="success"
-          title="验证申请已提交"
-          subTitle="您的验证申请已成功提交，我们将尽快处理"
-          extra={[
-            <Button type="primary" key="back" onClick={() => setCurrentStep(0)}>
-              返回验证类型选择
-            </Button>
-          ]}
-        />
-      );
-    }
-    
-    return (
-      <Result
-        status="info"
-        title="验证处理中"
-        subTitle={`您的${verificationTypes.find(t => t.key === verificationType)?.title || verificationType}验证申请正在处理中`}
-        extra={[
-          <Button type="primary" key="back" onClick={() => setCurrentStep(0)}>
-            返回验证类型选择
-          </Button>
-        ]}
-      />
-    );
-  };
-
-  // 渲染验证历史
-  const renderVerificationHistory = () => {
-    if (verifications.length === 0) {
-      return (
-        <Empty description="暂无验证历史" />
-      );
-    }
-    
-    return (
-      <div className="verification-history">
-        <Title level={4}>验证历史</Title>
-        
-        {verifications.map((verification, index) => {
-          const typeInfo = verificationTypes.find(t => t.key === verification.verificationType) || {
-            title: verification.verificationType,
-            description: '验证'
-          };
-          
-          return (
-            <Card key={index} className="verification-history-item">
-              <div className="verification-history-header">
-                <div className="verification-type">
-                  <Text strong>{typeInfo.title}</Text>
-                  {verification.valid ? (
-                    <Tag color="success">已验证</Tag>
-                  ) : (
-                    <Tag color="processing">处理中</Tag>
-                  )}
-                </div>
-                <div className="verification-time">
-                  {new Date(verification.timestamp).toLocaleString()}
-                </div>
-              </div>
-              
-              <div className="verification-history-content">
-                <div className="verification-info">
-                  <div>
-                    <Text type="secondary">验证者: </Text>
-                    <Text>{verification.verifier || '系统自动'}</Text>
+                
+                <div className="reputation-stats">
+                  <div className="stat-item">
+                    <span className="stat-value">{userReputation.contributions || 0}</span>
+                    <span className="stat-label">贡献</span>
                   </div>
-                  {verification.proof && (
-                    <div>
-                      <Text type="secondary">证明: </Text>
-                      <Text>{verification.proof.startsWith('ipfs://') ? (
-                        <a href={`https://ipfs.io/ipfs/${verification.proof.replace('ipfs://', '')}`} target="_blank" rel="noopener noreferrer">
-                          <LinkOutlined /> 查看证明
-                        </a>
-                      ) : verification.proof}</Text>
-                    </div>
-                  )}
+                  <div className="stat-item">
+                    <span className="stat-value">{userReputation.participations || 0}</span>
+                    <span className="stat-label">参与</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-value">{userReputation.creations || 0}</span>
+                    <span className="stat-label">创作</span>
+                  </div>
+                </div>
+                
+                <div className="reputation-actions">
+                  <button 
+                    className="view-history-btn"
+                    onClick={() => navigate('/reputation-history')}
+                  >
+                    查看历史记录
+                  </button>
+                  <button 
+                    className="view-leaderboard-btn"
+                    onClick={() => navigate('/reputation-leaderboard')}
+                  >
+                    查看排行榜
+                  </button>
                 </div>
               </div>
-            </Card>
-          );
-        })}
-      </div>
-    );
-  };
-
-  if (loading || identityLoading) {
-    return <Spin tip="加载中..." />;
-  }
-
-  if (error) {
-    return (
-      <Alert
-        message="操作错误"
-        description={error}
-        type="error"
-        showIcon
-      />
-    );
-  }
-
-  return (
-    <div className="identity-verifier">
-      <div className="identity-verifier-header">
-        <Title level={3}>身份验证</Title>
-        <Paragraph>
-          完成身份验证可以增强您的身份可信度，解锁更多平台功能。
-        </Paragraph>
-      </div>
-      
-      <div className="identity-verifier-content">
-        <Steps current={currentStep}>
-          <Step title="选择验证类型" />
-          <Step title="完成验证" />
-          <Step title="验证结果" />
-        </Steps>
-        
-        <Divider />
-        
-        <div className="identity-verifier-step-content">
-          {currentStep === 0 && renderTypeSelection()}
-          {currentStep === 1 && renderVerificationForm()}
-          {currentStep === 2 && renderVerificationStatus()}
+            </div>
+          )}
+          
+          {/* 凭证展示 */}
+          {showCredentials && (
+            <Suspense fallback={<div className="loading-container"><div className="loading-spinner"></div></div>}>
+              <CredentialGallery 
+                credentials={userCredentials || []} 
+                address={account}
+              />
+            </Suspense>
+          )}
         </div>
-      </div>
+      )}
       
-      <Divider />
-      
-      <div className="identity-verifier-history">
-        {renderVerificationHistory()}
-      </div>
+      {/* 身份验证流程 */}
+      {active && (!userIdentity || !userIdentity.verified) && (
+        <div className="identity-verification-section">
+          <div className="verification-header">
+            <h2>身份验证</h2>
+            <p>完成身份验证以解锁平台全部功能并开始建立您的声誉</p>
+          </div>
+          
+          <div className="verification-steps">
+            <div className="steps-indicator">
+              {[0, 1, 2, 3].map((step) => (
+                <div 
+                  key={step} 
+                  className={`step-indicator ${verificationStep >= step ? 'active' : ''} ${verificationStep === step ? 'current' : ''}`}
+                >
+                  <div className="step-number">{step + 1}</div>
+                  <div className="step-label">
+                    {step === 0 && '基本信息'}
+                    {step === 1 && '身份证明'}
+                    {step === 2 && '确认提交'}
+                    {step === 3 && '完成'}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="verification-form-container">
+              <form onSubmit={handleSubmitVerification} className="verification-form">
+                {/* 步骤1: 基本信息 */}
+                {verificationStep === 0 && (
+                  <div className="verification-step">
+                    <h3>基本信息</h3>
+                    
+                    <div className="form-group">
+                      <label htmlFor="name">姓名 <span className="required">*</span></label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value={verificationData.name}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="请输入您的真实姓名"
+                        aria-required="true"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="email">电子邮箱 <span className="required">*</span></label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={verificationData.email}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="请输入您的电子邮箱"
+                        aria-required="true"
+                      />
+                      <p className="form-hint">我们将通过此邮箱与您联系验证结果</p>
+                    </div>
+                    
+                    <div className="form-actions">
+                      <button
+                        type="button"
+                        className="next-btn"
+                        onClick={handleNextStep}
+                        disabled={!verificationData.name || !verificationData.email}
+                      >
+                        下一步
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* 步骤2: 身份证明 */}
+                {verificationStep === 1 && (
+                  <div className="verification-step">
+                    <h3>身份证明</h3>
+                    
+                    <div className="form-group">
+                      <label htmlFor="proofType">证明类型</label>
+                      <select
+                        id="proofType"
+                        name="proofType"
+                        value={verificationData.proofType}
+                        onChange={handleInputChange}
+                      >
+                        <option value="document">身份证件</option>
+                        <option value="passport">护照</option>
+                        <option value="license">驾驶证</option>
+                        <option value="other">其他证件</option>
+                      </select>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="proofFile">上传证件 <span className="required">*</span></label>
+                      <div className="file-upload">
+                        <input
+                          type="file"
+                          id="proofFile"
+                          name="proofFile"
+                          onChange={handleInputChange}
+                          accept="image/jpeg,image/png,application/pdf"
+                          required
+                          aria-required="true"
+                        />
+                        <div className="file-upload-label">
+                          {verificationData.proofFile ? (
+                            <span className="file-name">{verificationData.proofFile.name}</span>
+                          ) : (
+                            <>
+                              <span className="upload-icon">📎</span>
+                              <span>点击或拖拽文件至此处</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <p className="form-hint">支持JPG、PNG或PDF格式，文件大小不超过5MB</p>
+                    </div>
+                    
+                    <div className="form-actions">
+                      <button
+                        type="button"
+                        className="back-btn"
+                        onClick={handlePrevStep}
+                      >
+                        上一步
+                      </button>
+                      <button
+                        type="button"
+                        className="next-btn"
+                        onClick={handleNextStep}
+                        disabled={!verificationData.proofFile}
+                      >
+                        下一步
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* 步骤3: 确认提交 */}
+                {verificationStep === 2 && (
+                  <div className="verification-step">
+                    <h3>确认提交</h3>
+                    
+                    <div className="verification-summary">
+                      <div className="summary-item">
+                        <span className="summary-label">姓名:</span>
+                        <span className="summary-value">{verificationData.name}</span>
+                      </div>
+                      <div className="summary-item">
+                        <span className="summary-label">电子邮箱:</span>
+                        <span className="summary-value">{verificationData.email}</span>
+                      </div>
+                      <div className="summary-item">
+                        <span className="summary-label">证明类型:</span>
+                        <span className="summary-value">{verificationData.proofType}</span>
+                      </div>
+                      <div className="summary-item">
+                        <span className="summary-label">上传文件:</span>
+                        <span className="summary-value">{verificationData.proofFile?.name}</span>
+                      </div>
+                      <div className="summary-item">
+                        <span className="summary-label">钱包地址:</span>
+                        <span className="summary-value">{account}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="form-group checkbox-group">
+                      <input
+                        type="checkbox"
+                        id="agreeTerms"
+                        name="agreeTerms"
+                        checked={verificationData.agreeTerms}
+                        onChange={handleInputChange}
+                        required
+                        aria-required="true"
+                      />
+                      <label htmlFor="agreeTerms">
+                        我同意平台的<a href="/terms" target="_blank" rel="noopener noreferrer">服务条款</a>和<a href="/privacy" target="_blank" rel="noopener noreferrer">隐私政策</a>，并确认所提供的信息真实有效
+                      </label>
+                    </div>
+                    
+                    <div className="form-actions">
+                      <button
+                        type="button"
+                        className="back-btn"
+                        onClick={handlePrevStep}
+                        disabled={isSubmitting}
+                      >
+                        上一步
+                      </button>
+                      <button
+                        type="submit"
+                        className="submit-btn"
+                        disabled={isSubmitting || !verificationData.agreeTerms}
+                      >
+                        {isSubmitting ? '提交中...' : '提交验证'}
+                      </button>
+                    </div>
+                    
+                    {isSubmitting && (
+                      <div className="upload-progress">
+                        <div className="progress-bar">
+                          <div 
+                            className="progress-fill"
+                            style={{ width: `${verificationProgress}%` }}
+                            role="progressbar"
+                            aria-valuenow={verificationProgress}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                          ></div>
+                        </div>
+                        <div className="progress-percentage">{verificationProgress}%</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* 步骤4: 完成 */}
+                {verificationStep === 3 && (
+                  <div className="verification-step">
+                    <div className="verification-complete">
+                      <div className="complete-icon">✓</div>
+                      <h3>验证申请已提交</h3>
+                      <p>我们已收到您的身份验证申请，正在进行审核。审核结果将通过邮件通知您，请留意邮箱。</p>
+                      <p className="verification-time">预计审核时间: 1-3个工作日</p>
+                      
+                      <button
+                        type="button"
+                        className="return-btn"
+                        onClick={() => navigate('/')}
+                      >
+                        返回首页
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </form>
+            </div>
+          </div>
+          
+          <div className="verification-benefits">
+            <h3>身份验证的好处</h3>
+            <div className="benefits-grid">
+              <div className="benefit-item">
+                <div className="benefit-icon">🔒</div>
+                <h4>增强安全性</h4>
+                <p>验证身份可以保护您的账户安全，防止未授权访问</p>
+              </div>
+              <div className="benefit-item">
+                <div className="benefit-icon">🏆</div>
+                <h4>建立声誉</h4>
+                <p>开始积累您的文化声誉分数，解锁更多平台特权</p>
+              </div>
+              <div className="benefit-item">
+                <div className="benefit-icon">🎭</div>
+                <h4>获取凭证</h4>
+                <p>获得独特的身份凭证NFT，展示您的文化成就</p>
+              </div>
+              <div className="benefit-item">
+                <div className="benefit-icon">🗳️</div>
+                <h4>参与治理</h4>
+                <p>获得投票权，参与平台重要决策的制定</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

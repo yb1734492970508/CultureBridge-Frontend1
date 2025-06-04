@@ -1,0 +1,18 @@
+/* 注册页面样式 */
+@import '../auth/Auth.css';
+
+.register-container {
+  composes: auth-container;
+}
+
+.register-card {
+  composes: auth-card;
+}
+
+.register-form {
+  composes: auth-form;
+}
+
+.register-button {
+  composes: auth-button;
+}
