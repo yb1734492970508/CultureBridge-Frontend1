@@ -7,6 +7,7 @@ import NFTGallery from './components/blockchain/NFTGallery';
 import NFTDetail from './components/blockchain/NFTDetail';
 import CopyrightProtection from './components/blockchain/CopyrightProtection';
 import CrossChainBridge from './components/blockchain/CrossChainBridge';
+import TokenEconomyDashboard from './components/token/TokenEconomyDashboard';
 import Register from './pages/auth/Register';
 import Login from './pages/auth/Login';
 import Profile from './pages/auth/Profile';
@@ -33,6 +34,7 @@ function App() {
             <Route path="/nft/:tokenId" element={<NFTDetailWrapper />} />
             <Route path="/copyright" element={<CopyrightProtection />} />
             <Route path="/bridge" element={<CrossChainBridge />} />
+            <Route path="/token-economy" element={<TokenEconomyDashboard />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
@@ -70,6 +72,7 @@ function UserMenu() {
             <div className="user-dropdown">
               <a href="/profile" className="dropdown-item">个人资料</a>
               <a href="/security" className="dropdown-item">安全设置</a>
+              <a href="/token-economy" className="dropdown-item">代币经济</a>
               <button className="dropdown-item logout" onClick={logout}>退出登录</button>
             </div>
           )}
@@ -114,6 +117,12 @@ function Home() {
           <h3>跨链资产桥</h3>
           <p>在多个区块链网络间安全转移您的资产</p>
           <a href="/bridge" className="feature-link">开始跨链</a>
+        </div>
+        
+        <div className="feature-card">
+          <h3>代币经济仪表盘</h3>
+          <p>查看CBT代币经济模型和市场数据</p>
+          <a href="/token-economy" className="feature-link">查看仪表盘</a>
         </div>
       </div>
     </div>
