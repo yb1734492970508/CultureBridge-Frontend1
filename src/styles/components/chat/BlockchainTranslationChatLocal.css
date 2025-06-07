@@ -1,0 +1,651 @@
+/**
+ * 区块链翻译聊天组件样式
+ * 用于本地Hardhat网络部署的智能合约交互界面
+ */
+
+.blockchain-translation-chat {
+  font-family: 'Roboto', 'Noto Sans SC', sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  color: #333;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 头部样式 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* 钱包信息样式 */
+.wallet-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.account-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #f0f4f8;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.network-badge {
+  background-color: #3498db;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.account-address {
+  font-family: monospace;
+  color: #2c3e50;
+}
+
+.token-balance {
+  font-weight: 600;
+  color: #16a085;
+}
+
+/* 按钮样式 */
+.btn-connect, .btn-disconnect, .btn-connect-large {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-connect, .btn-connect-large {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-connect:hover, .btn-connect-large:hover {
+  background-color: #2980b9;
+}
+
+.btn-disconnect {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.btn-disconnect:hover {
+  background-color: #c0392b;
+}
+
+.btn-connect-large {
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 错误消息样式 */
+.error-message {
+  background-color: #fdecea;
+  color: #e74c3c;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border-left: 4px solid #e74c3c;
+}
+
+/* 连接提示样式 */
+.connect-prompt {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #f0f4f8;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.connect-prompt p {
+  margin-bottom: 20px;
+  font-size: 18px;
+  color: #7f8c8d;
+}
+
+/* 标签页样式 */
+.tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.tab {
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 16px;
+  font-weight: 500;
+  color: #7f8c8d;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab:hover {
+  color: #3498db;
+}
+
+.tab.active {
+  color: #3498db;
+  border-bottom-color: #3498db;
+}
+
+/* 标签内容样式 */
+.tab-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.tab-content h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #2c3e50;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* 空消息样式 */
+.empty-message {
+  text-align: center;
+  padding: 30px;
+  color: #95a5a6;
+  font-style: italic;
+}
+
+/* NFT网格样式 */
+.nft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.nft-card {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nft-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.nft-image {
+  height: 180px;
+  overflow: hidden;
+}
+
+.nft-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.nft-card:hover .nft-image img {
+  transform: scale(1.05);
+}
+
+.nft-info {
+  padding: 15px;
+}
+
+.nft-info h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: #2c3e50;
+}
+
+.nft-info p {
+  margin: 5px 0;
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.btn-use-nft {
+  width: 100%;
+  padding: 8px 0;
+  margin-top: 10px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-use-nft:hover {
+  background-color: #2980b9;
+}
+
+/* 请求列表样式 */
+.requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.request-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #3498db;
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+}
+
+.status-created {
+  background-color: #3498db;
+}
+
+.status-assigned {
+  background-color: #f39c12;
+}
+
+.status-completed {
+  background-color: #2ecc71;
+}
+
+.status-verified {
+  background-color: #27ae60;
+}
+
+.status-disputed {
+  background-color: #e74c3c;
+}
+
+.status-cancelled {
+  background-color: #95a5a6;
+}
+
+.request-date {
+  font-size: 12px;
+  color: #95a5a6;
+}
+
+.request-content {
+  margin-bottom: 10px;
+}
+
+.request-content p {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.request-details {
+  margin-bottom: 15px;
+}
+
+.request-details p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.request-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-view-details, .btn-cancel {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-view-details {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-view-details:hover {
+  background-color: #2980b9;
+}
+
+.btn-cancel {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background-color: #c0392b;
+}
+
+/* 服务列表样式 */
+.services-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.service-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.service-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.service-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #2c3e50;
+}
+
+.performance-score {
+  font-size: 14px;
+  color: #16a085;
+  font-weight: 500;
+}
+
+.service-details {
+  margin-bottom: 15px;
+}
+
+.service-details p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.service-actions {
+  text-align: center;
+}
+
+.btn-use-service {
+  width: 100%;
+  padding: 8px 0;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-use-service:hover {
+  background-color: #2980b9;
+}
+
+/* 表单样式 */
+.translation-form {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-row .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: border-color 0.2s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-group input {
+  width: auto;
+}
+
+.checkbox-group label {
+  margin-bottom: 0;
+}
+
+.btn-create-request {
+  width: 100%;
+  padding: 12px 0;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-create-request:hover {
+  background-color: #2980b9;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .wallet-info {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 5px;
+  }
+  
+  .tab {
+    padding: 10px 15px;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .nft-grid, .services-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 暗色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .blockchain-translation-chat {
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .header {
+    border-bottom-color: #333;
+  }
+  
+  .header h2 {
+    color: #ecf0f1;
+  }
+  
+  .account-info {
+    background-color: #2c3e50;
+  }
+  
+  .account-address {
+    color: #ecf0f1;
+  }
+  
+  .token-balance {
+    color: #2ecc71;
+  }
+  
+  .error-message {
+    background-color: rgba(231, 76, 60, 0.2);
+  }
+  
+  .connect-prompt {
+    background-color: #2c3e50;
+  }
+  
+  .connect-prompt p {
+    color: #bdc3c7;
+  }
+  
+  .tab-content {
+    background-color: #2c3e50;
+  }
+  
+  .tab-content h3 {
+    color: #ecf0f1;
+  }
+  
+  .empty-message {
+    color: #bdc3c7;
+  }
+  
+  .nft-card, .request-card, .service-card {
+    background-color: #34495e;
+  }
+  
+  .nft-info h3, .service-header h3 {
+    color: #ecf0f1;
+  }
+  
+  .nft-info p, .request-details p, .service-details p {
+    color: #bdc3c7;
+  }
+  
+  input, select, textarea {
+    background-color: #34495e;
+    border-color: #2c3e50;
+    color: #ecf0f1;
+  }
+  
+  label {
+    color: #ecf0f1;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.nft-card, .request-card, .service-card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 加载状态样式 */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
