@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/auth/AuthContext';
+import { TokenProvider } from './context/token/TokenContext';
 import WalletConnector from './components/blockchain/WalletConnector';
 import NFTMinter from './components/blockchain/NFTMinter';
 import NFTGallery from './components/blockchain/NFTGallery';
@@ -17,35 +18,48 @@ import './App.css';
 function App() {
   return (
     <AuthProvider>
-      <div className="App">
-        <header className="App-header">
-          <h1>CultureBridge</h1>
-          <div className="header-actions">
-            <WalletConnector />
-            <UserMenu />
-          </div>
-        </header>
-        
-        <main className="App-main">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/mint" element={<NFTMinter />} />
-            <Route path="/gallery" element={<NFTGallery />} />
-            <Route path="/nft/:tokenId" element={<NFTDetailWrapper />} />
-            <Route path="/copyright" element={<CopyrightProtection />} />
-            <Route path="/bridge" element={<CrossChainBridge />} />
-            <Route path="/token-economy" element={<TokenEconomyDashboard />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/security" element={<SecuritySettings />} />
-          </Routes>
-        </main>
-        
-        <footer className="App-footer">
-          <p>CultureBridge - 基于区块链的跨文化交流平台</p>
-        </footer>
-      </div>
+      <TokenProvider>
+        <div className="App">
+          <header className="App-header">
+            <h1>CultureBridge</h1>
+            <div className="header-actions">
+              <WalletConnector />
+              <UserMenu />
+            </div>
+          </header>
+          
+          <nav className="App-nav">
+            <ul className="nav-list">
+              <li className="nav-item"><a href="/" className="nav-link">首页</a></li>
+              <li className="nav-item"><a href="/gallery" className="nav-link">NFT画廊</a></li>
+              <li className="nav-item"><a href="/mint" className="nav-link">创建NFT</a></li>
+              <li className="nav-item"><a href="/copyright" className="nav-link">版权保护</a></li>
+              <li className="nav-item"><a href="/bridge" className="nav-link">跨链桥</a></li>
+              <li className="nav-item"><a href="/token-economy" className="nav-link">代币经济</a></li>
+            </ul>
+          </nav>
+          
+          <main className="App-main">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/mint" element={<NFTMinter />} />
+              <Route path="/gallery" element={<NFTGallery />} />
+              <Route path="/nft/:tokenId" element={<NFTDetailWrapper />} />
+              <Route path="/copyright" element={<CopyrightProtection />} />
+              <Route path="/bridge" element={<CrossChainBridge />} />
+              <Route path="/token-economy" element={<TokenEconomyDashboard />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/security" element={<SecuritySettings />} />
+            </Routes>
+          </main>
+          
+          <footer className="App-footer">
+            <p>CultureBridge - 基于区块链的跨文化交流平台</p>
+          </footer>
+        </div>
+      </TokenProvider>
     </AuthProvider>
   );
 }
@@ -119,9 +133,9 @@ function Home() {
           <a href="/bridge" className="feature-link">开始跨链</a>
         </div>
         
-        <div className="feature-card">
-          <h3>代币经济仪表盘</h3>
-          <p>查看CBT代币经济模型和市场数据</p>
+        <div className="feature-card highlight-card">
+          <h3>CBT代币经济</h3>
+          <p>了解CBT代币经济模型与交易所上线计划</p>
           <a href="/token-economy" className="feature-link">查看仪表盘</a>
         </div>
       </div>
@@ -136,3 +150,4 @@ function NFTDetailWrapper() {
 }
 
 export default App;
+
