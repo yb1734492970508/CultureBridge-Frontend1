@@ -86,6 +86,7 @@ function UserMenu() {
             <div className="user-dropdown">
               <a href="/profile" className="dropdown-item">个人资料</a>
               <a href="/security" className="dropdown-item">安全设置</a>
+              <a href="/token-economy" className="dropdown-item">代币经济</a>
               <button className="dropdown-item logout" onClick={logout}>退出登录</button>
             </div>
           )}
@@ -149,3 +150,4 @@ function NFTDetailWrapper() {
 }
 
 export default App;
+
