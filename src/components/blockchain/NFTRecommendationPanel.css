@@ -1,0 +1,166 @@
+/* NFT推荐面板样式 */
+.nft-recommendation-panel {
+  width: 100%;
+  padding: var(--spacing-medium);
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-medium);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: var(--spacing-large);
+}
+
+/* 推荐头部 */
+.recommendation-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--spacing-medium);
+}
+
+.recommendation-header h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 var(--spacing-small) 0;
+  color: var(--color-text-primary);
+}
+
+/* 推荐标签页 */
+.recommendation-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xsmall);
+  margin-bottom: var(--spacing-small);
+  border-bottom: 1px solid var(--color-border-light);
+  padding-bottom: var(--spacing-small);
+}
+
+.tab-button {
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  border-radius: var(--border-radius-small);
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tab-button:hover {
+  color: var(--color-primary);
+  background-color: var(--color-background-hover);
+}
+
+.tab-button.active {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--color-primary);
+  border-radius: 3px 3px 0 0;
+}
+
+/* 推荐内容 */
+.recommendation-content {
+  min-height: 200px;
+}
+
+/* 推荐网格 */
+.recommendations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--spacing-medium);
+}
+
+/* 推荐项目 */
+.recommendation-item {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recommendation-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* 加载状态 */
+.recommendations-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(var(--color-primary-rgb), 0.1);
+  border-left-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: var(--spacing-small);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.recommendations-loading p {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* 无推荐内容 */
+.no-recommendations {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background-color: var(--color-background-alt);
+  border-radius: var(--border-radius-medium);
+  border: 1px dashed var(--color-border);
+}
+
+.no-recommendations p {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* 响应式调整 */
+@media (max-width: 767px) {
+  .recommendations-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  
+  .tab-button {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
+}
+
+/* 无障碍增强 */
+@media (prefers-reduced-motion: reduce) {
+  .recommendation-item,
+  .loading-spinner {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: more) {
+  .tab-button.active::after {
+    height: 4px;
+  }
+  
+  .no-recommendations {
+    border-width: 2px;
+  }
+}
