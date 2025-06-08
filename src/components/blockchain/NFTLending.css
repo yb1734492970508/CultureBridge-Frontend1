@@ -1,0 +1,316 @@
+.nft-lending-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.section-description {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.subsection-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  color: #444;
+}
+
+/* NFT Grid Styles */
+.nft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.nft-grid-item {
+  transition: transform 0.3s ease;
+}
+
+.nft-grid-item:hover {
+  transform: translateY(-5px);
+}
+
+.nft-card {
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.nft-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.nft-image-container {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.nft-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.nft-card:hover .nft-image {
+  transform: scale(1.05);
+}
+
+.nft-price-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.nft-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nft-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 40px;
+}
+
+.nft-id {
+  color: #999;
+}
+
+/* Loan Grid Styles */
+.loan-tabs {
+  margin-top: 1rem;
+}
+
+.loan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.loan-grid-item {
+  transition: transform 0.3s ease;
+}
+
+.loan-grid-item:hover {
+  transform: translateY(-5px);
+}
+
+.loan-card {
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.loan-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.loan-image-container {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+}
+
+.loan-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.loan-card:hover .loan-image {
+  transform: scale(1.05);
+}
+
+.loan-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.loan-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.loan-details {
+  margin-bottom: 0.5rem;
+}
+
+.loan-detail-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.detail-label {
+  color: #666;
+}
+
+.detail-value {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.loan-health-factor {
+  margin-top: 0.5rem;
+}
+
+.loan-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* Modal Styles */
+.nft-detail-image {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 400px;
+  object-fit: contain;
+}
+
+.nft-price-info {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.nft-attributes {
+  margin-top: 1rem;
+}
+
+.selected-nft-info,
+.selected-loan-info {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.selected-nft-thumbnail,
+.selected-loan-thumbnail {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .nft-lending-container {
+    padding: 1rem;
+  }
+  
+  .nft-grid,
+  .loan-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  
+  .nft-image-container,
+  .loan-image-container {
+    height: 150px;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+  }
+  
+  .subsection-title {
+    font-size: 1.3rem;
+  }
+}
+
+/* Animation for loading states */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.wallet-not-connected {
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .nft-lending-container {
+    background-color: #1a1a1a;
+  }
+  
+  .section-title,
+  .subsection-title {
+    color: #e0e0e0;
+  }
+  
+  .section-description {
+    color: #b0b0b0;
+  }
+  
+  .nft-card,
+  .loan-card {
+    background-color: #2a2a2a;
+    border-color: #3a3a3a;
+  }
+  
+  .nft-title,
+  .loan-title {
+    color: #e0e0e0;
+  }
+  
+  .nft-description {
+    color: #b0b0b0;
+  }
+  
+  .detail-label {
+    color: #b0b0b0;
+  }
+  
+  .nft-price-info,
+  .selected-nft-info,
+  .selected-loan-info {
+    background-color: #2a2a2a;
+  }
+}
