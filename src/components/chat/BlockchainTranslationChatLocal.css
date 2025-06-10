@@ -1,0 +1,1003 @@
+/**
+ * 区块链翻译聊天本地版样式
+ * 用于连接前端界面与本地Hardhat网络部署的智能合约
+ */
+
+.blockchain-translation-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* 头部样式 */
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: #3498db;
+  color: white;
+}
+
+.chat-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-toggle-theme {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.btn-toggle-theme:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.account-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.token-balance {
+  font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.account-address {
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.network-badge {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.network-badge.local {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.network-badge.testnet {
+  background-color: #f39c12;
+  color: white;
+}
+
+.btn-connect-wallet {
+  background-color: white;
+  color: #3498db;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-connect-wallet:hover {
+  background-color: #f1f1f1;
+  transform: translateY(-2px);
+}
+
+.btn-connect-wallet:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 主内容区域 */
+.chat-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+/* 连接钱包提示 */
+.connect-wallet-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 1rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.prompt-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.connect-wallet-prompt h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  color: #2c3e50;
+}
+
+.connect-wallet-prompt p {
+  margin: 0 0 1.5rem 0;
+  color: #7f8c8d;
+}
+
+/* 标签页 */
+.content-tabs {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-weight: 500;
+  color: #7f8c8d;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tab-btn:hover {
+  color: #3498db;
+}
+
+.tab-btn.active {
+  color: #3498db;
+  border-bottom-color: #3498db;
+}
+
+.badge {
+  background-color: #3498db;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  min-width: 1.2rem;
+  text-align: center;
+}
+
+/* 标签页内容 */
+.tab-content {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+}
+
+/* 区块样式 */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+.btn-refresh {
+  background: none;
+  border: none;
+  color: #3498db;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-refresh:hover {
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.btn-refresh.spinning {
+  animation: spin 1s linear infinite;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 2rem;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+/* 翻译表单 */
+.translation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.translation-form h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+label {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+input, select, textarea {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.content-input-container {
+  position: relative;
+}
+
+.voice-input-controls {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+}
+
+.btn-voice-start, .btn-voice-stop {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-voice-start {
+  color: #3498db;
+}
+
+.btn-voice-start:hover {
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.btn-voice-stop {
+  color: #e74c3c;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btn-voice-stop:hover {
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+.recording-indicator {
+  width: 10px;
+  height: 10px;
+  background-color: #e74c3c;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.transcript-preview {
+  background-color: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-style: italic;
+  color: #7f8c8d;
+  margin-top: 0.5rem;
+}
+
+.checkbox-group {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-group input {
+  margin: 0;
+}
+
+.btn-create-request {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 0.5rem;
+}
+
+.btn-create-request:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.btn-create-request:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 请求列表 */
+.requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.request-card {
+  background-color: white;
+  border-radius: 8px;
+  border-left: 4px solid;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.request-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.request-card.status-created {
+  border-left-color: #3498db;
+}
+
+.request-card.status-assigned {
+  border-left-color: #f39c12;
+}
+
+.request-card.status-completed {
+  border-left-color: #2ecc71;
+}
+
+.request-card.status-verified {
+  border-left-color: #27ae60;
+}
+
+.request-card.status-disputed {
+  border-left-color: #e74c3c;
+}
+
+.request-card.status-cancelled {
+  border-left-color: #95a5a6;
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+}
+
+.status-badge.status-created {
+  background-color: #3498db;
+}
+
+.status-badge.status-assigned {
+  background-color: #f39c12;
+}
+
+.status-badge.status-completed {
+  background-color: #2ecc71;
+}
+
+.status-badge.status-verified {
+  background-color: #27ae60;
+}
+
+.status-badge.status-disputed {
+  background-color: #e74c3c;
+}
+
+.status-badge.status-cancelled {
+  background-color: #95a5a6;
+}
+
+.request-date {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+}
+
+.request-content {
+  margin-bottom: 0.75rem;
+}
+
+.request-content p {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.request-details {
+  margin-bottom: 0.75rem;
+}
+
+.request-details p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.request-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.btn-view-details, .btn-cancel {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-view-details {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-view-details:hover {
+  background-color: #2980b9;
+}
+
+.btn-cancel {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background-color: #c0392b;
+}
+
+/* NFT列表 */
+.nft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.nft-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.nft-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.nft-image {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+}
+
+.nft-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.nft-card:hover .nft-image img {
+  transform: scale(1.05);
+}
+
+.for-sale-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background-color: #e74c3c;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.nft-info {
+  padding: 1rem;
+}
+
+.nft-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.nft-info p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.nft-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.nft-price span {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.btn-buy-nft {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-buy-nft:hover {
+  background-color: #27ae60;
+}
+
+.nft-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.btn-use-nft, .btn-sell-nft {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-use-nft {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-use-nft:hover {
+  background-color: #2980b9;
+}
+
+.btn-sell-nft {
+  background-color: #f39c12;
+  color: white;
+}
+
+.btn-sell-nft:hover {
+  background-color: #d35400;
+}
+
+/* AI服务列表 */
+.services-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.service-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  transition: all 0.2s;
+}
+
+.service-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.service-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.service-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.rating-stars {
+  display: flex;
+}
+
+.rating-score {
+  font-weight: 600;
+  color: #f39c12;
+}
+
+.rating-count {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+}
+
+.service-details {
+  margin-bottom: 0.75rem;
+}
+
+.service-details p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.performance-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.performance-label {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.performance-bar-container {
+  flex: 1;
+  height: 6px;
+  background-color: #f1f1f1;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.performance-bar {
+  height: 100%;
+  background-color: #3498db;
+  border-radius: 3px;
+}
+
+.performance-score {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #3498db;
+}
+
+.service-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.btn-use-service, .btn-compare {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-use-service {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-use-service:hover {
+  background-color: #2980b9;
+}
+
+.btn-compare {
+  background-color: #f1f1f1;
+  color: #7f8c8d;
+}
+
+.btn-compare:hover {
+  background-color: #e0e0e0;
+}
+
+/* 模态框 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-container {
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .chat-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .chat-content {
+    padding: 1rem;
+  }
+  
+  .content-tabs {
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+  
+  .tab-btn {
+    padding: 0.75rem 1rem;
+    white-space: nowrap;
+  }
+  
+  .tab-content {
+    padding: 1rem;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .nft-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-container {
+    width: 95%;
+  }
+}
+
+/* 暗色模式 */
+.blockchain-translation-chat.dark-mode {
+  background-color: #2d3436;
+  color: #f1f1f1;
+}
+
+.dark-mode .chat-header {
+  background-color: #2980b9;
+}
+
+.dark-mode .btn-toggle-theme {
+  color: #f1f1f1;
+}
+
+.dark-mode .btn-connect-wallet {
+  background-color: #3d4246;
+  color: #f1f1f1;
+}
+
+.dark-mode .btn-connect-wallet:hover {
+  background-color: #4d5256;
+}
+
+.dark-mode .chat-content {
+  background-color: #2d3436;
+}
+
+.dark-mode .connect-wallet-prompt {
+  background-color: #3d4246;
+}
+
+.dark-mode .connect-wallet-prompt h3 {
+  color: #ecf0f1;
+}
+
+.dark-mode .connect-wallet-prompt p {
+  color: #bdc3c7;
+}
+
+.dark-mode .content-tabs {
+  border-bottom-color: #3d4246;
+}
+
+.dark-mode .tab-btn {
+  color: #bdc3c7;
+}
+
+.dark-mode .tab-btn:hover,
+.dark-mode .tab-btn.active {
+  color: #3498db;
+}
+
+.dark-mode .tab-content {
+  background-color: #3d4246;
+}
+
+.dark-mode .section-header h3 {
+  color: #ecf0f1;
+}
+
+.dark-mode .empty-message {
+  color: #bdc3c7;
+}
+
+.dark-mode label {
+  color: #ecf0f1;
+}
+
+.dark-mode input, 
+.dark-mode select, 
+.dark-mode textarea {
+  background-color: #2d3436;
+  border-color: #4d5256;
+  color: #ecf0f1;
+}
+
+.dark-mode input:focus, 
+.dark-mode select:focus, 
+.dark-mode textarea:focus {
+  border-color: #3498db;
+}
+
+.dark-mode .transcript-preview {
+  background-color: #2d3436;
+  color: #bdc3c7;
+}
+
+.dark-mode .request-card {
+  background-color: #3d4246;
+}
+
+.dark-mode .request-date {
+  color: #bdc3c7;
+}
+
+.dark-mode .request-details p {
+  color: #bdc3c7;
+}
+
+.dark-mode .nft-card {
+  background-color: #3d4246;
+}
+
+.dark-mode .nft-info h3 {
+  color: #ecf0f1;
+}
+
+.dark-mode .nft-info p {
+  color: #bdc3c7;
+}
+
+.dark-mode .nft-price span {
+  color: #ecf0f1;
+}
+
+.dark-mode .service-card {
+  background-color: #3d4246;
+}
+
+.dark-mode .service-header h3 {
+  color: #ecf0f1;
+}
+
+.dark-mode .service-details p {
+  color: #bdc3c7;
+}
+
+.dark-mode .performance-label {
+  color: #bdc3c7;
+}
+
+.dark-mode .performance-bar-container {
+  background-color: #2d3436;
+}
+
+.dark-mode .btn-compare {
+  background-color: #2d3436;
+  color: #bdc3c7;
+}
+
+.dark-mode .btn-compare:hover {
+  background-color: #4d5256;
+}

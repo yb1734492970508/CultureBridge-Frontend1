@@ -1,0 +1,285 @@
+/**
+ * 翻译请求状态跟踪器样式
+ * 用于美化翻译请求状态展示组件
+ */
+
+.request-status-tracker {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+/* 加载状态 */
+.request-status-tracker.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.status-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #3498db;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 错误状态 */
+.request-status-tracker.error {
+  background-color: #fff5f5;
+  border-left: 4px solid #e74c3c;
+  color: #e74c3c;
+}
+
+.error-icon {
+  background-color: #e74c3c !important;
+  color: white;
+  font-weight: bold;
+}
+
+/* 未找到状态 */
+.request-status-tracker.not-found {
+  background-color: #f8f9fa;
+  border-left: 4px solid #95a5a6;
+  color: #7f8c8d;
+}
+
+.not-found-icon {
+  background-color: #95a5a6 !important;
+  color: white;
+  font-weight: bold;
+}
+
+/* 状态通知 */
+.status-notification {
+  position: relative;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+  color: white;
+  display: flex;
+  align-items: center;
+  animation: slideIn 0.3s ease-out;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.notification-icon {
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.notification-text {
+  flex: 1;
+  font-weight: 500;
+}
+
+/* 当前状态 */
+.current-status {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid;
+  border-radius: 8px;
+  background-color: white;
+  transition: all 0.3s ease;
+}
+
+.current-status:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.status-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.status-details {
+  flex: 1;
+}
+
+.status-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.status-progress-container {
+  height: 6px;
+  background-color: #f1f1f1;
+  border-radius: 3px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+
+.status-progress-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.status-description {
+  margin: 0;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+/* 状态历史 */
+.status-history {
+  margin-top: 1.5rem;
+}
+
+.status-history h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #555;
+  font-weight: 600;
+}
+
+.status-timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.status-timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 8px;
+  width: 2px;
+  background-color: #e0e0e0;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.timeline-point {
+  position: absolute;
+  left: -2rem;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #3498db;
+  border: 2px solid white;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  z-index: 1;
+}
+
+.timeline-content {
+  background-color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.timeline-title {
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.timeline-arrow {
+  margin: 0 0.5rem;
+  color: #7f8c8d;
+}
+
+.timeline-time {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.8rem;
+  color: #7f8c8d;
+}
+
+.timeline-description {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .current-status {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .status-icon {
+    margin: 0 0 1rem 0;
+  }
+  
+  .status-timeline {
+    padding-left: 1.5rem;
+  }
+  
+  .timeline-point {
+    left: -1.5rem;
+  }
+}
+
+/* 暗色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .request-status-tracker {
+    background-color: #2d3436;
+    color: #f1f1f1;
+  }
+  
+  .current-status {
+    background-color: #2d3436;
+    border-color: #3d4246;
+  }
+  
+  .status-progress-container {
+    background-color: #3d4246;
+  }
+  
+  .status-description {
+    color: #ddd;
+  }
+  
+  .status-history h4 {
+    color: #ddd;
+  }
+  
+  .status-timeline::before {
+    background-color: #3d4246;
+  }
+  
+  .timeline-content {
+    background-color: #2d3436;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .timeline-time {
+    color: #bdc3c7;
+  }
+  
+  .timeline-description {
+    color: #ddd;
+  }
+}

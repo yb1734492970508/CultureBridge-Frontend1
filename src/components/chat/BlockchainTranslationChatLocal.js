@@ -1,19 +1,17 @@
 /**
- * 区块链翻译聊天前端与本地合约集成组件
+ * 集成翻译请求状态通知的区块链翻译聊天组件
  * 用于连接前端界面与本地Hardhat网络部署的智能合约
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ethers } from 'ethers';
-import contracts from '../../config/contracts';
-import CultureTokenABI from '../../contracts/abis/CultureToken.json';
-import AIRegistryABI from '../../contracts/abis/AIRegistry.json';
-import CulturalNFTABI from '../../contracts/abis/CulturalNFT.json';
-import TranslationMarketABI from '../../contracts/abis/TranslationMarket.json';
+import BlockchainConnector from '../../utils/BlockchainConnector';
+import RequestStatusTracker from '../translation/RequestStatusTracker';
+import TranslationRequestDetail from '../translation/TranslationRequestDetail';
 import ToastNotification from '../notifications/ToastNotification';
-import './BlockchainTranslationChat.css';
+import './BlockchainTranslationChatLocal.css';
 
-const BlockchainTranslationChat = () => {
+const BlockchainTranslationChatLocal = () => {
   // 状态变量
   const [account, setAccount] = useState('');
   const [provider, setProvider] = useState(null);
@@ -39,6 +37,10 @@ const BlockchainTranslationChat = () => {
   const [error, setError] = useState('');
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   const [activeTab, setActiveTab] = useState('translation');
+  const [selectedRequestId, setSelectedRequestId] = useState(null);
+  const [showRequestDetail, setShowRequestDetail] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   
   // 翻译请求表单
   const [translationForm, setTranslationForm] = useState({
@@ -49,6 +51,11 @@ const BlockchainTranslationChat = () => {
     deadline: '',
     isAIAssisted: false
   });
+
+  // 语音识别
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const recognitionRef = useRef(null);
   
   // 初始化
   useEffect(() => {
@@ -78,6 +85,16 @@ const BlockchainTranslationChat = () => {
         } else {
           showNotification('请安装MetaMask钱包以使用区块链功能', 'warning');
         }
+
+        // 检测暗色模式偏好
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          setDarkMode(true);
+        }
+
+        // 监听暗色模式变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+          setDarkMode(e.matches);
+        });
       } catch (err) {
         console.error('初始化错误:', err);
         setError('初始化Web3连接失败');
@@ -91,6 +108,10 @@ const BlockchainTranslationChat = () => {
       if (window.ethereum) {
         window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
         window.ethereum.removeListener('chainChanged', handleChainChanged);
+      }
+      
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
       }
     };
   }, []);
@@ -153,13 +174,13 @@ const BlockchainTranslationChat = () => {
     try {
       // 获取当前网络的合约地址
       const networkKey = isLocalNetwork ? 'hardhat' : 'bscTestnet';
-      const contractAddresses = contracts[networkKey];
+      const contractAddresses = BlockchainConnector.contracts[networkKey];
       
       // 初始化合约实例
       if (contractAddresses.CultureToken) {
         const tokenContract = new ethers.Contract(
           contractAddresses.CultureToken,
-          CultureTokenABI.abi,
+          BlockchainConnector.CultureTokenABI.abi,
           signer
         );
         setCultureToken(tokenContract);
@@ -168,7 +189,7 @@ const BlockchainTranslationChat = () => {
       if (contractAddresses.AIRegistry) {
         const registryContract = new ethers.Contract(
           contractAddresses.AIRegistry,
-          AIRegistryABI.abi,
+          BlockchainConnector.AIRegistryABI.abi,
           signer
         );
         setAIRegistry(registryContract);
@@ -177,7 +198,7 @@ const BlockchainTranslationChat = () => {
       if (contractAddresses.CulturalNFT) {
         const nftContract = new ethers.Contract(
           contractAddresses.CulturalNFT,
-          CulturalNFTABI.abi,
+          BlockchainConnector.CulturalNFTABI.abi,
           signer
         );
         setCulturalNFT(nftContract);
@@ -186,7 +207,7 @@ const BlockchainTranslationChat = () => {
       if (contractAddresses.TranslationMarket) {
         const marketContract = new ethers.Contract(
           contractAddresses.TranslationMarket,
-          TranslationMarketABI.abi,
+          BlockchainConnector.TranslationMarketABI.abi,
           signer
         );
         setTranslationMarket(marketContract);
@@ -213,6 +234,7 @@ const BlockchainTranslationChat = () => {
   const loadUserData = async (userAccount) => {
     try {
       setIsLoading(true);
+      setIsRefreshing(true);
       
       // 加载代币余额
       if (cultureToken) {
@@ -251,6 +273,7 @@ const BlockchainTranslationChat = () => {
       showNotification('加载用户数据失败: ' + err.message, 'error');
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
   
@@ -263,14 +286,18 @@ const BlockchainTranslationChat = () => {
         name: '中英翻译专家NFT',
         type: 'TranslationMemory',
         language: 'en-zh',
-        imageUrl: 'https://example.com/nft1.jpg'
+        imageUrl: 'https://example.com/nft1.jpg',
+        price: '50',
+        isForSale: true
       },
       {
         id: 2,
         name: '文化解释器NFT',
         type: 'CulturalExplanation',
         language: 'en-zh',
-        imageUrl: 'https://example.com/nft2.jpg'
+        imageUrl: 'https://example.com/nft2.jpg',
+        price: '75',
+        isForSale: false
       }
     ];
   };
@@ -286,7 +313,19 @@ const BlockchainTranslationChat = () => {
         targetLanguage: 'en',
         reward: '10',
         status: 'Created',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        deadline: new Date(Date.now() + 86400000).toISOString() // 24小时后
+      },
+      {
+        id: '0x456...',
+        content: 'This is a test translation request',
+        sourceLanguage: 'en',
+        targetLanguage: 'zh',
+        reward: '15',
+        status: 'Completed',
+        createdAt: new Date(Date.now() - 86400000).toISOString(), // 24小时前
+        completedAt: new Date().toISOString(),
+        translation: '这是一个测试翻译请求'
       }
     ];
   };
@@ -301,7 +340,9 @@ const BlockchainTranslationChat = () => {
         serviceType: '机器翻译',
         languages: ['en', 'zh', 'ja'],
         pricePerToken: '0.1',
-        performanceScore: 85
+        performanceScore: 85,
+        reputationScore: 4.2,
+        reviewCount: 128
       },
       {
         id: 2,
@@ -309,7 +350,9 @@ const BlockchainTranslationChat = () => {
         serviceType: '文化解释',
         languages: ['en', 'zh'],
         pricePerToken: '0.2',
-        performanceScore: 90
+        performanceScore: 90,
+        reputationScore: 4.7,
+        reviewCount: 93
       }
     ];
   };
@@ -400,6 +443,77 @@ const BlockchainTranslationChat = () => {
       setNotification(prev => ({ ...prev, show: false }));
     }, 3000);
   };
+
+  // 处理请求状态变化
+  const handleRequestStatusChange = (oldStatus, newStatus) => {
+    showNotification(`翻译请求状态从 ${oldStatus} 变更为 ${newStatus}`, 'info');
+    // 重新加载用户数据
+    loadUserData(account);
+  };
+
+  // 开始语音识别
+  const startListening = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      showNotification('您的浏览器不支持语音识别功能', 'warning');
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.continuous = true;
+    recognitionRef.current.interimResults = true;
+    recognitionRef.current.lang = translationForm.sourceLanguage === 'zh' ? 'zh-CN' : 'en-US';
+
+    recognitionRef.current.onresult = (event) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      setTranscript(finalTranscript || interimTranscript);
+      
+      if (finalTranscript) {
+        setTranslationForm(prev => ({
+          ...prev,
+          content: prev.content + finalTranscript
+        }));
+      }
+    };
+
+    recognitionRef.current.onerror = (event) => {
+      console.error('语音识别错误:', event.error);
+      setIsListening(false);
+      showNotification(`语音识别错误: ${event.error}`, 'error');
+    };
+
+    recognitionRef.current.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current.start();
+    setIsListening(true);
+  };
+
+  // 停止语音识别
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  };
+
+  // 切换暗色模式
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    document.body.classList.toggle('dark-mode', !darkMode);
+  };
   
   // 渲染NFT列表
   const renderNFTList = () => {
@@ -413,12 +527,23 @@ const BlockchainTranslationChat = () => {
           <div key={nft.id} className="nft-card">
             <div className="nft-image">
               <img src={nft.imageUrl} alt={nft.name} />
+              {nft.isForSale && <span className="for-sale-badge">出售中</span>}
             </div>
             <div className="nft-info">
               <h3>{nft.name}</h3>
               <p>类型: {nft.type}</p>
               <p>语言: {nft.language}</p>
-              <button className="btn-use-nft">使用此NFT</button>
+              {nft.isForSale ? (
+                <div className="nft-price">
+                  <span>价格: {nft.price} CULT</span>
+                  <button className="btn-buy-nft">购买</button>
+                </div>
+              ) : (
+                <div className="nft-actions">
+                  <button className="btn-use-nft">使用此NFT</button>
+                  <button className="btn-sell-nft">出售</button>
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -435,7 +560,14 @@ const BlockchainTranslationChat = () => {
     return (
       <div className="requests-list">
         {translationRequests.map(request => (
-          <div key={request.id} className="request-card">
+          <div 
+            key={request.id} 
+            className={`request-card status-${request.status.toLowerCase()}`}
+            onClick={() => {
+              setSelectedRequestId(request.id);
+              setShowRequestDetail(true);
+            }}
+          >
             <div className="request-header">
               <span className={`status-badge status-${request.status.toLowerCase()}`}>
                 {request.status}
@@ -448,11 +580,29 @@ const BlockchainTranslationChat = () => {
             <div className="request-details">
               <p>从 {request.sourceLanguage} 翻译到 {request.targetLanguage}</p>
               <p>奖励: {request.reward} CULT</p>
+              <p>截止日期: {new Date(request.deadline).toLocaleDateString()}</p>
             </div>
             <div className="request-actions">
-              <button className="btn-view-details">查看详情</button>
+              <button 
+                className="btn-view-details"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedRequestId(request.id);
+                  setShowRequestDetail(true);
+                }}
+              >
+                查看详情
+              </button>
               {request.status === 'Created' && (
-                <button className="btn-cancel">取消请求</button>
+                <button 
+                  className="btn-cancel"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    alert('取消请求功能尚未实现');
+                  }}
+                >
+                  取消请求
+                </button>
               )}
             </div>
           </div>
@@ -473,17 +623,39 @@ const BlockchainTranslationChat = () => {
           <div key={service.id} className="service-card">
             <div className="service-header">
               <h3>{service.serviceType}</h3>
-              <span className="performance-score">
-                评分: {service.performanceScore}/100
-              </span>
+              <div className="service-rating">
+                <div className="rating-stars">
+                  {Array(5).fill().map((_, i) => (
+                    <span 
+                      key={i} 
+                      className={`star ${i < Math.floor(service.reputationScore) ? 'filled' : ''}`}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <span className="rating-score">{service.reputationScore.toFixed(1)}</span>
+                <span className="rating-count">({service.reviewCount})</span>
+              </div>
             </div>
             <div className="service-details">
               <p>提供者: {service.provider.substring(0, 6)}...{service.provider.substring(38)}</p>
               <p>支持语言: {service.languages.join(', ')}</p>
               <p>价格: {service.pricePerToken} CULT/token</p>
+              <div className="performance-meter">
+                <span className="performance-label">性能评分:</span>
+                <div className="performance-bar-container">
+                  <div 
+                    className="performance-bar" 
+                    style={{ width: `${service.performanceScore}%` }}
+                  ></div>
+                </div>
+                <span className="performance-score">{service.performanceScore}/100</span>
+              </div>
             </div>
             <div className="service-actions">
               <button className="btn-use-service">使用此服务</button>
+              <button className="btn-compare">对比</button>
             </div>
           </div>
         ))}
@@ -499,15 +671,44 @@ const BlockchainTranslationChat = () => {
         
         <div className="form-group">
           <label htmlFor="content">内容</label>
-          <textarea
-            id="content"
-            name="content"
-            value={translationForm.content}
-            onChange={handleFormChange}
-            placeholder="请输入需要翻译的内容"
-            rows={5}
-            required
-          />
+          <div className="content-input-container">
+            <textarea
+              id="content"
+              name="content"
+              value={translationForm.content}
+              onChange={handleFormChange}
+              placeholder="请输入需要翻译的内容"
+              rows={5}
+              required
+            />
+            <div className="voice-input-controls">
+              {isListening ? (
+                <button 
+                  type="button" 
+                  className="btn-voice-stop" 
+                  onClick={stopListening}
+                  title="停止语音输入"
+                >
+                  <span className="recording-indicator"></span>
+                  停止
+                </button>
+              ) : (
+                <button 
+                  type="button" 
+                  className="btn-voice-start" 
+                  onClick={startListening}
+                  title="开始语音输入"
+                >
+                  🎤
+                </button>
+              )}
+            </div>
+          </div>
+          {isListening && transcript && (
+            <div className="transcript-preview">
+              <p>{transcript}</p>
+            </div>
+          )}
         </div>
         
         <div className="form-row">
@@ -561,7 +762,7 @@ const BlockchainTranslationChat = () => {
               name="reward"
               value={translationForm.reward}
               onChange={handleFormChange}
-              min="10"
+              min="1"
               step="1"
               required
             />
@@ -593,9 +794,10 @@ const BlockchainTranslationChat = () => {
         </div>
         
         <button
+          type="button"
           className="btn-create-request"
           onClick={createTranslationRequest}
-          disabled={isLoading || !isConnected}
+          disabled={isLoading}
         >
           {isLoading ? '处理中...' : '创建翻译请求'}
         </button>
@@ -604,109 +806,161 @@ const BlockchainTranslationChat = () => {
   };
   
   return (
-    <div className="blockchain-translation-chat">
-      <div className="header">
+    <div className={`blockchain-translation-chat ${darkMode ? 'dark-mode' : ''}`}>
+      {/* 头部 */}
+      <div className="chat-header">
         <h2>区块链翻译聊天</h2>
         
-        <div className="wallet-info">
+        <div className="header-actions">
+          <button 
+            className="btn-toggle-theme" 
+            onClick={toggleDarkMode}
+            title={darkMode ? '切换到亮色模式' : '切换到暗色模式'}
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </button>
+          
           {isConnected ? (
-            <>
-              <div className="account-info">
-                <span className="network-badge">
-                  {isLocalNetwork ? '本地网络' : '测试网'}
-                </span>
-                <span className="account-address">
-                  {account.substring(0, 6)}...{account.substring(38)}
-                </span>
-                <span className="token-balance">
-                  {tokenBalance} CULT
-                </span>
-              </div>
-              <button className="btn-disconnect" onClick={() => window.location.reload()}>
-                断开连接
-              </button>
-            </>
+            <div className="account-info">
+              <span className="token-balance">{tokenBalance} CULT</span>
+              <span className="account-address">
+                {account.substring(0, 6)}...{account.substring(38)}
+              </span>
+              <span className={`network-badge ${isLocalNetwork ? 'local' : 'testnet'}`}>
+                {isLocalNetwork ? 'Local' : 'Testnet'}
+              </span>
+            </div>
           ) : (
-            <button className="btn-connect" onClick={connectWallet} disabled={isLoading}>
+            <button
+              className="btn-connect-wallet"
+              onClick={connectWallet}
+              disabled={isLoading}
+            >
               {isLoading ? '连接中...' : '连接钱包'}
             </button>
           )}
         </div>
       </div>
       
-      {error && (
-        <div className="error-message">
-          {error}
+      {/* 主内容 */}
+      <div className="chat-content">
+        {!isConnected ? (
+          <div className="connect-wallet-prompt">
+            <div className="prompt-icon">🔗</div>
+            <h3>请连接您的钱包</h3>
+            <p>连接钱包以使用区块链翻译服务</p>
+            <button
+              className="btn-connect-wallet"
+              onClick={connectWallet}
+              disabled={isLoading}
+            >
+              {isLoading ? '连接中...' : '连接钱包'}
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* 标签页 */}
+            <div className="content-tabs">
+              <button
+                className={`tab-btn ${activeTab === 'translation' ? 'active' : ''}`}
+                onClick={() => setActiveTab('translation')}
+              >
+                创建翻译请求
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`}
+                onClick={() => setActiveTab('requests')}
+              >
+                我的请求
+                <span className="badge">{translationRequests.length}</span>
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'nfts' ? 'active' : ''}`}
+                onClick={() => setActiveTab('nfts')}
+              >
+                我的NFT
+                <span className="badge">{ownedNFTs.length}</span>
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'services' ? 'active' : ''}`}
+                onClick={() => setActiveTab('services')}
+              >
+                AI服务
+              </button>
+            </div>
+            
+            {/* 标签页内容 */}
+            <div className="tab-content">
+              {activeTab === 'translation' && renderTranslationForm()}
+              {activeTab === 'requests' && (
+                <div className="requests-container">
+                  <div className="section-header">
+                    <h3>我的翻译请求</h3>
+                    <button 
+                      className={`btn-refresh ${isRefreshing ? 'spinning' : ''}`}
+                      onClick={() => loadUserData(account)}
+                      disabled={isRefreshing}
+                      title="刷新数据"
+                    >
+                      ↻
+                    </button>
+                  </div>
+                  {renderTranslationRequests()}
+                </div>
+              )}
+              {activeTab === 'nfts' && (
+                <div className="nfts-container">
+                  <div className="section-header">
+                    <h3>我的NFT资产</h3>
+                    <button 
+                      className={`btn-refresh ${isRefreshing ? 'spinning' : ''}`}
+                      onClick={() => loadUserData(account)}
+                      disabled={isRefreshing}
+                      title="刷新数据"
+                    >
+                      ↻
+                    </button>
+                  </div>
+                  {renderNFTList()}
+                </div>
+              )}
+              {activeTab === 'services' && (
+                <div className="services-container">
+                  <div className="section-header">
+                    <h3>可用的AI服务</h3>
+                    <button 
+                      className={`btn-refresh ${isRefreshing ? 'spinning' : ''}`}
+                      onClick={() => loadUserData(account)}
+                      disabled={isRefreshing}
+                      title="刷新数据"
+                    >
+                      ↻
+                    </button>
+                  </div>
+                  {renderAIServices()}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+      
+      {/* 请求详情模态框 */}
+      {showRequestDetail && selectedRequestId && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <TranslationRequestDetail 
+              requestId={selectedRequestId}
+              onClose={() => {
+                setShowRequestDetail(false);
+                setSelectedRequestId(null);
+              }}
+            />
+          </div>
         </div>
       )}
       
-      {isConnected ? (
-        <div className="main-content">
-          <div className="tabs">
-            <button
-              className={`tab ${activeTab === 'translation' ? 'active' : ''}`}
-              onClick={() => setActiveTab('translation')}
-            >
-              翻译请求
-            </button>
-            <button
-              className={`tab ${activeTab === 'nfts' ? 'active' : ''}`}
-              onClick={() => setActiveTab('nfts')}
-            >
-              我的NFT
-            </button>
-            <button
-              className={`tab ${activeTab === 'ai-services' ? 'active' : ''}`}
-              onClick={() => setActiveTab('ai-services')}
-            >
-              AI服务
-            </button>
-            <button
-              className={`tab ${activeTab === 'create' ? 'active' : ''}`}
-              onClick={() => setActiveTab('create')}
-            >
-              创建请求
-            </button>
-          </div>
-          
-          <div className="tab-content">
-            {activeTab === 'translation' && (
-              <div className="translation-requests-tab">
-                <h3>我的翻译请求</h3>
-                {renderTranslationRequests()}
-              </div>
-            )}
-            
-            {activeTab === 'nfts' && (
-              <div className="nfts-tab">
-                <h3>我的NFT资产</h3>
-                {renderNFTList()}
-              </div>
-            )}
-            
-            {activeTab === 'ai-services' && (
-              <div className="ai-services-tab">
-                <h3>可用的AI服务</h3>
-                {renderAIServices()}
-              </div>
-            )}
-            
-            {activeTab === 'create' && (
-              <div className="create-request-tab">
-                {renderTranslationForm()}
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="connect-prompt">
-          <p>请连接您的钱包以使用区块链翻译服务</p>
-          <button className="btn-connect-large" onClick={connectWallet} disabled={isLoading}>
-            {isLoading ? '连接中...' : '连接钱包'}
-          </button>
-        </div>
-      )}
-      
+      {/* 通知 */}
       {notification.show && (
         <ToastNotification
           message={notification.message}
@@ -718,4 +972,4 @@ const BlockchainTranslationChat = () => {
   );
 };
 
-export default BlockchainTranslationChat;
+export default BlockchainTranslationChatLocal;

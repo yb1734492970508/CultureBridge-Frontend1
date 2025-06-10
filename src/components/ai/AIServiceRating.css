@@ -1,0 +1,997 @@
+/**
+ * AI服务评分与推荐组件样式
+ * 用于美化AI服务评分与推荐界面
+ */
+
+.ai-service-rating {
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  padding-bottom: 2rem;
+}
+
+/* 头部样式 */
+.rating-header {
+  padding: 1.5rem;
+  background-color: #8e44ad;
+  color: white;
+}
+
+.rating-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* 区块样式 */
+.recommended-services,
+.preferences-section,
+.all-services {
+  margin: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+/* 推荐服务 */
+.recommended-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.btn-refresh-recommendations {
+  background-color: #8e44ad;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-refresh-recommendations:hover {
+  background-color: #9b59b6;
+}
+
+/* 用户偏好设置 */
+.preferences-form {
+  padding: 1.5rem;
+}
+
+.preference-group {
+  margin-bottom: 1.5rem;
+}
+
+.preference-group label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.language-checkboxes,
+.type-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+.price-range {
+  width: 100%;
+  max-width: 500px;
+}
+
+.price-range input[type="range"] {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.price-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+/* 服务过滤器 */
+.service-filters {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.service-filters input {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  min-width: 200px;
+}
+
+.service-filters select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  background-color: white;
+}
+
+/* 服务网格 */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+/* 服务卡片 */
+.service-card {
+  position: relative;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.service-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.service-card.recommended {
+  border: 2px solid #8e44ad;
+}
+
+.recommended-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #8e44ad;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-bottom-left-radius: 8px;
+}
+
+.service-header {
+  padding: 1.25rem 1.25rem 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.service-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+  flex: 1;
+}
+
+.service-type {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background-color: #f1f1f1;
+  color: #7f8c8d;
+  white-space: nowrap;
+}
+
+.service-rating {
+  padding: 0 1.25rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rating-stars {
+  display: flex;
+}
+
+.star {
+  color: #ddd;
+  font-size: 1.2rem;
+}
+
+.star.filled {
+  color: #f39c12;
+}
+
+.rating-score {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.rating-count {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.service-description {
+  padding: 0 1.25rem 0.75rem;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  min-height: 4rem;
+}
+
+.service-languages {
+  padding: 0 1.25rem 0.75rem;
+}
+
+.service-languages .label {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  margin-right: 0.5rem;
+}
+
+.language-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.language-tag {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background-color: #f1f1f1;
+  color: #7f8c8d;
+}
+
+.language-tags.large .language-tag {
+  font-size: 0.9rem;
+  padding: 0.3rem 0.6rem;
+}
+
+.service-metrics {
+  padding: 0 1.25rem 0.75rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.metric-label {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  margin-bottom: 0.25rem;
+}
+
+.metric-value {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.user-rating {
+  padding: 0.75rem 1.25rem;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+}
+
+.user-rating-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.user-rating .label {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.user-rating-stars .star {
+  font-size: 1rem;
+}
+
+.user-comment {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+.service-actions {
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  gap: 0.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.btn-use-service,
+.btn-rate-service,
+.btn-view-details {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.btn-use-service {
+  background-color: #8e44ad;
+  color: white;
+}
+
+.btn-use-service:hover {
+  background-color: #9b59b6;
+}
+
+.btn-rate-service {
+  background-color: #f39c12;
+  color: white;
+}
+
+.btn-rate-service:hover {
+  background-color: #e67e22;
+}
+
+.btn-view-details {
+  background-color: #f1f1f1;
+  color: #7f8c8d;
+}
+
+.btn-view-details:hover {
+  background-color: #e0e0e0;
+}
+
+/* 加载和错误状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  grid-column: 1 / -1;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #8e44ad;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-container {
+  text-align: center;
+  padding: 2rem;
+  color: #e74c3c;
+  grid-column: 1 / -1;
+}
+
+.error-container button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+  cursor: pointer;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 3rem;
+  color: #7f8c8d;
+  font-style: italic;
+  grid-column: 1 / -1;
+}
+
+/* 模态框 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease;
+}
+
+.service-detail-modal {
+  max-width: 800px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #2c3e50;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #7f8c8d;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-body {
+  padding: 1.25rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.btn-cancel,
+.btn-submit,
+.btn-close-detail,
+.btn-edit-rating {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel {
+  background-color: #f1f1f1;
+  color: #7f8c8d;
+}
+
+.btn-cancel:hover {
+  background-color: #e0e0e0;
+}
+
+.btn-submit {
+  background-color: #8e44ad;
+  color: white;
+}
+
+.btn-submit:hover {
+  background-color: #9b59b6;
+}
+
+.btn-close-detail {
+  background-color: #f1f1f1;
+  color: #7f8c8d;
+}
+
+.btn-close-detail:hover {
+  background-color: #e0e0e0;
+}
+
+.btn-edit-rating {
+  background-color: #f39c12;
+  color: white;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.btn-edit-rating:hover {
+  background-color: #e67e22;
+}
+
+/* 服务详情 */
+.service-detail-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.service-detail-section {
+  margin-bottom: 1rem;
+}
+
+.service-detail-section h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.1rem;
+  color: #2c3e50;
+  border-bottom: 1px solid #f1f1f1;
+  padding-bottom: 0.5rem;
+}
+
+.service-detail-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-label {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  margin-bottom: 0.25rem;
+}
+
+.detail-value {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.rating-summary {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.rating-big {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rating-number {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.rating-stars.large .star {
+  font-size: 1.5rem;
+}
+
+.rating-count {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  margin-top: 0.5rem;
+}
+
+.user-rating-detail {
+  flex: 1;
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.rating-date {
+  font-size: 0.8rem;
+  color: #95a5a6;
+  margin-top: 0.5rem;
+}
+
+.feature-list {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.feature-item {
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.performance-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.performance-metric {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.metric-bar-container {
+  flex: 1;
+  height: 8px;
+  background-color: #f1f1f1;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.metric-bar {
+  height: 100%;
+  background-color: #8e44ad;
+  border-radius: 4px;
+}
+
+/* 评分表单 */
+.service-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.rating-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.rating-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rating-label {
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+.rating-stars.interactive .star {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.rating-stars.interactive .star:hover {
+  transform: scale(1.2);
+}
+
+.rating-value {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: #8e44ad;
+  box-shadow: 0 0 0 2px rgba(142, 68, 173, 0.2);
+}
+
+/* 通知样式 */
+.notification {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  padding: 1rem 1.5rem;
+  border-radius: 6px;
+  background-color: #3498db;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1100;
+  animation: slideUp 0.3s ease;
+  max-width: 350px;
+}
+
+.notification.success {
+  background-color: #2ecc71;
+}
+
+.notification.warning {
+  background-color: #f39c12;
+}
+
+.notification.error {
+  background-color: #e74c3c;
+}
+
+.notification button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+.notification button:hover {
+  opacity: 1;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .service-filters {
+    width: 100%;
+  }
+  
+  .service-filters input,
+  .service-filters select {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .rating-summary {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .rating-big {
+    align-items: flex-start;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+  }
+  
+  .btn-cancel,
+  .btn-submit,
+  .btn-close-detail {
+    width: 100%;
+  }
+  
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 暗色模式 */
+@media (prefers-color-scheme: dark) {
+  .ai-service-rating {
+    background-color: #2d3436;
+    color: #f1f1f1;
+  }
+  
+  .rating-header {
+    background-color: #6c3483;
+  }
+  
+  .recommended-services,
+  .preferences-section,
+  .all-services,
+  .service-card {
+    background-color: #3d4246;
+    border-color: #4d5256;
+  }
+  
+  .section-header {
+    border-bottom-color: #4d5256;
+  }
+  
+  .section-header h3 {
+    color: #ecf0f1;
+  }
+  
+  .service-filters input,
+  .service-filters select,
+  .form-group textarea {
+    background-color: #2d3436;
+    border-color: #4d5256;
+    color: #f1f1f1;
+  }
+  
+  .service-header h3 {
+    color: #ecf0f1;
+  }
+  
+  .service-type,
+  .language-tag {
+    background-color: #2d3436;
+    color: #bdc3c7;
+  }
+  
+  .rating-score {
+    color: #ecf0f1;
+  }
+  
+  .rating-count,
+  .service-description,
+  .service-languages .label,
+  .metric-label,
+  .user-rating .label,
+  .user-comment {
+    color: #bdc3c7;
+  }
+  
+  .metric-value {
+    color: #ecf0f1;
+  }
+  
+  .user-rating {
+    background-color: #2d3436;
+    border-top-color: #4d5256;
+  }
+  
+  .service-actions {
+    border-top-color: #4d5256;
+  }
+  
+  .btn-view-details {
+    background-color: #2d3436;
+    color: #bdc3c7;
+  }
+  
+  .btn-view-details:hover {
+    background-color: #4d5256;
+  }
+  
+  .modal-content {
+    background-color: #3d4246;
+    color: #f1f1f1;
+  }
+  
+  .modal-header {
+    border-bottom-color: #4d5256;
+  }
+  
+  .modal-header h2 {
+    color: #ecf0f1;
+  }
+  
+  .btn-close {
+    color: #bdc3c7;
+  }
+  
+  .modal-footer {
+    border-top-color: #4d5256;
+  }
+  
+  .btn-cancel,
+  .btn-close-detail {
+    background-color: #2d3436;
+    color: #bdc3c7;
+  }
+  
+  .btn-cancel:hover,
+  .btn-close-detail:hover {
+    background-color: #4d5256;
+  }
+  
+  .service-detail-section h3,
+  .service-detail-section h4 {
+    color: #ecf0f1;
+    border-bottom-color: #4d5256;
+  }
+  
+  .detail-label,
+  .rating-count {
+    color: #bdc3c7;
+  }
+  
+  .detail-value,
+  .rating-number {
+    color: #ecf0f1;
+  }
+  
+  .user-rating-detail {
+    background-color: #2d3436;
+  }
+  
+  .rating-date {
+    color: #bdc3c7;
+  }
+  
+  .feature-item {
+    color: #ecf0f1;
+  }
+  
+  .metric-bar-container {
+    background-color: #2d3436;
+  }
+  
+  .service-name,
+  .rating-label,
+  .rating-value,
+  .form-group label {
+    color: #ecf0f1;
+  }
+}

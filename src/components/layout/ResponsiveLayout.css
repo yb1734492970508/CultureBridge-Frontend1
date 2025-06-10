@@ -1,0 +1,393 @@
+/**
+ * 移动端适配与响应式布局样式
+ * 用于确保CultureBridge在各种设备上的良好体验
+ */
+
+.responsive-layout {
+  position: relative;
+  min-height: 100vh;
+  transition: all 0.3s ease;
+}
+
+.responsive-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* 设备类型特定样式 */
+.responsive-layout.mobile .responsive-content {
+  padding: 0.5rem;
+}
+
+.responsive-layout.tablet .responsive-content {
+  padding: 0.75rem;
+}
+
+/* 设置按钮 */
+.settings-toggle {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 900;
+  transition: all 0.3s ease;
+}
+
+.settings-toggle:hover {
+  background-color: #2980b9;
+  transform: scale(1.05);
+}
+
+.settings-toggle:active {
+  transform: scale(0.95);
+}
+
+/* 设置面板 */
+.settings-panel {
+  position: fixed;
+  bottom: 5rem;
+  left: 1.5rem;
+  width: 300px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 900;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.settings-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.close-settings {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #7f8c8d;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.settings-content {
+  padding: 1rem;
+}
+
+.settings-group {
+  margin-bottom: 1.5rem;
+}
+
+.settings-group:last-child {
+  margin-bottom: 0;
+}
+
+.settings-group label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+/* 主题切换 */
+.theme-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.theme-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: white;
+  color: #7f8c8d;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theme-option:hover {
+  background-color: #f8f9fa;
+}
+
+.theme-option.active {
+  border-color: #3498db;
+  color: #3498db;
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.theme-option svg {
+  margin-bottom: 0.25rem;
+}
+
+/* 字体大小选项 */
+.font-size-options {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.font-size-option {
+  flex: 1;
+  padding: 0.75rem 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: white;
+  color: #7f8c8d;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  text-align: center;
+  font-weight: 600;
+}
+
+.font-size-option:nth-child(1) {
+  font-size: 0.9rem;
+}
+
+.font-size-option:nth-child(2) {
+  font-size: 1rem;
+}
+
+.font-size-option:nth-child(3) {
+  font-size: 1.1rem;
+}
+
+.font-size-option:nth-child(4) {
+  font-size: 1.2rem;
+}
+
+.font-size-option:hover {
+  background-color: #f8f9fa;
+}
+
+.font-size-option.active {
+  border-color: #3498db;
+  color: #3498db;
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.size-label {
+  display: block;
+  font-size: 0.7rem;
+  margin-top: 0.25rem;
+  font-weight: normal;
+}
+
+/* 设备信息 */
+.device-info {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  color: #7f8c8d;
+}
+
+.info-value {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+/* 响应式调整 */
+@media (max-width: 576px) {
+  .settings-panel {
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    border-radius: 0;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+  }
+  
+  .settings-toggle {
+    bottom: 1rem;
+    left: 1rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
+/* 暗色模式 */
+:root.dark-mode {
+  --bg-color: #1a1a1a;
+  --text-color: #f1f1f1;
+  --border-color: #444;
+  --card-bg: #2d2d2d;
+  --highlight-color: #3498db;
+  --muted-color: #aaa;
+}
+
+:root.dark-mode .settings-panel {
+  background-color: #2d2d2d;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+:root.dark-mode .settings-header {
+  border-bottom-color: #444;
+}
+
+:root.dark-mode .settings-header h3 {
+  color: #f1f1f1;
+}
+
+:root.dark-mode .close-settings {
+  color: #aaa;
+}
+
+:root.dark-mode .settings-group label {
+  color: #f1f1f1;
+}
+
+:root.dark-mode .theme-option {
+  background-color: #2d2d2d;
+  border-color: #444;
+  color: #aaa;
+}
+
+:root.dark-mode .theme-option:hover {
+  background-color: #3d3d3d;
+}
+
+:root.dark-mode .theme-option.active {
+  border-color: #3498db;
+  color: #3498db;
+  background-color: rgba(52, 152, 219, 0.2);
+}
+
+:root.dark-mode .font-size-option {
+  background-color: #2d2d2d;
+  border-color: #444;
+  color: #aaa;
+}
+
+:root.dark-mode .font-size-option:hover {
+  background-color: #3d3d3d;
+}
+
+:root.dark-mode .font-size-option.active {
+  border-color: #3498db;
+  color: #3498db;
+  background-color: rgba(52, 152, 219, 0.2);
+}
+
+:root.dark-mode .device-info {
+  background-color: #222;
+}
+
+:root.dark-mode .info-label {
+  color: #aaa;
+}
+
+:root.dark-mode .info-value {
+  color: #f1f1f1;
+}
+
+/* 全局暗色模式样式 */
+:root.dark-mode body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+:root.dark-mode input,
+:root.dark-mode select,
+:root.dark-mode textarea,
+:root.dark-mode button {
+  background-color: #2d2d2d;
+  color: #f1f1f1;
+  border-color: #444;
+}
+
+:root.dark-mode a {
+  color: #3498db;
+}
+
+:root.dark-mode a:hover {
+  color: #2980b9;
+}
+
+/* 触摸设备优化 */
+@media (hover: none) {
+  .settings-toggle,
+  .theme-option,
+  .font-size-option,
+  button {
+    cursor: default;
+  }
+  
+  .settings-toggle:active,
+  .theme-option:active,
+  .font-size-option:active,
+  button:active {
+    transform: scale(0.95);
+  }
+  
+  /* 增大触摸目标 */
+  .font-size-option,
+  .theme-option,
+  button {
+    min-height: 44px;
+  }
+}
+
+/* 方向特定样式 */
+.responsive-layout.portrait .responsive-content {
+  padding-bottom: 4rem; /* 为底部导航留出空间 */
+}
+
+/* 动画优化 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .settings-panel {
+    animation: none;
+  }
+}
