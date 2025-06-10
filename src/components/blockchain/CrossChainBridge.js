@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { ethers } from 'ethers';
 import { BlockchainContext } from '../../context/blockchain/BlockchainContext';
+import EnhancedCrossChainHistory from './EnhancedCrossChainHistory';
 import './CrossChainBridge.css';
 
 /**
@@ -18,6 +19,7 @@ const CrossChainBridge = () => {
   } = useContext(BlockchainContext);
 
   // 组件状态
+  const [activeTab, setActiveTab] = useState('bridge'); // 'bridge', 'history'
   const [sourceChain, setSourceChain] = useState('bnb');
   const [targetChain, setTargetChain] = useState('ethereum');
   const [amount, setAmount] = useState('');
@@ -30,6 +32,7 @@ const CrossChainBridge = () => {
   const [transferId, setTransferId] = useState('');
   const [transferHistory, setTransferHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   // 支持的链
   const supportedChains = [
@@ -237,14 +240,35 @@ const CrossChainBridge = () => {
 
   return (
     <div className="cross-chain-bridge">
-      <h2>跨链资产桥</h2>
-      <p className="description">
-        在BNB Chain、Ethereum和Polygon之间安全转移您的资产
-      </p>
+      <div className="bridge-header">
+        <h2>跨链资产桥</h2>
+        <p className="description">
+          在BNB Chain、Ethereum和Polygon之间安全转移您的资产
+        </p>
+      </div>
       
-      {!account ? (
-        <div className="connect-wallet-container">
-          <p>请连接钱包以使用跨链桥</p>
+      {/* 标签页导航 */}
+      <div className="tab-navigation">
+        <button 
+          className={`tab-button ${activeTab === 'bridge' ? 'active' : ''}`}
+          onClick={() => setActiveTab('bridge')}
+        >
+          🌉 跨链转账
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
+          onClick={() => setActiveTab('history')}
+        >
+          📊 交易历史
+        </button>
+      </div>
+      
+      {/* 标签页内容 */}
+      {activeTab === 'bridge' && (
+        <div className="bridge-content">
+          {!account ? (
+            <div className="connect-wallet-container">
+              <p>请连接钱包以使用跨链桥</p>
           <button className="connect-button" onClick={connectWallet}>
             连接钱包
           </button>
@@ -512,7 +536,66 @@ const CrossChainBridge = () => {
               </div>
             )}
           </div>
-        </>
+        </div>
+      )}
+      
+      {/* 历史记录标签页 */}
+      {activeTab === 'history' && (
+        <div className="history-content">
+          <EnhancedCrossChainHistory 
+            onTransactionSelect={setSelectedTransaction}
+          />
+          
+          {/* 交易详情模态框 */}
+          {selectedTransaction && (
+            <div className="transaction-modal">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h3>交易详情</h3>
+                  <button 
+                    className="close-button"
+                    onClick={() => setSelectedTransaction(null)}
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                <div className="modal-body">
+                  <div className="detail-row">
+                    <span className="label">交易ID:</span>
+                    <span className="value">{selectedTransaction.id}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">源链:</span>
+                    <span className="value">{selectedTransaction.sourceChain}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">目标链:</span>
+                    <span className="value">{selectedTransaction.targetChain}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">金额:</span>
+                    <span className="value">{selectedTransaction.amount} {selectedTransaction.sourceToken}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">状态:</span>
+                    <span className="value">{selectedTransaction.status}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">桥接协议:</span>
+                    <span className="value">{selectedTransaction.bridgeProtocol}</span>
+                  </div>
+                  {selectedTransaction.txHash && (
+                    <div className="detail-row">
+                      <span className="label">交易哈希:</span>
+                      <span className="value hash">{selectedTransaction.txHash}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
