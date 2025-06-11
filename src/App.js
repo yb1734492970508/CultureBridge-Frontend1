@@ -9,6 +9,7 @@ import NFTDetail from './components/blockchain/NFTDetail';
 import CopyrightProtection from './components/blockchain/CopyrightProtection';
 import CrossChainBridge from './components/blockchain/CrossChainBridge';
 import TokenEconomyDashboard from './components/token/TokenEconomyDashboard';
+import MultiChainAssetManager from './components/asset/MultiChainAssetManager';
 import Register from './pages/auth/Register';
 import Login from './pages/auth/Login';
 import Profile from './pages/auth/Profile';
@@ -35,6 +36,7 @@ function App() {
               <li className="nav-item"><a href="/mint" className="nav-link">创建NFT</a></li>
               <li className="nav-item"><a href="/copyright" className="nav-link">版权保护</a></li>
               <li className="nav-item"><a href="/bridge" className="nav-link">跨链桥</a></li>
+              <li className="nav-item"><a href="/assets" className="nav-link">资产管理</a></li>
               <li className="nav-item"><a href="/token-economy" className="nav-link">代币经济</a></li>
             </ul>
           </nav>
@@ -47,6 +49,7 @@ function App() {
               <Route path="/nft/:tokenId" element={<NFTDetailWrapper />} />
               <Route path="/copyright" element={<CopyrightProtection />} />
               <Route path="/bridge" element={<CrossChainBridge />} />
+              <Route path="/assets" element={<MultiChainAssetManager />} />
               <Route path="/token-economy" element={<TokenEconomyDashboard />} />
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
@@ -131,6 +134,12 @@ function Home() {
           <h3>跨链资产桥</h3>
           <p>在多个区块链网络间安全转移您的资产</p>
           <a href="/bridge" className="feature-link">开始跨链</a>
+        </div>
+        
+        <div className="feature-card highlight-card">
+          <h3>多链资产管理</h3>
+          <p>统一管理您在各个区块链上的数字资产</p>
+          <a href="/assets" className="feature-link">管理资产</a>
         </div>
         
         <div className="feature-card highlight-card">
