@@ -1,0 +1,303 @@
+/* DAO治理仪表盘样式 */
+.dashboard-home {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-medium);
+}
+
+/* 仪表盘头部 */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-large);
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: var(--color-text-primary);
+}
+
+/* 时间范围选择器 */
+.time-range-selector {
+  display: flex;
+  background-color: var(--color-background-alt);
+  border-radius: var(--border-radius-medium);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.time-range-selector span {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.time-range-selector span:hover {
+  background-color: rgba(var(--color-primary-rgb), 0.1);
+}
+
+.time-range-selector span.active {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* 仪表盘内容 */
+.dashboard-content {
+  margin-bottom: var(--spacing-large);
+}
+
+/* 加载和错误状态 */
+.dashboard-loading,
+.dashboard-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.dashboard-loading p {
+  margin-top: var(--spacing-medium);
+  color: var(--color-text-secondary);
+}
+
+/* 指标卡片 */
+.metrics-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-medium);
+  margin-bottom: var(--spacing-large);
+}
+
+.metric-card {
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-medium);
+}
+
+.metric-card h3 {
+  margin: 0;
+  margin-bottom: var(--spacing-small);
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-small);
+}
+
+.metric-description {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+/* 健康度卡片 */
+.health-card {
+  margin-bottom: var(--spacing-large);
+}
+
+.health-score {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-large);
+}
+
+.score-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-inner {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  margin-top: 5px;
+}
+
+.health-metrics {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+}
+
+.health-metric {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+
+.metric-label {
+  width: 100px;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.metric-bar {
+  flex: 1;
+  height: 8px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.metric-progress {
+  height: 100%;
+  background-color: var(--color-primary);
+  border-radius: 4px;
+}
+
+.metric-value {
+  width: 50px;
+  text-align: right;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+/* 趋势卡片 */
+.trend-card {
+  margin-bottom: var(--spacing-large);
+}
+
+/* 分布图卡片 */
+.distribution-charts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-medium);
+  margin-bottom: var(--spacing-large);
+}
+
+.distribution-card {
+  height: 100%;
+}
+
+/* 投票卡片 */
+.voting-card {
+  margin-bottom: var(--spacing-large);
+}
+
+.voting-charts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-medium);
+}
+
+/* 即将推出卡片 */
+.coming-soon {
+  text-align: center;
+  padding: var(--spacing-large);
+}
+
+.coming-soon h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-medium);
+  color: var(--color-text-primary);
+}
+
+.coming-soon p {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* 响应式调整 */
+@media (max-width: 1024px) {
+  .metrics-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .health-score {
+    flex-direction: column;
+  }
+  
+  .distribution-charts {
+    grid-template-columns: 1fr;
+  }
+  
+  .voting-charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-medium);
+  }
+  
+  .time-range-selector {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .time-range-selector span {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .metrics-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 无障碍增强 */
+@media (prefers-reduced-motion: reduce) {
+  .metric-card {
+    transition: none;
+  }
+  
+  .time-range-selector span {
+    transition: none;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: more) {
+  .time-range-selector {
+    border-width: 2px;
+  }
+  
+  .metric-bar {
+    border: 1px solid var(--color-border);
+  }
+  
+  .score-circle {
+    border: 2px solid var(--color-border);
+  }
+}
