@@ -1,0 +1,280 @@
+.liquidity-pool-container {
+  padding: 24px;
+  background-color: #f5f8fa;
+  border-radius: 8px;
+  min-height: 600px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.tab-content {
+  padding: 16px 0;
+}
+
+.section {
+  margin-top: 24px;
+}
+
+.form-card {
+  height: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.form-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.info-card {
+  height: 100%;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.pools-list-container,
+.pairs-list-container,
+.cross-chain-list-container {
+  background-color: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+}
+
+.wallet-not-connected {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .liquidity-pool-container {
+    padding: 16px;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* 暗色模式 */
+.dark-theme .liquidity-pool-container {
+  background-color: #1f1f1f;
+  color: #f0f0f0;
+}
+
+.dark-theme .form-card,
+.dark-theme .pools-list-container,
+.dark-theme .pairs-list-container,
+.dark-theme .cross-chain-list-container {
+  background-color: #2a2a2a;
+  border: 1px solid #3a3a3a;
+}
+
+.dark-theme .info-card {
+  background-color: #2a2a2a;
+}
+
+/* 动画效果 */
+.ant-btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+
+.ant-btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+.ant-btn-primary:focus:not(:active)::after {
+  animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  20% {
+    transform: scale(25, 25);
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(40, 40);
+  }
+}
+
+/* 卡片悬停效果 */
+.ant-card {
+  transition: transform 0.3s ease;
+}
+
+.ant-card:hover {
+  transform: translateY(-5px);
+}
+
+/* 表格样式增强 */
+.ant-table-thead > tr > th {
+  background-color: #f0f5ff;
+  color: #1890ff;
+  font-weight: 600;
+}
+
+.dark-theme .ant-table-thead > tr > th {
+  background-color: #303030;
+  color: #69c0ff;
+}
+
+/* 标签样式 */
+.ant-tag {
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+/* 统计数字样式 */
+.ant-statistic-content {
+  font-family: 'Roboto Mono', monospace;
+}
+
+/* 表单项间距 */
+.ant-form-item {
+  margin-bottom: 16px;
+}
+
+/* 按钮组样式 */
+.ant-btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* 模态框样式 */
+.ant-modal-content {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ant-modal-header {
+  border-radius: 8px 8px 0 0;
+}
+
+.ant-modal-footer {
+  border-radius: 0 0 8px 8px;
+}
+
+/* 提示框样式 */
+.ant-tooltip-inner {
+  border-radius: 4px;
+}
+
+/* 选择器样式 */
+.ant-select-selector {
+  border-radius: 6px !important;
+}
+
+/* 输入框样式 */
+.ant-input {
+  border-radius: 6px;
+}
+
+/* 标签页样式 */
+.ant-tabs-tab {
+  padding: 12px 16px;
+  transition: all 0.3s;
+}
+
+.ant-tabs-tab:hover {
+  color: #40a9ff;
+}
+
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  font-weight: 600;
+}
+
+/* 分割线样式 */
+.ant-divider {
+  margin: 16px 0;
+}
+
+/* 警告图标样式 */
+.anticon-warning {
+  color: #faad14;
+}
+
+/* 信息图标样式 */
+.anticon-info-circle {
+  color: #1890ff;
+}
+
+/* 成功图标样式 */
+.anticon-check-circle {
+  color: #52c41a;
+}
+
+/* 错误图标样式 */
+.anticon-close-circle {
+  color: #f5222d;
+}
+
+/* 移动端优化 */
+@media (max-width: 576px) {
+  .ant-form-item-label {
+    padding-bottom: 4px;
+  }
+  
+  .ant-card-head-title {
+    font-size: 16px;
+  }
+  
+  .ant-statistic-title {
+    font-size: 12px;
+  }
+  
+  .ant-statistic-content {
+    font-size: 20px;
+  }
+}
