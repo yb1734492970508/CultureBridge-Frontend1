@@ -1,0 +1,178 @@
+.multi-chain-adapter-container {
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+  margin-bottom: 2rem;
+}
+
+.adapter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chain-count-badge {
+  margin-left: 1rem;
+}
+
+.chain-count-text {
+  margin-right: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.adapter-section {
+  margin-bottom: 1.5rem;
+}
+
+.section-description {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.transaction-details {
+  padding: 1rem;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.transaction-details p {
+  margin-bottom: 0.75rem;
+  word-break: break-all;
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
+}
+
+/* 标签页样式 */
+.ant-tabs-tab {
+  padding: 0.75rem 1rem !important;
+}
+
+.ant-tabs-tab-active {
+  font-weight: 500;
+}
+
+/* 表格样式 */
+.ant-table-wrapper {
+  margin-top: 1rem;
+}
+
+.ant-table-thead > tr > th {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  font-weight: 500;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background-color: rgba(var(--primary-rgb), 0.05) !important;
+}
+
+/* 表单样式 */
+.ant-form-item-label > label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* 按钮样式 */
+.ant-btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.ant-btn-primary:hover, .ant-btn-primary:focus {
+  background-color: var(--primary-light);
+  border-color: var(--primary-light);
+}
+
+/* 选择器样式 */
+.ant-select-selector {
+  border-radius: 6px !important;
+}
+
+.ant-select-focused .ant-select-selector {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2) !important;
+}
+
+/* 输入框样式 */
+.ant-input, .ant-input-number {
+  border-radius: 6px !important;
+}
+
+.ant-input:focus, .ant-input-number:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2) !important;
+}
+
+/* 徽章样式 */
+.ant-badge-status-dot {
+  width: 8px;
+  height: 8px;
+}
+
+.ant-badge-status-text {
+  margin-left: 8px;
+}
+
+/* 模态框样式 */
+.ant-modal-header {
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 1.5rem;
+}
+
+.ant-modal-body {
+  padding: 1.5rem;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 1rem 1.5rem;
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .multi-chain-adapter-container {
+    padding: 0.75rem;
+  }
+  
+  .ant-tabs-tab {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.9rem;
+  }
+  
+  .transaction-details {
+    padding: 0.75rem;
+  }
+}
+
+/* 暗色模式适配 */
+.dark-mode .multi-chain-adapter-container {
+  background-color: var(--dark-bg-secondary);
+}
+
+.dark-mode .transaction-details {
+  background-color: var(--dark-bg-tertiary);
+}
+
+.dark-mode .ant-table-thead > tr > th {
+  background-color: var(--dark-bg-tertiary) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-mode .ant-table-tbody > tr:hover > td {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.adapter-section {
+  animation: fadeIn 0.3s ease-out;
+}
