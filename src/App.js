@@ -2,7 +2,9 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/auth/AuthContext';
 import { TokenProvider } from './context/token/TokenContext';
-import WalletConnector from './components/blockchain/WalletConnector';
+import { BlockchainProvider } from './context/blockchain/BlockchainContext';
+import BNBWalletConnector from './components/blockchain/BNBWalletConnector';
+import CBTTokenManager from './components/token/CBTTokenManager';
 import NFTMinter from './components/blockchain/NFTMinter';
 import NFTGallery from './components/blockchain/NFTGallery';
 import NFTDetail from './components/blockchain/NFTDetail';
@@ -20,48 +22,53 @@ function App() {
   return (
     <AuthProvider>
       <TokenProvider>
-        <div className="App">
-          <header className="App-header">
-            <h1>CultureBridge</h1>
-            <div className="header-actions">
-              <WalletConnector />
-              <UserMenu />
-            </div>
-          </header>
-          
-          <nav className="App-nav">
-            <ul className="nav-list">
-              <li className="nav-item"><a href="/" className="nav-link">首页</a></li>
-              <li className="nav-item"><a href="/gallery" className="nav-link">NFT画廊</a></li>
-              <li className="nav-item"><a href="/mint" className="nav-link">创建NFT</a></li>
-              <li className="nav-item"><a href="/copyright" className="nav-link">版权保护</a></li>
-              <li className="nav-item"><a href="/bridge" className="nav-link">跨链桥</a></li>
-              <li className="nav-item"><a href="/assets" className="nav-link">资产管理</a></li>
-              <li className="nav-item"><a href="/token-economy" className="nav-link">代币经济</a></li>
-            </ul>
-          </nav>
-          
-          <main className="App-main">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/mint" element={<NFTMinter />} />
-              <Route path="/gallery" element={<NFTGallery />} />
-              <Route path="/nft/:tokenId" element={<NFTDetailWrapper />} />
-              <Route path="/copyright" element={<CopyrightProtection />} />
-              <Route path="/bridge" element={<CrossChainBridge />} />
-              <Route path="/assets" element={<MultiChainAssetManager />} />
-              <Route path="/token-economy" element={<TokenEconomyDashboard />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/security" element={<SecuritySettings />} />
-            </Routes>
-          </main>
-          
-          <footer className="App-footer">
-            <p>CultureBridge - 基于区块链的跨文化交流平台</p>
-          </footer>
-        </div>
+        <BlockchainProvider>
+          <div className="App">
+            <header className="App-header">
+              <h1>CultureBridge</h1>
+              <div className="header-actions">
+                <BNBWalletConnector />
+                <UserMenu />
+              </div>
+            </header>
+            
+            <nav className="App-nav">
+              <ul className="nav-list">
+                <li className="nav-item"><a href="/" className="nav-link">首页</a></li>
+                <li className="nav-item"><a href="/gallery" className="nav-link">NFT画廊</a></li>
+                <li className="nav-item"><a href="/mint" className="nav-link">创建NFT</a></li>
+                <li className="nav-item"><a href="/copyright" className="nav-link">版权保护</a></li>
+                <li className="nav-item"><a href="/bridge" className="nav-link">跨链桥</a></li>
+                <li className="nav-item"><a href="/assets" className="nav-link">资产管理</a></li>
+                <li className="nav-item"><a href="/token-economy" className="nav-link">代币经济</a></li>
+                <li className="nav-item"><a href="/cbt-manager" className="nav-link">CBT管理</a></li>
+              </ul>
+            </nav>
+            
+            <main className="App-main">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/mint" element={<NFTMinter />} />
+                <Route path="/gallery" element={<NFTGallery />} />
+                <Route path="/nft/:tokenId" element={<NFTDetailWrapper />} />
+                <Route path="/copyright" element={<CopyrightProtection />} />
+                <Route path="/bridge" element={<CrossChainBridge />} />
+                <Route path="/assets" element={<MultiChainAssetManager />} />
+                <Route path="/token-economy" element={<TokenEconomyDashboard />} />
+                <Route path="/cbt-manager" element={<CBTTokenManager />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/security" element={<SecuritySettings />} />
+              </Routes>
+            </main>
+            
+            <footer className="App-footer">
+              <p>CultureBridge - 基于BNB链的跨文化交流平台</p>
+              <p>CBT代币驱动的去中心化文化生态系统</p>
+            </footer>
+          </div>
+        </BlockchainProvider>
       </TokenProvider>
     </AuthProvider>
   );
@@ -143,8 +150,14 @@ function Home() {
         </div>
         
         <div className="feature-card highlight-card">
+          <h3>CBT代币管理</h3>
+          <p>管理您的CBT代币，包括转账、质押和授权操作</p>
+          <a href="/cbt-manager" className="feature-link">管理CBT</a>
+        </div>
+        
+        <div className="feature-card highlight-card">
           <h3>CBT代币经济</h3>
-          <p>了解CBT代币经济模型与交易所上线计划</p>
+          <p>了解CBT代币经济模型与BNB链集成方案</p>
           <a href="/token-economy" className="feature-link">查看仪表盘</a>
         </div>
       </div>
