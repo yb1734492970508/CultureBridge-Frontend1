@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Web3ReactProvider } from '@web3-react/core';
 import { ethers } from 'ethers';
 import { BlockchainProvider } from './context/blockchain';
+import { BlockchainProvider as NewBlockchainProvider } from './context/BlockchainContext';
 import { TokenProvider } from './context/token/TokenContext';
 import App from './App';
 import './index.css';
@@ -22,13 +23,15 @@ root.render(
   <React.StrictMode>
     <Web3ReactProvider getLibrary={getLibrary}>
       <BlockchainProvider>
-        <TokenProvider>
-          <Router>
-            <Routes>
-              <Route path="/*" element={<App />} />
-            </Routes>
-          </Router>
-        </TokenProvider>
+        <NewBlockchainProvider>
+          <TokenProvider>
+            <Router>
+              <Routes>
+                <Route path="/*" element={<App />} />
+              </Routes>
+            </Router>
+          </TokenProvider>
+        </NewBlockchainProvider>
       </BlockchainProvider>
     </Web3ReactProvider>
   </React.StrictMode>
