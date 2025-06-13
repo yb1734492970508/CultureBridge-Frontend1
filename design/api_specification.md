@@ -1,47 +1,69 @@
+# CultureBridge API Specification
 # CultureBridge API接口规范
 
+## 1. API Overview
 ## 1. API概述
 
+The CultureBridge application's API adopts a RESTful architectural style, providing data interaction interfaces between the frontend and backend. The API design adheres to the following principles:
 CultureBridge应用的API采用RESTful架构风格，提供前端与后端之间的数据交互接口。API设计遵循以下原则：
 
+- Use standard HTTP methods (GET, POST, PUT, DELETE)
 - 使用标准HTTP方法（GET, POST, PUT, DELETE）
+- Return standard HTTP status codes
 - 返回标准HTTP状态码
+- Use JSON as the data exchange format
 - 使用JSON作为数据交换格式
+- Implement version control
 - 实施版本控制
+- Provide detailed error messages
 - 提供详细的错误信息
+- Support pagination, sorting, and filtering
 - 支持分页、排序和过滤
 
+### 1.1 Base URL Structure
 ### 1.1 基础URL结构
 
 ```
 https://api.culturebridge.com/v1/{resource}
 ```
 
+- `v1`: API version
 - `v1`: API版本
+- `{resource}`: API resource (e.g., users, courses, translations, etc.)
 - `{resource}`: API资源（如users, courses, translations等）
 
+### 1.2 Authentication Method
 ### 1.2 认证方式
 
+The API uses JWT (JSON Web Token) for authentication:
 API使用JWT（JSON Web Token）进行认证：
 
-1. 客户端通过登录接口获取JWT令牌
-2. 后续请求在Authorization头中携带令牌
-3. 令牌包含用户ID和权限信息
-4. 令牌有效期为24小时，可通过刷新令牌延长
+1. The client obtains a JWT token through the login interface.
+1. 客户端通过登录接口获取JWT令牌。
+2. Subsequent requests carry the token in the Authorization header.
+2. 后续请求在Authorization头中携带令牌。
+3. The token contains user ID and permission information.
+3. 令牌包含用户ID和权限信息。
+4. The token is valid for 24 hours and can be extended by refreshing the token.
+4. 令牌有效期为24小时，可通过刷新令牌延长。
 
 ```
 Authorization: Bearer {token}
 ```
 
+## 2. User-related APIs
 ## 2. 用户相关API
 
+### 2.1 User Registration
 ### 2.1 用户注册
 
+**Request**:
 **请求**:
 ```
 POST /v1/auth/register
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
@@ -53,6 +75,7 @@ POST /v1/auth/register
 }
 ```
 
+**Response** (201 Created):
 **响应** (201 Created):
 ```json
 {
@@ -65,13 +88,16 @@ POST /v1/auth/register
 }
 ```
 
+### 2.2 User Login
 ### 2.2 用户登录
 
+**Request**:
 **请求**:
 ```
 POST /v1/auth/login
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
@@ -80,6 +106,7 @@ POST /v1/auth/login
 }
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -96,13 +123,16 @@ POST /v1/auth/login
 }
 ```
 
+### 2.3 Refresh Token
 ### 2.3 刷新令牌
 
+**Request**:
 **请求**:
 ```
 POST /v1/auth/refresh
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
@@ -110,6 +140,7 @@ POST /v1/auth/refresh
 }
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -119,13 +150,16 @@ POST /v1/auth/refresh
 }
 ```
 
+### 2.4 Get User Profile
 ### 2.4 获取用户资料
 
+**Request**:
 **请求**:
 ```
 GET /v1/users/{user_id}
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -141,13 +175,16 @@ GET /v1/users/{user_id}
 }
 ```
 
+### 2.5 Update User Profile
 ### 2.5 更新用户资料
 
+**Request**:
 **请求**:
 ```
 PUT /v1/users/{user_id}
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
@@ -158,6 +195,7 @@ PUT /v1/users/{user_id}
 }
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -172,13 +210,16 @@ PUT /v1/users/{user_id}
 }
 ```
 
+### 2.6 Get User Language Proficiency
 ### 2.6 获取用户语言能力
 
+**Request**:
 **请求**:
 ```
 GET /v1/users/{user_id}/languages
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -201,13 +242,16 @@ GET /v1/users/{user_id}/languages
 }
 ```
 
+### 2.7 Update User Language Proficiency
 ### 2.7 更新用户语言能力
 
+**Request**:
 **请求**:
 ```
 PUT /v1/users/{user_id}/languages
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
@@ -234,6 +278,7 @@ PUT /v1/users/{user_id}/languages
 }
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -263,13 +308,16 @@ PUT /v1/users/{user_id}/languages
 }
 ```
 
+### 2.8 Get User Interests
 ### 2.8 获取用户兴趣
 
+**Request**:
 **请求**:
 ```
 GET /v1/users/{user_id}/interests
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -293,13 +341,16 @@ GET /v1/users/{user_id}/interests
 }
 ```
 
+### 2.9 Update User Interests
 ### 2.9 更新用户兴趣
 
+**Request**:
 **请求**:
 ```
 PUT /v1/users/{user_id}/interests
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
@@ -311,6 +362,7 @@ PUT /v1/users/{user_id}/interests
 }
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -334,15 +386,19 @@ PUT /v1/users/{user_id}/interests
 }
 ```
 
+## 3. Learning Content Related APIs
 ## 3. 学习内容相关API
 
+### 3.1 Get Available Languages List
 ### 3.1 获取可用语言列表
 
+**Request**:
 **请求**:
 ```
 GET /v1/languages
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -369,13 +425,16 @@ GET /v1/languages
 }
 ```
 
+### 3.2 Get Course List
 ### 3.2 获取课程列表
 
+**Request**:
 **请求**:
 ```
 GET /v1/courses?language=es&level=beginner
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -410,13 +469,16 @@ GET /v1/courses?language=es&level=beginner
 }
 ```
 
+### 3.3 Get Course Details
 ### 3.3 获取课程详情
 
+**Request**:
 **请求**:
 ```
 GET /v1/courses/{course_id}
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -445,13 +507,16 @@ GET /v1/courses/{course_id}
 }
 ```
 
+### 3.4 Get Learning Unit Details
 ### 3.4 获取学习单元详情
 
+**Request**:
 **请求**:
 ```
 GET /v1/units/{unit_id}
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -486,13 +551,16 @@ GET /v1/units/{unit_id}
 }
 ```
 
+### 3.5 Get Learning Content
 ### 3.5 获取学习内容
 
+**Request**:
 **请求**:
 ```
 GET /v1/contents/{content_id}
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -527,13 +595,16 @@ GET /v1/contents/{content_id}
 }
 ```
 
+### 3.6 Submit Exercise Answer
 ### 3.6 提交练习答案
 
+**Request**:
 **请求**:
 ```
 POST /v1/exercises/{exercise_id}/submit
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
@@ -541,6 +612,7 @@ POST /v1/exercises/{exercise_id}/submit
 }
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -552,13 +624,16 @@ POST /v1/exercises/{exercise_id}/submit
 }
 ```
 
+### 3.7 Get User Learning Progress
 ### 3.7 获取用户学习进度
 
+**Request**:
 **请求**:
 ```
 GET /v1/users/{user_id}/progress?course_id={course_id}
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -579,13 +654,16 @@ GET /v1/users/{user_id}/progress?course_id={course_id}
 }
 ```
 
+### 3.8 Update User Learning Progress
 ### 3.8 更新用户学习进度
 
+**Request**:
 **请求**:
 ```
 PUT /v1/users/{user_id}/progress
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
@@ -595,6 +673,7 @@ PUT /v1/users/{user_id}/progress
 }
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -615,15 +694,19 @@ PUT /v1/users/{user_id}/progress
 }
 ```
 
+## 4. Social and Matching Related APIs
 ## 4. 社交与匹配相关API
 
+### 4.1 Get Matched User List
 ### 4.1 获取匹配用户列表
 
+**Request**:
 **请求**:
 ```
 GET /v1/matches?page=1&per_page=10
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -700,13 +783,16 @@ GET /v1/matches?page=1&per_page=10
 }
 ```
 
+### 4.2 Update Matching Preferences
 ### 4.2 更新匹配偏好
 
+**Request**:
 **请求**:
 ```
 PUT /v1/users/{user_id}/match-preferences
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
@@ -721,6 +807,7 @@ PUT /v1/users/{user_id}/match-preferences
 }
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -746,13 +833,16 @@ PUT /v1/users/{user_id}/match-preferences
 }
 ```
 
+### 4.3 Send Friend Request
 ### 4.3 发送交友请求
 
+**Request**:
 **请求**:
 ```
 POST /v1/relationships
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
@@ -761,6 +851,7 @@ POST /v1/relationships
 }
 ```
 
+**Response** (201 Created):
 **响应** (201 Created):
 ```json
 {
@@ -772,13 +863,16 @@ POST /v1/relationships
 }
 ```
 
+### 4.4 Get Friend Request List
 ### 4.4 获取交友请求列表
 
+**Request**:
 **请求**:
 ```
 GET /v1/relationships?status=pending
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -798,28 +892,32 @@ GET /v1/relationships?status=pending
     }
   ],
   "pagination": {
-    "total": 1,
+    "total": 24,
     "page": 1,
     "per_page": 10,
-    "total_pages": 1
+    "total_pages": 3
   }
 }
 ```
 
-### 4.5 响应交友请求
+### 4.5 Accept/Reject Friend Request
+### 4.5 接受/拒绝交友请求
 
+**Request**:
 **请求**:
 ```
 PUT /v1/relationships/{relationship_id}
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
-  "status": "accepted"
+  "status": "accepted" // or "rejected"
 }
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
@@ -827,171 +925,145 @@ PUT /v1/relationships/{relationship_id}
   "user_id_1": "550e8400-e29b-41d4-a716-446655440101",
   "user_id_2": "550e8400-e29b-41d4-a716-446655440000",
   "status": "accepted",
-  "created_at": "2025-05-17T14:30:00Z",
   "updated_at": "2025-05-18T09:20:00Z"
 }
 ```
 
+### 4.6 Get Friend List
 ### 4.6 获取好友列表
 
+**Request**:
 **请求**:
 ```
-GET /v1/relationships?status=accepted
+GET /v1/users/{user_id}/friends
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
-  "relationships": [
+  "friends": [
     {
-      "relationship_id": "550e8400-e29b-41d4-a716-446655440201",
-      "user": {
-        "user_id": "550e8400-e29b-41d4-a716-446655440101",
-        "username": "jean_dupont",
-        "first_name": "Jean",
-        "last_name": "Dupont",
-        "profile_picture": "https://assets.culturebridge.com/profiles/jean.jpg",
-        "languages": [
-          {
-            "language_code": "fr",
-            "name": "French",
-            "proficiency_level": "native"
-          },
-          {
-            "language_code": "en",
-            "name": "English",
-            "proficiency_level": "advanced"
-          }
-        ]
-      },
-      "status": "accepted",
-      "created_at": "2025-05-17T14:30:00Z",
-      "updated_at": "2025-05-18T09:20:00Z"
-    }
-  ],
-  "pagination": {
-    "total": 1,
-    "page": 1,
-    "per_page": 10,
-    "total_pages": 1
-  }
-}
-```
-
-### 4.7 创建聊天会话
-
-**请求**:
-```
-POST /v1/chat/sessions
-```
-
-**请求体**:
-```json
-{
-  "participants": ["550e8400-e29b-41d4-a716-446655440101"]
-}
-```
-
-**响应** (201 Created):
-```json
-{
-  "session_id": "550e8400-e29b-41d4-a716-446655440300",
-  "created_by": "550e8400-e29b-41d4-a716-446655440000",
-  "created_at": "2025-05-18T09:25:00Z",
-  "participants": [
-    {
-      "user_id": "550e8400-e29b-41d4-a716-446655440000",
-      "username": "johndoe",
-      "first_name": "John",
-      "last_name": "Doe",
-      "profile_picture": "https://assets.culturebridge.com/profiles/johndoe.jpg"
+      "user_id": "550e8400-e29b-41d4-a716-446655440100",
+      "username": "maria_garcia",
+      "first_name": "Maria",
+      "last_name": "Garcia",
+      "profile_picture": "https://assets.culturebridge.com/profiles/maria.jpg",
+      "bio": "Spanish teacher and food lover"
     },
     {
       "user_id": "550e8400-e29b-41d4-a716-446655440101",
       "username": "jean_dupont",
       "first_name": "Jean",
       "last_name": "Dupont",
-      "profile_picture": "https://assets.culturebridge.com/profiles/jean.jpg"
+      "profile_picture": "https://assets.culturebridge.com/profiles/jean.jpg",
+      "bio": "French photographer and language enthusiast"
     }
   ]
 }
 ```
 
-### 4.8 获取聊天会话列表
+## 5. Chat and Translation Related APIs
+## 5. 聊天与翻译相关API
 
+### 5.1 Start Chat Session
+### 5.1 开始聊天会话
+
+**Request**:
 **请求**:
 ```
-GET /v1/chat/sessions
+POST /v1/chat/sessions
 ```
 
-**响应** (200 OK):
+**Request Body**:
+**请求体**:
 ```json
 {
-  "sessions": [
-    {
-      "session_id": "550e8400-e29b-41d4-a716-446655440300",
-      "created_at": "2025-05-18T09:25:00Z",
-      "updated_at": "2025-05-18T09:30:00Z",
-      "last_message": {
-        "sender": {
-          "user_id": "550e8400-e29b-41d4-a716-446655440101",
-          "first_name": "Jean",
-          "profile_picture": "https://assets.culturebridge.com/profiles/jean.jpg"
-        },
-        "content": "Bonjour! Comment ça va?",
-        "sent_at": "2025-05-18T09:30:00Z"
-      },
-      "participants": [
-        {
-          "user_id": "550e8400-e29b-41d4-a716-446655440101",
-          "username": "jean_dupont",
-          "first_name": "Jean",
-          "last_name": "Dupont",
-          "profile_picture": "https://assets.culturebridge.com/profiles/jean.jpg"
-        }
-      ],
-      "unread_count": 1
-    }
-  ],
-  "pagination": {
-    "total": 1,
-    "page": 1,
-    "per_page": 10,
-    "total_pages": 1
-  }
+  "participant_ids": [
+    "550e8400-e29b-41d4-a716-446655440000",
+    "550e8400-e29b-41d4-a716-446655440100"
+  ]
 }
 ```
 
-### 4.9 获取聊天消息
+**Response** (201 Created):
+**响应** (201 Created):
+```json
+{
+  "session_id": "550e8400-e29b-41d4-a716-446655440300",
+  "participant_ids": [
+    "550e8400-e29b-41d4-a716-446655440000",
+    "550e8400-e29b-41d4-a716-446655440100"
+  ],
+  "created_at": "2025-05-18T09:30:00Z"
+}
+```
 
+### 5.2 Send Message
+### 5.2 发送消息
+
+**Request**:
+**请求**:
+```
+POST /v1/chat/sessions/{session_id}/messages
+```
+
+**Request Body**:
+**请求体**:
+```json
+{
+  "sender_id": "550e8400-e29b-41d4-a716-446655440000",
+  "message_type": "text",
+  "content": "Hello, how are you?"
+}
+```
+
+**Response** (201 Created):
+**响应** (201 Created):
+```json
+{
+  "message_id": "550e8400-e29b-41d4-a716-446655440301",
+  "session_id": "550e8400-e29b-41d4-a716-446655440300",
+  "sender_id": "550e8400-e29b-41d4-a716-446655440000",
+  "message_type": "text",
+  "content": "Hello, how are you?",
+  "timestamp": "2025-05-18T09:31:00Z"
+}
+```
+
+### 5.3 Get Chat History
+### 5.3 获取聊天历史
+
+**Request**:
 **请求**:
 ```
 GET /v1/chat/sessions/{session_id}/messages?page=1&per_page=20
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
-  "session_id": "550e8400-e29b-41d4-a716-446655440300",
   "messages": [
     {
-      "message_id": "550e8400-e29b-41d4-a716-446655440400",
-      "sender": {
-        "user_id": "550e8400-e29b-41d4-a716-446655440101",
-        "first_name": "Jean",
-        "profile_picture": "https://assets.culturebridge.com/profiles/jean.jpg"
-      },
-      "content": "Bonjour! Comment ça va?",
-      "original_language": "fr",
-      "translated_content": {
-        "en": "Hello! How are you?"
-      },
-      "sent_at": "2025-05-18T09:30:00Z",
-      "read_by": []
+      "message_id": "550e8400-e29b-41d4-a716-446655440301",
+      "session_id": "550e8400-e29b-41d4-a716-446655440300",
+      "sender_id": "550e8400-e29b-41d4-a716-446655440000",
+      "message_type": "text",
+      "content": "Hello, how are you?",
+      "timestamp": "2025-05-18T09:31:00Z"
+    },
+    {
+      "message_id": "550e8400-e29b-41d4-a716-446655440302",
+      "session_id": "550e8400-e29b-41d4-a716-446655440300",
+      "sender_id": "550e8400-e29b-41d4-a716-446655440100",
+      "message_type": "text",
+      "content": "I'm fine, thank you! And you?",
+      "timestamp": "2025-05-18T09:31:30Z"
     }
   ],
   "pagination": {
-    "total": 1,
+    "total": 2,
     "page": 1,
     "per_page": 20,
     "total_pages": 1
@@ -999,465 +1071,413 @@ GET /v1/chat/sessions/{session_id}/messages?page=1&per_page=20
 }
 ```
 
-### 4.10 发送聊天消息
+### 5.4 Real-time Translation
+### 5.4 实时翻译
 
+**Request**:
 **请求**:
 ```
-POST /v1/chat/sessions/{session_id}/messages
+POST /v1/translate
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
-  "content": "I'm doing well, thank you! How about you?",
-  "original_language": "en",
-  "translate_to": ["fr"]
+  "text": "Hello, how are you?",
+  "source_language": "en",
+  "target_language": "zh"
 }
 ```
 
+**Response** (200 OK):
+**响应** (200 OK):
+```json
+{
+  "original_text": "Hello, how are you?",
+  "translated_text": "你好，你怎么样？",
+  "source_language": "en",
+  "target_language": "zh"
+}
+```
+
+### 5.5 Voice-to-Text and Translation
+### 5.5 语音转文本与翻译
+
+**Request**:
+**请求**:
+```
+POST /v1/voice/transcribe-and-translate
+```
+
+**Request Body**:
+**请求体**:
+```json
+{
+  "audio_data": "base64_encoded_audio_data",
+  "source_language": "en",
+  "target_language": "zh"
+}
+```
+
+**Response** (200 OK):
+**响应** (200 OK):
+```json
+{
+  "transcribed_text": "Hello, how are you?",
+  "translated_text": "你好，你怎么样？",
+  "source_language": "en",
+  "target_language": "zh"
+}
+```
+
+## 6. Cultural Asset and Marketplace Related APIs
+## 6. 文化资产与市场相关API
+
+### 6.1 Create Cultural Asset (NFT)
+### 6.1 创建文化资产（NFT）
+
+**Request**:
+**请求**:
+```
+POST /v1/assets
+```
+
+**Request Body**:
+**请求体**:
+```json
+{
+  "owner_id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Ancient Chinese Painting",
+  "description": "A beautiful painting from the Tang Dynasty.",
+  "media_url": "https://assets.culturebridge.com/nfts/painting1.jpg",
+  "metadata": {
+    "artist": "Wu Daozi",
+    "year": "700 AD",
+    "category": "Painting"
+  }
+}
+```
+
+**Response** (201 Created):
 **响应** (201 Created):
 ```json
 {
-  "message_id": "550e8400-e29b-41d4-a716-446655440401",
-  "sender": {
-    "user_id": "550e8400-e29b-41d4-a716-446655440000",
-    "first_name": "John",
-    "profile_picture": "https://assets.culturebridge.com/profiles/johndoe.jpg"
+  "asset_id": "550e8400-e29b-41d4-a716-446655440400",
+  "owner_id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Ancient Chinese Painting",
+  "description": "A beautiful painting from the Tang Dynasty.",
+  "media_url": "https://assets.culturebridge.com/nfts/painting1.jpg",
+  "metadata": {
+    "artist": "Wu Daozi",
+    "year": "700 AD",
+    "category": "Painting"
   },
-  "content": "I'm doing well, thank you! How about you?",
-  "original_language": "en",
-  "translated_content": {
-    "fr": "Je vais bien, merci ! Et toi ?"
-  },
-  "sent_at": "2025-05-18T09:35:00Z",
-  "read_by": []
-}
-```
-
-### 4.11 标记消息为已读
-
-**请求**:
-```
-PUT /v1/chat/sessions/{session_id}/read
-```
-
-**响应** (200 OK):
-```json
-{
-  "session_id": "550e8400-e29b-41d4-a716-446655440300",
-  "last_read_at": "2025-05-18T09:40:00Z",
-  "unread_count": 0
-}
-```
-
-## 5. 翻译相关API
-
-### 5.1 翻译文本
-
-**请求**:
-```
-POST /v1/translations
-```
-
-**请求体**:
-```json
-{
-  "text": "Hello, how are you today?",
-  "source_language": "en",
-  "target_language": "es",
-  "include_grammar_notes": true,
-  "include_cultural_notes": true
-}
-```
-
-**响应** (200 OK):
-```json
-{
-  "translation_id": "550e8400-e29b-41d4-a716-446655440500",
-  "original_text": "Hello, how are you today?",
-  "translated_text": "Hola, ¿cómo estás hoy?",
-  "source_language": "en",
-  "target_language": "es",
-  "grammar_notes": [
-    "In Spanish, questions are marked with both opening (¿) and closing (?) question marks."
-  ],
-  "cultural_notes": [
-    "In Spanish-speaking countries, it's common to greet people with a kiss on the cheek or a hug, even in professional settings."
-  ],
   "created_at": "2025-05-18T09:45:00Z"
 }
 ```
 
-### 5.2 获取翻译历史
+### 6.2 Get Cultural Asset List
+### 6.2 获取文化资产列表
 
+**Request**:
 **请求**:
 ```
-GET /v1/translations/history?page=1&per_page=10
+GET /v1/assets?category=Painting&owner_id={user_id}
 ```
 
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
-  "translations": [
+  "assets": [
     {
-      "translation_id": "550e8400-e29b-41d4-a716-446655440500",
-      "original_text": "Hello, how are you today?",
-      "translated_text": "Hola, ¿cómo estás hoy?",
-      "source_language": "en",
-      "target_language": "es",
-      "created_at": "2025-05-18T09:45:00Z",
-      "is_favorite": false
-    },
-    {
-      "translation_id": "550e8400-e29b-41d4-a716-446655440501",
-      "original_text": "I would like to order a coffee, please.",
-      "translated_text": "Me gustaría pedir un café, por favor.",
-      "source_language": "en",
-      "target_language": "es",
-      "created_at": "2025-05-17T16:20:00Z",
-      "is_favorite": true
+      "asset_id": "550e8400-e29b-41d4-a716-446655440400",
+      "owner_id": "550e8400-e29b-41d4-a716-446655440000",
+      "title": "Ancient Chinese Painting",
+      "description": "A beautiful painting from the Tang Dynasty.",
+      "media_url": "https://assets.culturebridge.com/nfts/painting1.jpg",
+      "metadata": {
+        "artist": "Wu Daozi",
+        "year": "700 AD",
+        "category": "Painting"
+      }
     }
   ],
   "pagination": {
-    "total": 15,
+    "total": 1,
     "page": 1,
     "per_page": 10,
-    "total_pages": 2
+    "total_pages": 1
   }
 }
 ```
 
-### 5.3 将翻译标记为收藏
+### 6.3 Get Cultural Asset Details
+### 6.3 获取文化资产详情
 
+**Request**:
 **请求**:
 ```
-PUT /v1/translations/{translation_id}/favorite
+GET /v1/assets/{asset_id}
 ```
 
-**请求体**:
-```json
-{
-  "is_favorite": true
-}
-```
-
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
-  "translation_id": "550e8400-e29b-41d4-a716-446655440500",
-  "is_favorite": true,
-  "updated_at": "2025-05-18T09:50:00Z"
+  "asset_id": "550e8400-e29b-41d4-a716-446655440400",
+  "owner_id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Ancient Chinese Painting",
+  "description": "A beautiful painting from the Tang Dynasty.",
+  "media_url": "https://assets.culturebridge.com/nfts/painting1.jpg",
+  "metadata": {
+    "artist": "Wu Daozi",
+    "year": "700 AD",
+    "category": "Painting"
+  },
+  "created_at": "2025-05-18T09:45:00Z",
+  "on_sale": true,
+  "price": {
+    "amount": 10,
+    "currency": "CBT"
+  }
 }
 ```
 
-### 5.4 保存常用短语
+### 6.4 List Cultural Asset for Sale
+### 6.4 挂单出售文化资产
 
+**Request**:
 **请求**:
 ```
-POST /v1/phrases
+POST /v1/marketplace/listings
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
-  "original_text": "Could you please repeat that?",
-  "translated_text": "¿Podría repetir eso, por favor?",
-  "source_language": "en",
-  "target_language": "es",
-  "context": "Asking for clarification"
+  "asset_id": "550e8400-e29b-41d4-a716-446655440400",
+  "price": {
+    "amount": 10,
+    "currency": "CBT"
+  }
 }
 ```
 
+**Response** (201 Created):
 **响应** (201 Created):
 ```json
 {
-  "phrase_id": "550e8400-e29b-41d4-a716-446655440600",
-  "original_text": "Could you please repeat that?",
-  "translated_text": "¿Podría repetir eso, por favor?",
-  "source_language": "en",
-  "target_language": "es",
-  "context": "Asking for clarification",
+  "listing_id": "550e8400-e29b-41d4-a716-446655440500",
+  "asset_id": "550e8400-e29b-41d4-a716-446655440400",
+  "seller_id": "550e8400-e29b-41d4-a716-446655440000",
+  "price": {
+    "amount": 10,
+    "currency": "CBT"
+  },
+  "status": "active",
+  "created_at": "2025-05-18T09:50:00Z"
+}
+```
+
+### 6.5 Purchase Cultural Asset
+### 6.5 购买文化资产
+
+**Request**:
+**请求**:
+```
+POST /v1/marketplace/purchases
+```
+
+**Request Body**:
+**请求体**:
+```json
+{
+  "listing_id": "550e8400-e29b-41d4-a716-446655440500",
+  "buyer_id": "550e8400-e29b-41d4-a716-446655440100"
+}
+```
+
+**Response** (201 Created):
+**响应** (201 Created):
+```json
+{
+  "purchase_id": "550e8400-e29b-41d4-a716-446655440600",
+  "listing_id": "550e8400-e29b-41d4-a716-446655440500",
+  "asset_id": "550e8400-e29b-41d4-a716-446655440400",
+  "seller_id": "550e8400-e29b-41d4-a716-446655440000",
+  "buyer_id": "550e8400-e29b-41d4-a716-446655440100",
+  "price": {
+    "amount": 10,
+    "currency": "CBT"
+  },
+  "status": "completed",
   "created_at": "2025-05-18T09:55:00Z"
 }
 ```
 
-### 5.5 获取常用短语列表
+## 7. Token and Wallet Related APIs
+## 7. 代币与钱包相关API
 
+### 7.1 Get User Token Balance
+### 7.1 获取用户代币余额
+
+**Request**:
 **请求**:
 ```
-GET /v1/phrases?source_language=en&target_language=es
+GET /v1/users/{user_id}/token-balance
 ```
 
-**响应** (200 OK):
-```json
-{
-  "phrases": [
-    {
-      "phrase_id": "550e8400-e29b-41d4-a716-446655440600",
-      "original_text": "Could you please repeat that?",
-      "translated_text": "¿Podría repetir eso, por favor?",
-      "source_language": "en",
-      "target_language": "es",
-      "context": "Asking for clarification",
-      "created_at": "2025-05-18T09:55:00Z"
-    },
-    {
-      "phrase_id": "550e8400-e29b-41d4-a716-446655440601",
-      "original_text": "Nice to meet you.",
-      "translated_text": "Encantado de conocerte.",
-      "source_language": "en",
-      "target_language": "es",
-      "context": "Introductions",
-      "created_at": "2025-05-16T11:30:00Z"
-    }
-  ],
-  "pagination": {
-    "total": 8,
-    "page": 1,
-    "per_page": 10,
-    "total_pages": 1
-  }
-}
-```
-
-## 6. 通知相关API
-
-### 6.1 获取通知列表
-
-**请求**:
-```
-GET /v1/notifications?is_read=false
-```
-
-**响应** (200 OK):
-```json
-{
-  "notifications": [
-    {
-      "notification_id": "550e8400-e29b-41d4-a716-446655440700",
-      "type": "friend_request",
-      "content": "Jean Dupont sent you a friend request",
-      "related_id": "550e8400-e29b-41d4-a716-446655440201",
-      "is_read": false,
-      "created_at": "2025-05-17T14:30:00Z"
-    },
-    {
-      "notification_id": "550e8400-e29b-41d4-a716-446655440701",
-      "type": "message",
-      "content": "New message from Jean Dupont",
-      "related_id": "550e8400-e29b-41d4-a716-446655440400",
-      "is_read": false,
-      "created_at": "2025-05-18T09:30:00Z"
-    }
-  ],
-  "pagination": {
-    "total": 2,
-    "page": 1,
-    "per_page": 10,
-    "total_pages": 1
-  }
-}
-```
-
-### 6.2 标记通知为已读
-
-**请求**:
-```
-PUT /v1/notifications/{notification_id}/read
-```
-
-**响应** (200 OK):
-```json
-{
-  "notification_id": "550e8400-e29b-41d4-a716-446655440700",
-  "is_read": true,
-  "updated_at": "2025-05-18T10:00:00Z"
-}
-```
-
-### 6.3 标记所有通知为已读
-
-**请求**:
-```
-PUT /v1/notifications/read-all
-```
-
-**响应** (200 OK):
-```json
-{
-  "updated_count": 2,
-  "updated_at": "2025-05-18T10:05:00Z"
-}
-```
-
-## 7. 用户设置相关API
-
-### 7.1 获取用户设置
-
-**请求**:
-```
-GET /v1/users/{user_id}/settings
-```
-
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
   "user_id": "550e8400-e29b-41d4-a716-446655440000",
-  "notification_preferences": {
-    "friend_requests": true,
-    "messages": true,
-    "learning_reminders": true,
-    "system_updates": false
-  },
-  "privacy_settings": {
-    "profile_visibility": "public",
-    "online_status": "friends_only",
-    "language_progress": "public"
-  },
-  "theme": "light",
-  "created_at": "2025-05-15T10:00:00Z",
-  "updated_at": "2025-05-15T10:00:00Z"
+  "balance": {
+    "amount": 1000,
+    "currency": "CBT"
+  }
 }
 ```
 
-### 7.2 更新用户设置
+### 7.2 Send Token
+### 7.2 发送代币
 
+**Request**:
 **请求**:
 ```
-PUT /v1/users/{user_id}/settings
+POST /v1/transactions/send-token
 ```
 
+**Request Body**:
 **请求体**:
 ```json
 {
-  "notification_preferences": {
-    "friend_requests": true,
-    "messages": true,
-    "learning_reminders": false,
-    "system_updates": false
-  },
-  "privacy_settings": {
-    "profile_visibility": "friends_only",
-    "online_status": "friends_only",
-    "language_progress": "public"
-  },
-  "theme": "dark"
+  "sender_id": "550e8400-e29b-41d4-a716-446655440000",
+  "receiver_id": "550e8400-e29b-41d4-a716-446655440100",
+  "amount": 50,
+  "currency": "CBT"
 }
 ```
 
+**Response** (201 Created):
+**响应** (201 Created):
+```json
+{
+  "transaction_id": "550e8400-e29b-41d4-a716-446655440700",
+  "sender_id": "550e8400-e29b-41d4-a716-446655440000",
+  "receiver_id": "550e8400-e29b-41d4-a716-446655440100",
+  "amount": 50,
+  "currency": "CBT",
+  "status": "completed",
+  "timestamp": "2025-05-18T10:00:00Z"
+}
+```
+
+### 7.3 Get Transaction History
+### 7.3 获取交易历史
+
+**Request**:
+**请求**:
+```
+GET /v1/users/{user_id}/transactions?type=send&currency=CBT
+```
+
+**Response** (200 OK):
 **响应** (200 OK):
 ```json
 {
-  "user_id": "550e8400-e29b-41d4-a716-446655440000",
-  "notification_preferences": {
-    "friend_requests": true,
-    "messages": true,
-    "learning_reminders": false,
-    "system_updates": false
-  },
-  "privacy_settings": {
-    "profile_visibility": "friends_only",
-    "online_status": "friends_only",
-    "language_progress": "public"
-  },
-  "theme": "dark",
-  "created_at": "2025-05-15T10:00:00Z",
-  "updated_at": "2025-05-18T10:10:00Z"
-}
-```
-
-## 8. 错误处理
-
-### 8.1 错误响应格式
-
-所有API错误都将返回一个一致的JSON格式：
-
-```json
-{
-  "error": {
-    "code": "invalid_request",
-    "message": "The request was invalid",
-    "details": [
-      "Email is required",
-      "Password must be at least 8 characters"
-    ]
+  "transactions": [
+    {
+      "transaction_id": "550e8400-e29b-41d4-a716-446655440700",
+      "sender_id": "550e8400-e29b-41d4-a716-446655440000",
+      "receiver_id": "550e8400-e29b-41d4-a716-446655440100",
+      "amount": 50,
+      "currency": "CBT",
+      "status": "completed",
+      "timestamp": "2025-05-18T10:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 1,
+    "page": 1,
+    "per_page": 10,
+    "total_pages": 1
   }
 }
 ```
 
-### 8.2 常见错误代码
+## 8. Governance Related APIs
+## 8. 治理相关API
 
-| HTTP状态码 | 错误代码 | 描述 |
-|------------|----------|------|
-| 400 | invalid_request | 请求格式或参数无效 |
-| 401 | unauthorized | 未提供认证或认证无效 |
-| 403 | forbidden | 无权访问请求的资源 |
-| 404 | not_found | 请求的资源不存在 |
-| 409 | conflict | 请求冲突（如用户名已存在） |
-| 422 | validation_failed | 请求数据验证失败 |
-| 429 | too_many_requests | 请求频率超过限制 |
-| 500 | server_error | 服务器内部错误 |
+### 8.1 Get Proposal List
+### 8.1 获取提案列表
 
-## 9. API版本控制
+**Request**:
+**请求**:
+```
+GET /v1/governance/proposals?status=active
+```
 
-### 9.1 版本策略
+**Response** (200 OK):
+**响应** (200 OK):
+```json
+{
+  "proposals": [
+    {
+      "proposal_id": "550e8400-e29b-41d4-a716-446655440800",
+      "title": "Increase Staking Rewards",
+      "description": "Proposing to increase CBT staking rewards by 10% to incentivize participation.",
+      "proposer_id": "550e8400-e29b-41d4-a716-446655440000",
+      "status": "active",
+      "start_time": "2025-05-15T00:00:00Z",
+      "end_time": "2025-05-22T23:59:59Z",
+      "votes_for": 150000,
+      "votes_against": 50000,
+      "total_votes": 200000
+    }
+  ],
+  "pagination": {
+    "total": 1,
+    "page": 1,
+    "per_page": 10,
+    "total_pages": 1
+  }
+}
+```
 
-- API版本在URL路径中指定（如`/v1/users`）
-- 主要版本（如v1到v2）可能包含不兼容的更改
-- 次要更新在同一主要版本内保持向后兼容
+### 8.2 Submit Vote
+### 8.2 提交投票
 
-### 9.2 版本生命周期
+**Request**:
+**请求**:
+```
+POST /v1/governance/proposals/{proposal_id}/vote
+```
 
-- 新版本发布后，旧版本将继续支持至少12个月
-- 版本弃用计划将提前3个月通知
-- 弃用版本将返回警告头部，建议迁移到新版本
+**Request Body**:
+**请求体**:
+```json
+{
+  "voter_id": "550e8400-e29b-41d4-a716-446655440100",
+  "vote": "for", // or "against"
+  "amount": 100 // amount of tokens to vote with
+}
+```
 
-## 10. API限流策略
+**Response** (201 Created):
+**响应** (201 Created):
+```json
+{
+  "vote_id": "550e8400-e29b-41d4-a716-446655440900",
+  "proposal_id": "550e8400-e29b-41d4-a716-446655440800",
+  "voter_id": "550e8400-e29b-41d4-a716-446655440100",
+  "vote": "for",
+  "amount": 100,
+  "timestamp": "2025-05-18T10:10:00Z"
+}
+```
 
-- 基本认证用户：每分钟60个请求
-- JWT认证用户：每分钟120个请求
-- 超出限制将返回429状态码
-- 响应头部包含限流信息：
-  - `X-RateLimit-Limit`: 时间窗口内的最大请求数
-  - `X-RateLimit-Remaining`: 当前时间窗口内剩余的请求数
-  - `X-RateLimit-Reset`: 当前时间窗口重置的时间（Unix时间戳）
 
-## 11. API安全最佳实践
-
-### 11.1 客户端实现建议
-
-- 所有API请求使用HTTPS
-- 安全存储JWT令牌，优先使用HTTP-only cookies
-- 实现令牌刷新机制
-- 处理401响应时自动尝试刷新令牌
-- 敏感操作添加额外验证（如重新输入密码）
-
-### 11.2 安全头部
-
-所有API响应将包含以下安全头部：
-
-- `Strict-Transport-Security`: 强制HTTPS连接
-- `X-Content-Type-Options`: 防止MIME类型嗅探
-- `X-Frame-Options`: 防止点击劫持
-- `Content-Security-Policy`: 限制资源加载
-- `X-XSS-Protection`: 启用XSS过滤
-
-## 12. API实现路线图
-
-### 12.1 MVP阶段
-
-- 用户认证API（注册、登录、刷新令牌）
-- 用户资料API（获取、更新资料和语言能力）
-- 基础学习内容API（获取课程、单元和内容）
-- 核心翻译API（文本翻译）
-- 基础社交API（匹配用户、发送请求）
-- 基础聊天API（创建会话、发送消息）
-
-### 12.2 后续阶段
-
-- 高级用户匹配API（基于更复杂的算法）
-- 学习进度跟踪和分析API
-- 高级翻译功能（语法和文化提示）
-- 社区功能API（论坛、讨论组）
-- 游戏化元素API（成就、徽章、排行榜）
-- 内容创建和分享API
