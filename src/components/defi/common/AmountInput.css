@@ -1,0 +1,353 @@
+/* AmountInput.css - 金额输入组件样式 */
+
+.amount-input-container {
+  width: 100%;
+}
+
+.amount-input-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.amount-input-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.balance-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.balance-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.balance-text:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.max-button {
+  padding: 4px 8px;
+  background: rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 4px;
+  color: #667eea;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.max-button:hover:not(:disabled) {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: rgba(102, 126, 234, 0.5);
+}
+
+.max-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.amount-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.amount-input-wrapper.focused {
+  border-color: rgba(102, 126, 234, 0.5);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.amount-input-wrapper.error {
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
+}
+
+.amount-input-wrapper.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.amount-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+  padding: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.amount-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.amount-input:disabled {
+  cursor: not-allowed;
+}
+
+.amount-input:read-only {
+  cursor: default;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.max-button-inline {
+  padding: 6px 12px;
+  background: rgba(102, 126, 234, 0.2);
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  color: #667eea;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.max-button-inline:hover:not(:disabled) {
+  background: rgba(102, 126, 234, 0.3);
+}
+
+.max-button-inline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.amount-input-footer {
+  margin-top: 6px;
+  min-height: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error-message {
+  font-size: 12px;
+  color: #fca5a5;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.error-message::before {
+  content: '⚠️';
+  font-size: 10px;
+}
+
+.input-info {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.usd-value {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* 数字输入特殊样式 */
+.amount-input[type="text"] {
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+.amount-input::-webkit-outer-spin-button,
+.amount-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .amount-input {
+    font-size: 16px;
+    padding: 14px;
+  }
+  
+  .amount-input-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .balance-info {
+    align-self: flex-end;
+  }
+  
+  .max-button-inline {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .amount-input {
+    font-size: 14px;
+    padding: 12px;
+  }
+  
+  .amount-input-wrapper {
+    border-radius: 10px;
+  }
+  
+  .max-button {
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+  
+  .max-button-inline {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+}
+
+/* 动画效果 */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+.amount-input-wrapper.error {
+  animation: shake 0.3s ease-in-out;
+}
+
+/* 聚焦时的发光效果 */
+.amount-input-wrapper.focused {
+  position: relative;
+}
+
+.amount-input-wrapper.focused::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 14px;
+  z-index: -1;
+  opacity: 0.3;
+  filter: blur(4px);
+}
+
+/* 加载状态 */
+.amount-input-wrapper.loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.amount-input-wrapper.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* 成功状态 */
+.amount-input-wrapper.success {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+}
+
+/* 警告状态 */
+.amount-input-wrapper.warning {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1);
+}
+
+/* 大额输入特殊样式 */
+.amount-input.large-amount {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* 小额输入特殊样式 */
+.amount-input.small-amount {
+  font-size: 14px;
+}
+
+/* 只读状态特殊样式 */
+.amount-input-wrapper.readonly {
+  background: rgba(255, 255, 255, 0.02);
+  border-style: dashed;
+}
+
+.amount-input-wrapper.readonly .amount-input {
+  color: rgba(255, 255, 255, 0.7);
+  cursor: default;
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .amount-input-wrapper {
+    border-width: 2px;
+  }
+  
+  .amount-input {
+    font-weight: 600;
+  }
+  
+  .error-message {
+    font-weight: 600;
+  }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  .amount-input-wrapper,
+  .max-button,
+  .max-button-inline {
+    transition: none;
+  }
+  
+  .amount-input-wrapper.error {
+    animation: none;
+  }
+  
+  .amount-input-wrapper.loading::after {
+    animation: none;
+  }
+}
+

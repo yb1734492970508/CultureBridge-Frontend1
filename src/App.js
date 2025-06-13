@@ -13,6 +13,8 @@ import CrossChainBridge from './components/blockchain/CrossChainBridge';
 import TokenEconomyDashboard from './components/token/TokenEconomyDashboard';
 import MultiChainAssetManager from './components/asset/MultiChainAssetManager';
 import BlockchainWallet from './components/BlockchainWallet';
+import SwapInterface from './components/defi/dex/SwapInterface';
+import FarmList from './components/defi/farming/FarmList';
 import Register from './pages/auth/Register';
 import Login from './pages/auth/Login';
 import Profile from './pages/auth/Profile';
@@ -44,6 +46,13 @@ function App() {
                 <li className="nav-item"><a href="/assets" className="nav-link">资产管理</a></li>
                 <li className="nav-item"><a href="/token-economy" className="nav-link">代币经济</a></li>
                 <li className="nav-item"><a href="/cbt-manager" className="nav-link">CBT管理</a></li>
+                <li className="nav-item dropdown">
+                  <a href="#" className="nav-link">DeFi</a>
+                  <ul className="dropdown-menu">
+                    <li><a href="/swap" className="dropdown-link">代币交换</a></li>
+                    <li><a href="/farming" className="dropdown-link">流动性挖矿</a></li>
+                  </ul>
+                </li>
               </ul>
             </nav>
             
@@ -59,6 +68,8 @@ function App() {
                 <Route path="/assets" element={<MultiChainAssetManager />} />
                 <Route path="/token-economy" element={<TokenEconomyDashboard />} />
                 <Route path="/cbt-manager" element={<CBTTokenManager />} />
+                <Route path="/swap" element={<SwapInterface />} />
+                <Route path="/farming" element={<FarmList />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/profile" element={<Profile />} />
@@ -152,6 +163,18 @@ function Home() {
           <p>了解CBT代币经济模型与BNB链集成方案</p>
           <a href="/token-economy" className="feature-link">查看仪表盘</a>
         </div>
+        
+        <div className="feature-card highlight-card">
+          <h3>DeFi交易所</h3>
+          <p>去中心化代币交换，享受低滑点和高流动性</p>
+          <a href="/swap" className="feature-link">开始交易</a>
+        </div>
+        
+        <div className="feature-card highlight-card">
+          <h3>流动性挖矿</h3>
+          <p>提供流动性获得CBT代币奖励，参与收益农场</p>
+          <a href="/farming" className="feature-link">开始挖矿</a>
+        </div>
       </div>
     </div>
   );
@@ -164,3 +187,4 @@ function NFTDetailWrapper() {
 }
 
 export default App;
+
