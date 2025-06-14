@@ -1,0 +1,317 @@
+/* FarmList.css - 流动性挖矿列表样式 */
+
+.farm-list-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.farm-list-header {
+  text-align: center;
+  margin-bottom: 40px;
+  color: white;
+}
+
+.farm-list-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.farm-list-subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin-bottom: 20px;
+}
+
+.farm-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #4CAF50;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  color: white;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.farms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 25px;
+}
+
+.farm-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.farm-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+}
+
+.farm-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.farm-tokens {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.token-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #FFD700, #FFA500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  font-size: 0.8rem;
+}
+
+.farm-pair {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.farm-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.info-item {
+  text-align: center;
+}
+
+.info-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.info-value {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.apy-value {
+  color: #4CAF50;
+  font-size: 1.3rem;
+}
+
+.farm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.farm-button {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.stake-button {
+  background: linear-gradient(45deg, #4CAF50, #45a049);
+  color: white;
+}
+
+.stake-button:hover {
+  background: linear-gradient(45deg, #45a049, #3d8b40);
+  transform: translateY(-2px);
+}
+
+.unstake-button {
+  background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+  color: white;
+}
+
+.unstake-button:hover {
+  background: linear-gradient(45deg, #ee5a52, #dc4c64);
+  transform: translateY(-2px);
+}
+
+.harvest-button {
+  background: linear-gradient(45deg, #FFD700, #FFA500);
+  color: white;
+}
+
+.harvest-button:hover {
+  background: linear-gradient(45deg, #FFA500, #FF8C00);
+  transform: translateY(-2px);
+}
+
+.farm-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 15px;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #4CAF50;
+}
+
+.status-text {
+  font-size: 0.9rem;
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.user-position {
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.position-title {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.position-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.position-item {
+  text-align: center;
+}
+
+.position-label {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 3px;
+}
+
+.position-value {
+  font-weight: bold;
+  color: #333;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-container {
+  text-align: center;
+  padding: 40px;
+  color: white;
+}
+
+.error-message {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.retry-button {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .farm-list-container {
+    padding: 15px;
+  }
+  
+  .farm-list-title {
+    font-size: 2rem;
+  }
+  
+  .farms-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .farm-info {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .farm-actions {
+    flex-direction: column;
+  }
+  
+  .stat-card {
+    padding: 15px;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+  }
+}
+

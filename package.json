@@ -1,33 +1,60 @@
 {
   "name": "culturebridge-frontend",
-  "version": "1.0.0",
-  "description": "CultureBridge跨文化交流平台的前端代码",
+  "version": "2.1.0",
+  "description": "CultureBridge跨文化交流平台的前端代码 / CultureBridge Cross-Cultural Communication Platform Frontend",
   "main": "src/index.js",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy": "npm run build && npm run deploy:static"
   },
   "keywords": [
     "culture",
     "exchange",
     "react",
-    "frontend"
+    "frontend",
+    "blockchain",
+    "voice-translation",
+    "real-time-chat",
+    "CBT-token",
+    "BNB-chain",
+    "multilingual",
+    "i18n"
   ],
-  "author": "",
+  "author": "Bin Yi <binyi@culturebridge.com>",
+  "contributors": [
+    {
+      "name": "Bin Yi",
+      "email": "binyi@culturebridge.com",
+      "role": "Lead Developer"
+    }
+  ],
   "license": "MIT",
   "dependencies": {
+    "@ant-design/icons": "^6.0.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.1.1",
+    "@mui/lab": "^7.0.0-beta.13",
+    "@mui/material": "^7.1.1",
     "@web3-react/core": "^6.1.9",
     "@web3-react/injected-connector": "^6.0.7",
+    "antd": "^5.26.0",
     "axios": "^1.3.5",
+    "chart.js": "^4.4.9",
     "ethers": "^5.7.2",
+    "ipfs-http-client": "^60.0.1",
     "nft.storage": "^7.1.1",
     "react": "^18.2.0",
+    "react-chartjs-2": "^5.3.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.10.0",
     "react-scripts": "5.0.1",
-    "recharts": "^2.15.3"
+    "recharts": "^2.15.3",
+    "socket.io-client": "^4.8.1",
+    "web3": "^4.16.0"
   },
   "browserslist": {
     "production": [
