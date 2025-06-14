@@ -1,0 +1,387 @@
+/* TransactionButton.css - 交易按钮组件样式 */
+
+.transaction-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  user-select: none;
+  outline: none;
+  background: transparent;
+}
+
+.transaction-button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* 按钮内容 */
+.transaction-button__content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.transaction-button__text {
+  white-space: nowrap;
+}
+
+.transaction-button__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transaction-button__loading-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 尺寸变体 */
+.transaction-button--small {
+  padding: 8px 16px;
+  font-size: 14px;
+  min-height: 36px;
+}
+
+.transaction-button--medium {
+  padding: 12px 24px;
+  font-size: 16px;
+  min-height: 48px;
+}
+
+.transaction-button--large {
+  padding: 16px 32px;
+  font-size: 18px;
+  min-height: 56px;
+}
+
+/* 全宽按钮 */
+.transaction-button--full-width {
+  width: 100%;
+}
+
+/* 主要按钮样式 */
+.transaction-button--primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.transaction-button--primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.transaction-button--primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* 次要按钮样式 */
+.transaction-button--secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.transaction-button--secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.transaction-button--secondary:active {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(0);
+}
+
+/* 危险按钮样式 */
+.transaction-button--danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.transaction-button--danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+.transaction-button--danger:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* 成功按钮样式 */
+.transaction-button--success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.transaction-button--success:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.transaction-button--success:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+/* 禁用状态 */
+.transaction-button--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.transaction-button--disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 加载状态 */
+.transaction-button--loading {
+  cursor: wait;
+  pointer-events: none;
+}
+
+.transaction-button--loading .transaction-button__text {
+  opacity: 0.8;
+}
+
+/* 点击状态 */
+.transaction-button--clicked {
+  transform: scale(0.98);
+}
+
+/* 波纹效果 */
+.transaction-button__ripple {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.transaction-button__ripple::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.transaction-button:active .transaction-button__ripple::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .transaction-button--small {
+    padding: 6px 12px;
+    font-size: 13px;
+    min-height: 32px;
+  }
+  
+  .transaction-button--medium {
+    padding: 10px 20px;
+    font-size: 15px;
+    min-height: 44px;
+  }
+  
+  .transaction-button--large {
+    padding: 14px 28px;
+    font-size: 17px;
+    min-height: 52px;
+  }
+  
+  .transaction-button__content {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .transaction-button--small {
+    padding: 5px 10px;
+    font-size: 12px;
+    min-height: 30px;
+  }
+  
+  .transaction-button--medium {
+    padding: 8px 16px;
+    font-size: 14px;
+    min-height: 40px;
+  }
+  
+  .transaction-button--large {
+    padding: 12px 24px;
+    font-size: 16px;
+    min-height: 48px;
+  }
+  
+  .transaction-button {
+    border-radius: 10px;
+  }
+}
+
+/* 特殊状态动画 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.transaction-button--loading {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* 成功状态动画 */
+@keyframes success-flash {
+  0% {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  }
+  50% {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  }
+  100% {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  }
+}
+
+.transaction-button--success.flash {
+  animation: success-flash 0.6s ease-in-out;
+}
+
+/* 错误状态动画 */
+@keyframes error-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.transaction-button--danger.shake {
+  animation: error-shake 0.5s ease-in-out;
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .transaction-button {
+    border: 2px solid currentColor;
+  }
+  
+  .transaction-button--primary {
+    background: #4f46e5;
+    border-color: #4f46e5;
+  }
+  
+  .transaction-button--secondary {
+    background: transparent;
+    border-color: currentColor;
+  }
+  
+  .transaction-button--danger {
+    background: #dc2626;
+    border-color: #dc2626;
+  }
+  
+  .transaction-button--success {
+    background: #059669;
+    border-color: #059669;
+  }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  .transaction-button,
+  .transaction-button__ripple::before,
+  .transaction-button__loading-icon {
+    transition: none;
+    animation: none;
+  }
+  
+  .transaction-button:hover:not(:disabled) {
+    transform: none;
+  }
+  
+  .transaction-button:active {
+    transform: none;
+  }
+  
+  .transaction-button--clicked {
+    transform: none;
+  }
+}
+
+/* 焦点可见性增强 */
+@media (prefers-reduced-motion: no-preference) {
+  .transaction-button:focus-visible {
+    animation: focus-pulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes focus-pulse {
+  0%, 100% {
+    outline-color: rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    outline-color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  .transaction-button {
+    min-height: 44px; /* 确保触摸目标足够大 */
+  }
+  
+  .transaction-button:hover {
+    transform: none;
+  }
+  
+  .transaction-button:active {
+    transform: scale(0.95);
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .transaction-button {
+    background: transparent !important;
+    color: black !important;
+    border: 1px solid black !important;
+    box-shadow: none !important;
+  }
+}
+
