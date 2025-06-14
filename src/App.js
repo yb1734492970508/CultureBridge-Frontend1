@@ -1,97 +1,125 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/auth/AuthContext';
-import { TokenProvider } from './context/token/TokenContext';
-import { BlockchainProvider } from './context/blockchain/BlockchainContext';
+import { AuthProvider, AuthGuard } from './contexts/AuthContext';
+import { TokenProvider } from './context/token/TokenContext'; // Assuming this context exists
+import { BlockchainProvider } from './context/blockchain/BlockchainContext'; // Assuming this context exists
+import { ErrorBoundary, errorHandler } from './utils/errorHandler';
+import socketService from './services/socketService';
+
+// Import existing components and pages
 import BNBWalletConnector from './components/blockchain/BNBWalletConnector';
 import CBTTokenManager from './components/token/CBTTokenManager';
 import NFTMinter from './components/blockchain/NFTMinter';
 import NFTGallery from './components/blockchain/NFTGallery';
 import NFTDetail from './components/blockchain/NFTDetail';
 import CopyrightProtection from './components/blockchain/CopyrightProtection';
-import CrossChainBridge from './components/blockchain/CrossChainBridge';
+import CrossChainBridge from './components/cross-chain/CrossChainBridge'; // Corrected path
 import TokenEconomyDashboard from './components/token/TokenEconomyDashboard';
 import MultiChainAssetManager from './components/asset/MultiChainAssetManager';
-import BlockchainWallet from './components/BlockchainWallet';
+import BlockchainWallet from './components/blockchain/BlockchainWallet'; // Corrected path
 import SwapInterface from './components/defi/dex/SwapInterface';
 import FarmList from './components/defi/farming/FarmList';
 import Register from './pages/auth/Register';
 import Login from './pages/auth/Login';
 import Profile from './pages/auth/Profile';
 import SecuritySettings from './pages/auth/SecuritySettings';
+
+// New or enhanced components for chat and voice translation
+import ChatRoomList from './components/chat/ChatRoomList'; // Assuming this will be created
+import ChatWindow from './components/chat/ChatWindow'; // Assuming this will be created
+import VoiceTranslator from './components/voice/VoiceTranslator'; // Assuming this will be created
+
 import './App.css';
 
 function App() {
+  useEffect(() => {
+    // Initialize socket service when the app mounts
+    socketService.connect();
+    socketService.startHeartbeat();
+
+    // Clean up socket service when the app unmounts
+    return () => {
+      socketService.stopHeartbeat();
+      socketService.disconnect();
+    };
+  }, []);
+
   return (
-    <AuthProvider>
-      <TokenProvider>
-        <BlockchainProvider>
-          <div className="App">
-            <header className="App-header">
-              <h1>CultureBridge</h1>
-              <div className="header-actions">
-                <BNBWalletConnector />
-                <UserMenu />
-              </div>
-            </header>
-            
-            <nav className="App-nav">
-              <ul className="nav-list">
-                <li className="nav-item"><a href="/" className="nav-link">首页</a></li>
-                <li className="nav-item"><a href="/wallet" className="nav-link">区块链钱包</a></li>
-                <li className="nav-item"><a href="/gallery" className="nav-link">NFT画廊</a></li>
-                <li className="nav-item"><a href="/mint" className="nav-link">创建NFT</a></li>
-                <li className="nav-item"><a href="/copyright" className="nav-link">版权保护</a></li>
-                <li className="nav-item"><a href="/bridge" className="nav-link">跨链桥</a></li>
-                <li className="nav-item"><a href="/assets" className="nav-link">资产管理</a></li>
-                <li className="nav-item"><a href="/token-economy" className="nav-link">代币经济</a></li>
-                <li className="nav-item"><a href="/cbt-manager" className="nav-link">CBT管理</a></li>
-                <li className="nav-item dropdown">
-                  <a href="#" className="nav-link">DeFi</a>
-                  <ul className="dropdown-menu">
-                    <li><a href="/swap" className="dropdown-link">代币交换</a></li>
-                    <li><a href="/farming" className="dropdown-link">流动性挖矿</a></li>
-                  </ul>
-                </li>
-              </ul>
-            </nav>
-            
-            <main className="App-main">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/wallet" element={<BlockchainWallet />} />
-                <Route path="/mint" element={<NFTMinter />} />
-                <Route path="/gallery" element={<NFTGallery />} />
-                <Route path="/nft/:tokenId" element={<NFTDetailWrapper />} />
-                <Route path="/copyright" element={<CopyrightProtection />} />
-                <Route path="/bridge" element={<CrossChainBridge />} />
-                <Route path="/assets" element={<MultiChainAssetManager />} />
-                <Route path="/token-economy" element={<TokenEconomyDashboard />} />
-                <Route path="/cbt-manager" element={<CBTTokenManager />} />
-                <Route path="/swap" element={<SwapInterface />} />
-                <Route path="/farming" element={<FarmList />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/security" element={<SecuritySettings />} />
-              </Routes>
-            </main>
-            
-            <footer className="App-footer">
-              <p>CultureBridge - 基于BNB链的跨文化交流平台</p>
-              <p>CBT代币驱动的去中心化文化生态系统</p>
-            </footer>
-          </div>
-        </BlockchainProvider>
-      </TokenProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <TokenProvider>
+          <BlockchainProvider>
+            <div className="App">
+              <header className="App-header">
+                <h1>CultureBridge</h1>
+                <div className="header-actions">
+                  <BNBWalletConnector />
+                  <UserMenu />
+                </div>
+              </header>
+              
+              <nav className="App-nav">
+                <ul className="nav-list">
+                  <li className="nav-item"><a href="/" className="nav-link">首页</a></li>
+                  <li className="nav-item"><a href="/wallet" className="nav-link">区块链钱包</a></li>
+                  <li className="nav-item"><a href="/gallery" className="nav-link">NFT画廊</a></li>
+                  <li className="nav-item"><a href="/mint" className="nav-link">创建NFT</a></li>
+                  <li className="nav-item"><a href="/copyright" className="nav-link">版权保护</a></li>
+                  <li className="nav-item"><a href="/bridge" className="nav-link">跨链桥</a></li>
+                  <li className="nav-item"><a href="/assets" className="nav-link">资产管理</a></li>
+                  <li className="nav-item"><a href="/token-economy" className="nav-link">代币经济</a></li>
+                  <li className="nav-item"><a href="/cbt-manager" className="nav-link">CBT管理</a></li>
+                  <li className="nav-item"><a href="/chat" className="nav-link">实时聊天</a></li>
+                  <li className="nav-item"><a href="/translate" className="nav-link">语音翻译</a></li>
+                  <li className="nav-item dropdown">
+                    <a href="#" className="nav-link">DeFi</a>
+                    <ul className="dropdown-menu">
+                      <li><a href="/swap" className="dropdown-link">代币交换</a></li>
+                      <li><a href="/farming" className="dropdown-link">流动性挖矿</a></li>
+                    </ul>
+                  </li>
+                </ul>
+              </nav>
+              
+              <main className="App-main">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/wallet" element={<AuthGuard><BlockchainWallet /></AuthGuard>} />
+                  <Route path="/mint" element={<AuthGuard><NFTMinter /></AuthGuard>} />
+                  <Route path="/gallery" element={<NFTGallery />} />
+                  <Route path="/nft/:tokenId" element={<NFTDetailWrapper />} />
+                  <Route path="/copyright" element={<AuthGuard><CopyrightProtection /></AuthGuard>} />
+                  <Route path="/bridge" element={<AuthGuard><CrossChainBridge /></AuthGuard>} />
+                  <Route path="/assets" element={<AuthGuard><MultiChainAssetManager /></AuthGuard>} />
+                  <Route path="/token-economy" element={<TokenEconomyDashboard />} />
+                  <Route path="/cbt-manager" element={<AuthGuard><CBTTokenManager /></AuthGuard>} />
+                  <Route path="/swap" element={<AuthGuard><SwapInterface /></AuthGuard>} />
+                  <Route path="/farming" element={<AuthGuard><FarmList /></AuthGuard>} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
+                  <Route path="/security" element={<AuthGuard><SecuritySettings /></AuthGuard>} />
+                  <Route path="/chat" element={<AuthGuard><ChatRoomList /></AuthGuard>} />
+                  <Route path="/chat/:roomId" element={<AuthGuard><ChatWindow /></AuthGuard>} />
+                  <Route path="/translate" element={<AuthGuard><VoiceTranslator /></AuthGuard>} />
+                </Routes>
+              </main>
+              
+              <footer className="App-footer">
+                <p>CultureBridge - 基于BNB链的跨文化交流平台</p>
+                <p>CBT代币驱动的去中心化文化生态系统</p>
+              </footer>
+            </div>
+          </BlockchainProvider>
+        </TokenProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
 // 用户菜单组件
 function UserMenu() {
-  // 暂时注释掉AuthProvider相关代码，避免错误
-  // const { isAuthenticated, user, logout } = React.useContext(AuthProvider);
+  const { isAuthenticated, user, logout } = React.useContext(AuthContext);
   const [menuOpen, setMenuOpen] = React.useState(false);
   
   const toggleMenu = () => {
@@ -100,10 +128,17 @@ function UserMenu() {
   
   return (
     <div className="user-menu">
-      <div className="auth-buttons">
-        <a href="/login" className="login-button">登录</a>
-        <a href="/register" className="register-button">注册</a>
-      </div>
+      {isAuthenticated ? (
+        <div className="authenticated-user">
+          <span>欢迎, {user?.username || user?.walletAddress?.substring(0, 6) + '...' + user?.walletAddress?.substring(user.walletAddress.length - 4)}</span>
+          <button onClick={logout} className="logout-button">登出</button>
+        </div>
+      ) : (
+        <div className="auth-buttons">
+          <a href="/login" className="login-button">登录</a>
+          <a href="/register" className="register-button">注册</a>
+        </div>
+      )}
     </div>
   );
 }
@@ -175,6 +210,18 @@ function Home() {
           <p>提供流动性获得CBT代币奖励，参与收益农场</p>
           <a href="/farming" className="feature-link">开始挖矿</a>
         </div>
+
+        <div className="feature-card highlight-card">
+          <h3>实时聊天</h3>
+          <p>与全球用户进行实时文化交流</p>
+          <a href="/chat" className="feature-link">进入聊天室</a>
+        </div>
+
+        <div className="feature-card highlight-card">
+          <h3>语音翻译</h3>
+          <p>实时语音翻译，无障碍沟通</p>
+          <a href="/translate" className="feature-link">开始翻译</a>
+        </div>
       </div>
     </div>
   );
@@ -187,4 +234,5 @@ function NFTDetailWrapper() {
 }
 
 export default App;
+
 
