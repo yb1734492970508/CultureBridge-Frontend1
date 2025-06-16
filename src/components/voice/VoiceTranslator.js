@@ -13,11 +13,21 @@ function VoiceTranslator() {
   const [audioChunks, setAudioChunks] = useState([]);
   const [translatedText, setTranslatedText] = useState('');
   const [sourceLanguage, setSourceLanguage] = useState('auto'); // 'auto' for auto-detection
-  const [targetLanguage, setTargetLanguage] = useState('en');
+  const [targetLanguage, setTargetLanguage] = useState('en-US');
   const [supportedLanguages, setSupportedLanguages] = useState([]);
   const [translationHistory, setTranslationHistory] = useState([]);
   const { error, loading, executeAsync, clearError } = useAsyncError();
   const audioRef = useRef(null);
+
+  // Mock languages for initial display if API not ready
+  const mockLanguages = [
+    { code: 'zh-CN', name: '中文', flag: '🇨🇳' },
+    { code: 'en-US', name: 'English', flag: '🇺🇸' },
+    { code: 'es-ES', name: 'Español', flag: '🇪🇸' },
+    { code: 'fr-FR', name: 'Français', flag: '🇫🇷' },
+    { code: 'ja-JP', name: '日本語', flag: '🇯🇵' },
+    { code: 'ko-KR', name: '한국어', flag: '🇰🇷' }
+  ];
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -38,22 +48,32 @@ function VoiceTranslator() {
 
   const fetchSupportedLanguages = async () => {
     await executeAsync(async () => {
-      const response = await voiceAPI.getSupportedLanguages();
-      setSupportedLanguages(response.languages);
+      try {
+        const response = await voiceAPI.getSupportedLanguages();
+        setSupportedLanguages(Object.values(response.data.languages));
+      } catch (err) {
+        console.error("Failed to fetch supported languages:", err);
+        // Fallback to mock languages if API fails
+        setSupportedLanguages(mockLanguages);
+      }
     });
   };
 
   const fetchTranslationHistory = async () => {
     await executeAsync(async () => {
-      const response = await voiceAPI.getTranslationHistory();
-      setTranslationHistory(response.history);
+      try {
+        const response = await voiceAPI.getTranslationHistory();
+        setTranslationHistory(response.data.data);
+      } catch (err) {
+        console.error("Failed to fetch translation history:", err);
+        setTranslationHistory([]); // Clear history on error
+      }
     });
   };
 
   const handleTranslationComplete = (data) => {
     setTranslatedText(data.translatedText);
-    // Optionally, add to history immediately or refresh history
-    fetchTranslationHistory();
+    fetchTranslationHistory(); // Refresh history
   };
 
   const handleTranslationError = (data) => {
@@ -79,7 +99,7 @@ function VoiceTranslator() {
 
         const formData = new FormData();
         formData.append('audio', audioBlob, 'audio.webm');
-        formData.append('sourceLanguage', sourceLanguage);
+        formData.append('sourceLanguage', sourceLanguage === 'auto' ? '' : sourceLanguage); // Send empty string for auto-detect
         formData.append('targetLanguage', targetLanguage);
 
         await executeAsync(async () => {
@@ -98,115 +118,275 @@ function VoiceTranslator() {
   };
 
   const stopRecording = () => {
-    if (mediaRecorder) {
+    if (mediaRecorder && isRecording) {
       mediaRecorder.stop();
       setIsRecording(false);
     }
   };
 
-  const playTranslatedAudio = async (text, lang) => {
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  const swapLanguages = () => {
+    setSourceLanguage(targetLanguage);
+    setTargetLanguage(sourceLanguage);
+  };
+
+  const getLanguageName = (code) => {
+    const lang = supportedLanguages.find(l => l.code === code);
+    return lang ? `${lang.flag} ${lang.name}` : code;
+  };
+
+  const playAudio = (audioUrl) => {
+    if (audioRef.current) {
+      audioRef.current.src = audioUrl;
+      audioRef.current.play();
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('已复制到剪贴板');
+    }).catch(err => {
+      console.error('复制失败:', err);
+    });
+  };
+
+  const deleteTranslation = async (id) => {
     await executeAsync(async () => {
-      const response = await voiceAPI.textToSpeech({ text, language: lang });
-      if (response.audioUrl) {
-        audioRef.current.src = response.audioUrl;
-        audioRef.current.play();
+      try {
+        await voiceAPI.deleteTranslation(id);
+        fetchTranslationHistory();
+      } catch (err) {
+        console.error("Failed to delete translation:", err);
       }
     });
   };
 
-  const deleteTranslation = async (translationId) => {
-    await executeAsync(async () => {
-      await voiceAPI.deleteTranslation(translationId);
-      setTranslationHistory(prev => prev.filter(item => item._id !== translationId));
-    });
-  };
-
-  if (loading) return <div className="loading">加载中...</div>;
-  if (error) return <div className="error-message">错误: {error.message}</div>;
-  if (!isAuthenticated) return <div className="not-authenticated">请登录以使用语音翻译功能。</div>;
-
   return (
-    <div className="voice-translator-container">
-      <h2>语音翻译</h2>
+    <div className="cultural-feed">
+      <div className="feed-header">
+        <h1 className="feed-title">语音翻译</h1>
+        <p className="feed-subtitle">实时语音翻译，无障碍沟通</p>
+      </div>
 
-      <div className="language-selection">
-        <label>
-          源语言:
-          <select value={sourceLanguage} onChange={(e) => setSourceLanguage(e.target.value)}>
+      {/* Language Selection */}
+      <div style={{
+        background: 'rgba(255,255,255,0.1)',
+        borderRadius: 'var(--border-radius-lg)',
+        padding: '1.5rem',
+        marginBottom: '1.5rem',
+        border: '1px solid rgba(255,255,255,0.1)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <select
+            value={sourceLanguage}
+            onChange={(e) => setSourceLanguage(e.target.value)}
+            style={{
+              flex: 1,
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: 'var(--border-radius)',
+              padding: '0.75rem',
+              color: 'white',
+              fontSize: '1rem'
+            }}
+          >
             <option value="auto">自动检测</option>
             {supportedLanguages.map(lang => (
-              <option key={lang.code} value={lang.code}>{lang.name}</option>
+              <option key={lang.code} value={lang.code} style={{ background: '#1E3A8A' }}>
+                {lang.flag} {lang.name}
+              </option>
             ))}
           </select>
-        </label>
-        <label>
-          目标语言:
-          <select value={targetLanguage} onChange={(e) => setTargetLanguage(e.target.value)}>
-            {supportedLanguages.map(lang => (
-              <option key={lang.code} value={lang.code}>{lang.name}</option>
-            ))}
-          </select>
-        </label>
-      </div>
 
-      <div className="recording-section">
-        <button
-          onClick={isRecording ? stopRecording : startRecording}
-          className={`mic-button ${isRecording ? 'recording' : ''}`}
-        >
-          <Mic size={48} />
-          {isRecording ? '停止录音' : '开始录音'}
-        </button>
-        <p className="recording-status">{isRecording ? '正在录音...' : '点击麦克风开始录音'}</p>
-      </div>
-
-      <div className="translation-output">
-        <h3>翻译结果:</h3>
-        <p className="translated-text">{translatedText || '等待翻译...'}</p>
-        {translatedText && (
-          <button onClick={() => playTranslatedAudio(translatedText, targetLanguage)} className="play-audio-btn">
-            <VolumeUp size={24} /> 播放翻译
+          <button
+            onClick={swapLanguages}
+            style={{
+              background: 'var(--secondary-orange)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '45px',
+              height: '45px',
+              color: 'white',
+              fontSize: '1.2rem',
+              cursor: 'pointer'
+            }}
+          >
+            🔄
           </button>
-        )}
-        <audio ref={audioRef} controls className="hidden-audio"></audio>
+
+          <select
+            value={targetLanguage}
+            onChange={(e) => setTargetLanguage(e.target.value)}
+            style={{
+              flex: 1,
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: 'var(--border-radius)',
+              padding: '0.75rem',
+              color: 'white',
+              fontSize: '1rem'
+            }}
+          >
+            {supportedLanguages.map(lang => (
+              <option key={lang.code} value={lang.code} style={{ background: '#1E3A8A' }}>
+                {lang.flag} {lang.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <div className="translation-history">
-        <h3><History size={20} /> 翻译历史</h3>
-        {translationHistory.length === 0 ? (
-          <p>暂无翻译历史。</p>
-        ) : (
-          <ul>
-            {translationHistory.map(item => (
-              <li key={item._id} className="history-item">
-                <div className="history-content">
-                  <p><strong>原文 ({item.sourceLanguage}):</strong> {item.originalText}</p>
-                  <p><strong>译文 ({item.targetLanguage}):</strong> {item.translatedText}</p>
-                  <span className="history-timestamp">{new Date(item.timestamp).toLocaleString()}</span>
-                </div>
-                <div className="history-actions">
-                  {item.originalAudioUrl && (
-                    <button onClick={() => playTranslatedAudio(item.originalText, item.sourceLanguage)} title="播放原文">
-                      <VolumeUp size={18} />
-                    </button>
-                  )}
-                  {item.translatedAudioUrl && (
-                    <button onClick={() => playTranslatedAudio(item.translatedText, item.targetLanguage)} title="播放译文">
-                      <VolumeUp size={18} />
-                    </button>
-                  )}
-                  <button onClick={() => deleteTranslation(item._id)} title="删除记录">
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+      {/* Recording Interface */}
+      <div style={{
+        background: 'rgba(255,255,255,0.1)',
+        borderRadius: 'var(--border-radius-lg)',
+        padding: '2rem',
+        marginBottom: '1.5rem',
+        textAlign: 'center',
+        border: '1px solid rgba(255,255,255,0.1)'
+      }}>
+        <div style={{
+          width: '120px',
+          height: '120px',
+          borderRadius: '50%',
+          background: isRecording ? 'var(--accent-green)' : 'var(--secondary-orange)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 1rem',
+          cursor: 'pointer',
+          fontSize: '3rem',
+          transition: 'var(--transition)',
+          animation: isRecording ? 'pulse 1.5s infinite' : 'none'
+        }}
+        onClick={toggleRecording}>
+          <Mic size={48} />
+        </div>
+
+        <h3 style={{ marginBottom: '0.5rem' }}>
+          {isRecording ? '正在录音...' : '点击开始录音'}
+        </h3>
+        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>
+          {isRecording ? '说话时会自动翻译' : '按住麦克风按钮开始语音翻译'}
+        </p>
+
+        {translatedText && (
+          <div style={{
+            marginTop: '1rem',
+            padding: '1rem',
+            background: 'rgba(16, 185, 129, 0.2)',
+            borderRadius: 'var(--border-radius)',
+            border: '1px solid var(--accent-green)'
+          }}>
+            <div style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+              识别结果: "{translatedText}"
+            </div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--accent-green)' }}>
+              翻译结果: "{translatedText}"
+            </div>
+          </div>
         )}
       </div>
+
+      {/* Translation History */}
+      <div>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem' }}>
+          翻译历史
+        </h2>
+        
+        {translationHistory.length === 0 ? (
+          <p style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>暂无翻译历史</p>
+        ) : (
+          translationHistory.map((item) => (
+            <div key={item._id} style={{
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: 'var(--border-radius)',
+              padding: '1rem',
+              marginBottom: '1rem',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: '0.5rem'
+              }}>
+                <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
+                  {getLanguageName(item.sourceLanguage)} → {getLanguageName(item.targetLanguage)}
+                </span>
+                <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
+                  {new Date(item.createdAt).toLocaleString()}
+                </span>
+              </div>
+              
+              <div style={{ marginBottom: '0.5rem' }}>
+                <div style={{ fontSize: '0.9rem', marginBottom: '0.25rem' }}>
+                  📢 {item.originalText}
+                </div>
+                <div style={{ fontSize: '0.9rem', color: 'var(--accent-green)' }}>
+                  🔄 {item.translatedText}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {item.audioInfo && item.audioInfo.outputAudioUrl && (
+                  <button onClick={() => playAudio(item.audioInfo.outputAudioUrl)} style={{
+                    background: 'none',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: 'var(--border-radius)',
+                    padding: '0.25rem 0.5rem',
+                    color: 'rgba(255,255,255,0.7)',
+                    fontSize: '0.8rem',
+                    cursor: 'pointer'
+                  }}>
+                    <Volume2 size={16} /> 播放
+                  </button>
+                )}
+                <button onClick={() => copyToClipboard(item.translatedText)} style={{
+                  background: 'none',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: 'var(--border-radius)',
+                  padding: '0.25rem 0.5rem',
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer'
+                }}>
+                  📋 复制
+                </button>
+                <button onClick={() => deleteTranslation(item._id)} style={{
+                  background: 'none',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: 'var(--border-radius)',
+                  padding: '0.25rem 0.5rem',
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer'
+                }}>
+                  <Trash2 size={16} /> 删除
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+      <audio ref={audioRef} />
+      <style jsx>{`
+        @keyframes pulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
+        }
+      `}</style>
     </div>
   );
-}
+};
 
 export default VoiceTranslator;
 
