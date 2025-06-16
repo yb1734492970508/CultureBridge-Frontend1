@@ -1,478 +1,521 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
-  MessageCircle, 
-  Send, 
-  Mic, 
-  MicOff, 
-  Users, 
-  Settings, 
-  Globe,
-  Heart,
-  Smile,
-  Image,
-  Paperclip,
-  MoreVertical,
-  Volume2,
-  VolumeX,
-  Star,
-  Gift,
-  Coins
-} from 'lucide-react';
+  Card, 
+  Input, 
+  Button, 
+  Avatar, 
+  List, 
+  Typography, 
+  Space, 
+  Tooltip, 
+  Modal, 
+  Select, 
+  Badge,
+  Spin,
+  message as antMessage,
+  Popover,
+  Divider
+} from 'antd';
+import { 
+  SendOutlined, 
+  AudioOutlined, 
+  TranslationOutlined, 
+  UserOutlined,
+  MoreOutlined,
+  SmileOutlined,
+  PaperClipOutlined,
+  StopOutlined
+} from '@ant-design/icons';
+import io from 'socket.io-client';
 
-const ChatRoom = ({ user, onEarnTokens }) => {
+const { TextArea } = Input;
+const { Text, Title } = Typography;
+const { Option } = Select;
+
+// 语言选项
+const LANGUAGES = [
+  { code: 'zh', name: '中文', flag: '🇨🇳' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'ja', name: '日本語', flag: '🇯🇵' },
+  { code: 'ko', name: '한국어', flag: '🇰🇷' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'pt', name: 'Português', flag: '🇵🇹' },
+  { code: 'ru', name: 'Русский', flag: '🇷🇺' }
+];
+
+const ChatRoom = ({ roomId, userInfo, onLeaveRoom }) => {
+  const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [selectedRoom, setSelectedRoom] = useState('general');
+  const [inputMessage, setInputMessage] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
+  const [roomInfo, setRoomInfo] = useState(null);
+  const [roomUsers, setRoomUsers] = useState([]);
+  const [typingUsers, setTypingUsers] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
-  const [onlineUsers, setOnlineUsers] = useState([]);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [autoTranslate, setAutoTranslate] = useState(true);
+  const [audioBlob, setAudioBlob] = useState(null);
   const [selectedLanguage, setSelectedLanguage] = useState('zh');
+  const [translationModal, setTranslationModal] = useState({ visible: false, messageId: null });
+  const [translations, setTranslations] = useState({});
+  
   const messagesEndRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const typingTimeoutRef = useRef(null);
 
-  // 聊天室配置
-  const chatRooms = [
-    { id: 'general', name: '综合讨论', description: '自由交流各种话题', icon: '💬', users: 234 },
-    { id: 'language-exchange', name: '语言交换', description: '练习语言，互相学习', icon: '🌐', users: 156 },
-    { id: 'culture-share', name: '文化分享', description: '分享各国文化特色', icon: '🎭', users: 89 },
-    { id: 'tech-talk', name: '科技讨论', description: '讨论最新科技趋势', icon: '💻', users: 67 },
-    { id: 'travel-stories', name: '旅行故事', description: '分享旅行经历和见闻', icon: '✈️', users: 123 }
-  ];
-
-  // 支持的语言
-  const languages = [
-    { code: 'zh', name: '中文', flag: '🇨🇳' },
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'ja', name: '日本語', flag: '🇯🇵' },
-    { code: 'ko', name: '한국어', flag: '🇰🇷' },
-    { code: 'pt', name: 'Português', flag: '🇵🇹' }
-  ];
-
-  // 表情符号
-  const emojis = ['😀', '😂', '😍', '🤔', '👍', '👎', '❤️', '🎉', '🔥', '💯', '🌟', '🎭'];
-
-  // 模拟消息数据
-  const mockMessages = [
-    {
-      id: 1,
-      user: { id: 'user1', name: 'Alice', avatar: '👩', country: '🇺🇸' },
-      content: 'Hello everyone! Welcome to CultureBridge!',
-      translation: '大家好！欢迎来到文化桥梁！',
-      timestamp: new Date(Date.now() - 300000),
-      type: 'text',
-      language: 'en',
-      likes: 5,
-      isLiked: false
-    },
-    {
-      id: 2,
-      user: { id: 'user2', name: '小明', avatar: '👨', country: '🇨🇳' },
-      content: '很高兴认识大家！我来自中国，希望能学习更多英语。',
-      translation: 'Nice to meet everyone! I\'m from China and hope to learn more English.',
-      timestamp: new Date(Date.now() - 240000),
-      type: 'text',
-      language: 'zh',
-      likes: 3,
-      isLiked: true
-    },
-    {
-      id: 3,
-      user: { id: 'user3', name: 'Maria', avatar: '👩', country: '🇪🇸' },
-      content: '¡Hola! Me encanta esta plataforma para intercambio cultural.',
-      translation: '你好！我喜欢这个文化交流平台。',
-      timestamp: new Date(Date.now() - 180000),
-      type: 'text',
-      language: 'es',
-      likes: 7,
-      isLiked: false
-    }
-  ];
-
-  const mockOnlineUsers = [
-    { id: 'user1', name: 'Alice', avatar: '👩', country: '🇺🇸', status: 'online' },
-    { id: 'user2', name: '小明', avatar: '👨', country: '🇨🇳', status: 'online' },
-    { id: 'user3', name: 'Maria', avatar: '👩', country: '🇪🇸', status: 'online' },
-    { id: 'user4', name: 'Jean', avatar: '👨', country: '🇫🇷', status: 'away' },
-    { id: 'user5', name: 'Hans', avatar: '👨', country: '🇩🇪', status: 'online' }
-  ];
-
+  // 初始化Socket连接
   useEffect(() => {
-    setMessages(mockMessages);
-    setOnlineUsers(mockOnlineUsers);
-  }, [selectedRoom]);
+    const newSocket = io(process.env.REACT_APP_CHAT_SERVER_URL || 'http://localhost:3001');
+    setSocket(newSocket);
+
+    // 连接事件
+    newSocket.on('connect', () => {
+      setIsConnected(true);
+      console.log('聊天服务器连接成功');
+      
+      // 加入房间
+      newSocket.emit('join-room', {
+        roomId,
+        userInfo
+      });
+    });
+
+    newSocket.on('disconnect', () => {
+      setIsConnected(false);
+      console.log('聊天服务器连接断开');
+    });
+
+    // 房间事件
+    newSocket.on('room-joined', (data) => {
+      setRoomInfo(data.roomInfo);
+      setRoomUsers(data.users);
+      antMessage.success(`已加入房间: ${data.roomInfo.name}`);
+    });
+
+    newSocket.on('user-joined', (user) => {
+      setRoomUsers(prev => [...prev, user]);
+      antMessage.info(`${user.username} 加入了房间`);
+    });
+
+    newSocket.on('user-left', (user) => {
+      setRoomUsers(prev => prev.filter(u => u.userId !== user.userId));
+      antMessage.info(`${user.username} 离开了房间`);
+    });
+
+    // 消息事件
+    newSocket.on('new-message', (message) => {
+      setMessages(prev => [...prev, message]);
+      scrollToBottom();
+    });
+
+    newSocket.on('new-voice-message', (voiceMessage) => {
+      setMessages(prev => [...prev, voiceMessage]);
+      scrollToBottom();
+    });
+
+    // 输入状态事件
+    newSocket.on('user-typing', (user) => {
+      setTypingUsers(prev => {
+        if (!prev.find(u => u.userId === user.userId)) {
+          return [...prev, user];
+        }
+        return prev;
+      });
+    });
+
+    newSocket.on('user-stop-typing', (user) => {
+      setTypingUsers(prev => prev.filter(u => u.userId !== user.userId));
+    });
+
+    // 翻译事件
+    newSocket.on('translation-result', (result) => {
+      setTranslations(prev => ({
+        ...prev,
+        [`${result.messageId}-${result.targetLanguage}`]: result.translation
+      }));
+    });
+
+    // 语音识别事件
+    newSocket.on('voice-transcription', (result) => {
+      setMessages(prev => prev.map(msg => 
+        msg.id === result.messageId 
+          ? { ...msg, transcription: result.transcription }
+          : msg
+      ));
+    });
+
+    // 错误处理
+    newSocket.on('error', (error) => {
+      antMessage.error(error.message);
+    });
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [roomId, userInfo]);
+
+  // 滚动到底部
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // 发送消息
+  const sendMessage = useCallback(() => {
+    if (!inputMessage.trim() || !socket) return;
+
+    socket.emit('send-message', {
+      roomId,
+      message: inputMessage.trim(),
+      messageType: 'text'
+    });
+
+    setInputMessage('');
+    
+    // 停止输入状态
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    socket.emit('stop-typing', { roomId });
+  }, [inputMessage, socket, roomId]);
+
+  // 处理输入变化
+  const handleInputChange = (e) => {
+    setInputMessage(e.target.value);
+    
+    if (!socket) return;
+
+    // 发送正在输入状态
+    socket.emit('typing', { roomId });
+    
+    // 设置停止输入的定时器
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit('stop-typing', { roomId });
+    }, 1000);
   };
 
-  const sendMessage = () => {
-    if (!newMessage.trim() || !user) return;
+  // 开始录音
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
 
-    const message = {
-      id: Date.now(),
-      user: {
-        id: user.id,
-        name: user.username,
-        avatar: '👤',
-        country: '🌍'
-      },
-      content: newMessage,
-      timestamp: new Date(),
-      type: 'text',
-      language: selectedLanguage,
-      likes: 0,
-      isLiked: false
-    };
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
 
-    setMessages(prev => [...prev, message]);
-    setNewMessage('');
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        setAudioBlob(audioBlob);
+        
+        // 停止所有音频轨道
+        stream.getTracks().forEach(track => track.stop());
+      };
 
-    // 奖励用户发送消息
-    onEarnTokens && onEarnTokens(0.1, 'CHAT_MESSAGE');
-
-    // 模拟自动翻译
-    if (autoTranslate && selectedLanguage !== 'zh') {
-      setTimeout(() => {
-        const translatedMessage = {
-          ...message,
-          translation: `[自动翻译] ${newMessage}`
-        };
-        setMessages(prev => prev.map(msg => 
-          msg.id === message.id ? translatedMessage : msg
-        ));
-      }, 1000);
+      mediaRecorder.start();
+      setIsRecording(true);
+      antMessage.info('开始录音...');
+    } catch (error) {
+      console.error('录音失败:', error);
+      antMessage.error('无法访问麦克风');
     }
   };
 
-  const startRecording = () => {
-    setIsRecording(true);
-    // 模拟录音
-    setTimeout(() => {
+  // 停止录音
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
       setIsRecording(false);
-      // 模拟语音消息
-      const voiceMessage = {
-        id: Date.now(),
-        user: {
-          id: user?.id || 'current_user',
-          name: user?.username || '我',
-          avatar: '👤',
-          country: '🌍'
-        },
-        content: '[语音消息]',
-        timestamp: new Date(),
-        type: 'voice',
-        duration: 3,
-        likes: 0,
-        isLiked: false
-      };
-      setMessages(prev => [...prev, voiceMessage]);
+      antMessage.success('录音完成');
+    }
+  };
+
+  // 发送语音消息
+  const sendVoiceMessage = () => {
+    if (!audioBlob || !socket) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const audioData = reader.result;
       
-      // 奖励用户语音消息
-      onEarnTokens && onEarnTokens(0.5, 'VOICE_MESSAGE');
-    }, 3000);
+      socket.emit('send-voice-message', {
+        roomId,
+        audioData,
+        duration: 0, // 这里应该计算实际时长
+        language: selectedLanguage
+      });
+
+      setAudioBlob(null);
+      antMessage.success('语音消息已发送');
+    };
+    
+    reader.readAsDataURL(audioBlob);
   };
 
-  const likeMessage = (messageId) => {
-    setMessages(prev => prev.map(msg => {
-      if (msg.id === messageId) {
-        const newLiked = !msg.isLiked;
-        return {
-          ...msg,
-          isLiked: newLiked,
-          likes: newLiked ? msg.likes + 1 : msg.likes - 1
-        };
-      }
-      return msg;
-    }));
+  // 请求翻译
+  const requestTranslation = (messageId, targetLanguage) => {
+    if (!socket) return;
 
-    // 奖励收到点赞
-    onEarnTokens && onEarnTokens(0.2, 'LIKE_RECEIVED');
-  };
-
-  const addEmoji = (emoji) => {
-    setNewMessage(prev => prev + emoji);
-    setShowEmojiPicker(false);
-  };
-
-  const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString('zh-CN', {
-      hour: '2-digit',
-      minute: '2-digit'
+    socket.emit('request-translation', {
+      messageId,
+      targetLanguage
     });
   };
 
-  const getCurrentRoom = () => {
-    return chatRooms.find(room => room.id === selectedRoom);
+  // 渲染消息
+  const renderMessage = (msg) => {
+    const isOwnMessage = msg.userId === userInfo.id;
+    const translationKey = `${msg.id}-${selectedLanguage}`;
+    const translation = translations[translationKey];
+
+    return (
+      <div
+        key={msg.id}
+        style={{
+          display: 'flex',
+          justifyContent: isOwnMessage ? 'flex-end' : 'flex-start',
+          marginBottom: 16
+        }}
+      >
+        <div style={{ maxWidth: '70%' }}>
+          {!isOwnMessage && (
+            <div style={{ marginBottom: 4 }}>
+              <Avatar size="small" src={msg.avatar} icon={<UserOutlined />} />
+              <Text style={{ marginLeft: 8, fontSize: 12, color: '#666' }}>
+                {msg.username}
+              </Text>
+            </div>
+          )}
+          
+          <Card
+            size="small"
+            style={{
+              backgroundColor: isOwnMessage ? '#1890ff' : '#f5f5f5',
+              color: isOwnMessage ? 'white' : 'black',
+              border: 'none'
+            }}
+            bodyStyle={{ padding: '8px 12px' }}
+          >
+            {msg.type === 'voice' ? (
+              <div>
+                <audio controls style={{ width: '100%', maxWidth: 200 }}>
+                  <source src={msg.audioData} type="audio/wav" />
+                </audio>
+                {msg.transcription && (
+                  <div style={{ marginTop: 4, fontSize: 12, opacity: 0.8 }}>
+                    转录: {msg.transcription}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <div>{msg.content}</div>
+                {translation && (
+                  <div style={{ 
+                    marginTop: 8, 
+                    padding: 8, 
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    borderRadius: 4,
+                    fontSize: 12
+                  }}>
+                    <TranslationOutlined style={{ marginRight: 4 }} />
+                    {translation}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginTop: 4 
+            }}>
+              <Text style={{ 
+                fontSize: 10, 
+                color: isOwnMessage ? 'rgba(255,255,255,0.7)' : '#999' 
+              }}>
+                {new Date(msg.timestamp).toLocaleTimeString()}
+              </Text>
+              
+              {!isOwnMessage && msg.type === 'text' && (
+                <Tooltip title="翻译">
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<TranslationOutlined />}
+                    onClick={() => requestTranslation(msg.id, selectedLanguage)}
+                    style={{ 
+                      color: isOwnMessage ? 'rgba(255,255,255,0.7)' : '#999',
+                      padding: 0,
+                      height: 'auto'
+                    }}
+                  />
+                </Tooltip>
+              )}
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
   };
 
+  // 渲染用户列表
+  const renderUserList = () => (
+    <List
+      size="small"
+      dataSource={roomUsers}
+      renderItem={(user) => (
+        <List.Item>
+          <List.Item.Meta
+            avatar={<Avatar size="small" src={user.avatar} icon={<UserOutlined />} />}
+            title={user.username}
+            description={`加入时间: ${new Date(user.joinedAt).toLocaleTimeString()}`}
+          />
+          <Badge status="success" />
+        </List.Item>
+      )}
+    />
+  );
+
+  if (!isConnected) {
+    return (
+      <Card style={{ textAlign: 'center', padding: 40 }}>
+        <Spin size="large" />
+        <div style={{ marginTop: 16 }}>连接聊天服务器中...</div>
+      </Card>
+    );
+  }
+
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* 左侧边栏 - 聊天室列表 */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-        {/* 头部 */}
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center space-x-2">
-            <MessageCircle className="h-6 w-6 text-blue-600" />
-            <span>聊天室</span>
-          </h2>
-        </div>
-
-        {/* 聊天室列表 */}
-        <div className="flex-1 overflow-y-auto">
-          {chatRooms.map(room => (
-            <div
-              key={room.id}
-              onClick={() => setSelectedRoom(room.id)}
-              className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
-                selectedRoom === room.id ? 'bg-blue-50 border-r-2 border-r-blue-500' : ''
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-2xl">{room.icon}</span>
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900">{room.name}</div>
-                  <div className="text-sm text-gray-600">{room.description}</div>
-                  <div className="text-xs text-gray-500 flex items-center space-x-1 mt-1">
-                    <Users className="h-3 w-3" />
-                    <span>{room.users} 在线</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* 在线用户 */}
-        <div className="border-t border-gray-200 p-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">在线用户</h3>
-          <div className="space-y-2 max-h-40 overflow-y-auto">
-            {onlineUsers.slice(0, 5).map(user => (
-              <div key={user.id} className="flex items-center space-x-2">
-                <div className="relative">
-                  <span className="text-lg">{user.avatar}</span>
-                  <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
-                    user.status === 'online' ? 'bg-green-500' : 'bg-yellow-500'
-                  }`}></div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-900 truncate">{user.name}</div>
-                </div>
-                <span className="text-sm">{user.country}</span>
-              </div>
-            ))}
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* 房间头部 */}
+      <Card size="small" style={{ marginBottom: 0, borderRadius: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <Title level={5} style={{ margin: 0 }}>
+              {roomInfo?.name}
+            </Title>
+            <Text type="secondary">
+              {roomUsers.length} 人在线 • {roomInfo?.language}
+            </Text>
           </div>
+          
+          <Space>
+            <Select
+              value={selectedLanguage}
+              onChange={setSelectedLanguage}
+              style={{ width: 120 }}
+              size="small"
+            >
+              {LANGUAGES.map(lang => (
+                <Option key={lang.code} value={lang.code}>
+                  {lang.flag} {lang.name}
+                </Option>
+              ))}
+            </Select>
+            
+            <Popover
+              content={renderUserList()}
+              title="在线用户"
+              trigger="click"
+              placement="bottomRight"
+            >
+              <Button size="small" icon={<UserOutlined />}>
+                {roomUsers.length}
+              </Button>
+            </Popover>
+            
+            <Button size="small" onClick={onLeaveRoom}>
+              离开房间
+            </Button>
+          </Space>
         </div>
+      </Card>
+
+      {/* 消息区域 */}
+      <div style={{ 
+        flex: 1, 
+        padding: 16, 
+        overflowY: 'auto',
+        backgroundColor: '#fafafa'
+      }}>
+        {messages.map(renderMessage)}
+        
+        {/* 正在输入指示器 */}
+        {typingUsers.length > 0 && (
+          <div style={{ padding: '8px 0', color: '#666', fontSize: 12 }}>
+            {typingUsers.map(user => user.username).join(', ')} 正在输入...
+          </div>
+        )}
+        
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* 主聊天区域 */}
-      <div className="flex-1 flex flex-col">
-        {/* 聊天头部 */}
-        <div className="bg-white border-b border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <span className="text-2xl">{getCurrentRoom()?.icon}</span>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">{getCurrentRoom()?.name}</h3>
-                <p className="text-sm text-gray-600">{getCurrentRoom()?.description}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              {/* 语言选择 */}
-              <select
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="text-sm border border-gray-300 rounded-md px-2 py-1"
-              >
-                {languages.map(lang => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.flag} {lang.name}
-                  </option>
-                ))}
-              </select>
-              
-              {/* 设置按钮 */}
-              <button
-                onClick={() => setAutoTranslate(!autoTranslate)}
-                className={`p-2 rounded-md ${autoTranslate ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
-                title="自动翻译"
-              >
-                <Globe className="h-4 w-4" />
-              </button>
-              
-              <button
-                onClick={() => setSoundEnabled(!soundEnabled)}
-                className={`p-2 rounded-md ${soundEnabled ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
-                title="声音通知"
-              >
-                {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-              </button>
+      {/* 输入区域 */}
+      <Card size="small" style={{ marginTop: 0, borderRadius: 0 }}>
+        {audioBlob && (
+          <div style={{ marginBottom: 8, padding: 8, backgroundColor: '#f0f0f0', borderRadius: 4 }}>
+            <audio controls style={{ width: '100%', maxWidth: 200 }}>
+              <source src={URL.createObjectURL(audioBlob)} type="audio/wav" />
+            </audio>
+            <div style={{ marginTop: 8 }}>
+              <Button size="small" onClick={sendVoiceMessage} type="primary">
+                发送语音
+              </Button>
+              <Button size="small" onClick={() => setAudioBlob(null)} style={{ marginLeft: 8 }}>
+                取消
+              </Button>
             </div>
           </div>
-        </div>
-
-        {/* 消息列表 */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map(message => (
-            <div key={message.id} className="flex space-x-3">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-sm">{message.user.avatar}</span>
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-1">
-                  <span className="text-sm font-medium text-gray-900">{message.user.name}</span>
-                  <span className="text-xs">{message.user.country}</span>
-                  <span className="text-xs text-gray-500">{formatTime(message.timestamp)}</span>
-                </div>
-                
-                <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-                  {message.type === 'voice' ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Mic className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm text-gray-900">{message.content}</div>
-                        <div className="text-xs text-gray-500">{message.duration}秒</div>
-                      </div>
-                      <button className="p-1 hover:bg-gray-100 rounded">
-                        <Volume2 className="h-4 w-4 text-gray-600" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-gray-900">{message.content}</p>
-                      {message.translation && autoTranslate && (
-                        <div className="mt-2 p-2 bg-blue-50 rounded border-l-2 border-blue-200">
-                          <p className="text-sm text-blue-800">{message.translation}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* 消息操作 */}
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => likeMessage(message.id)}
-                        className={`flex items-center space-x-1 text-xs ${
-                          message.isLiked ? 'text-red-500' : 'text-gray-500'
-                        } hover:text-red-500`}
-                      >
-                        <Heart className={`h-3 w-3 ${message.isLiked ? 'fill-current' : ''}`} />
-                        <span>{message.likes}</span>
-                      </button>
-                      
-                      {message.user.id !== user?.id && (
-                        <button className="text-xs text-gray-500 hover:text-blue-500">
-                          回复
-                        </button>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center space-x-1">
-                      <span className="text-xs text-gray-400">
-                        {message.language && languages.find(l => l.code === message.language)?.flag}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* 消息输入区域 */}
-        <div className="bg-white border-t border-gray-200 p-4">
-          {/* 表情选择器 */}
-          {showEmojiPicker && (
-            <div className="mb-3 p-3 bg-gray-50 rounded-lg">
-              <div className="grid grid-cols-6 gap-2">
-                {emojis.map(emoji => (
-                  <button
-                    key={emoji}
-                    onClick={() => addEmoji(emoji)}
-                    className="text-xl hover:bg-gray-200 rounded p-1"
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        )}
+        
+        <div style={{ display: 'flex', gap: 8 }}>
+          <TextArea
+            value={inputMessage}
+            onChange={handleInputChange}
+            onPressEnter={(e) => {
+              if (!e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            placeholder="输入消息... (Shift+Enter 换行)"
+            autoSize={{ minRows: 1, maxRows: 4 }}
+            style={{ flex: 1 }}
+          />
           
-          <div className="flex items-center space-x-2">
-            {/* 附件按钮 */}
-            <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md">
-              <Paperclip className="h-5 w-5" />
-            </button>
-            
-            {/* 图片按钮 */}
-            <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md">
-              <Image className="h-5 w-5" />
-            </button>
-            
-            {/* 表情按钮 */}
-            <button
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md"
-            >
-              <Smile className="h-5 w-5" />
-            </button>
-            
-            {/* 消息输入框 */}
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                placeholder="输入消息..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            
-            {/* 语音按钮 */}
-            <button
-              onClick={startRecording}
-              disabled={isRecording}
-              className={`p-2 rounded-md ${
-                isRecording 
-                  ? 'bg-red-100 text-red-600' 
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-            </button>
-            
-            {/* 发送按钮 */}
-            <button
+          <Space direction="vertical">
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
               onClick={sendMessage}
-              disabled={!newMessage.trim()}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white p-2 rounded-md"
-            >
-              <Send className="h-5 w-5" />
-            </button>
-          </div>
-          
-          {isRecording && (
-            <div className="mt-2 flex items-center space-x-2 text-red-600">
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-              <span className="text-sm">正在录音...</span>
-            </div>
-          )}
+              disabled={!inputMessage.trim()}
+            />
+            
+            <Button
+              icon={isRecording ? <StopOutlined /> : <AudioOutlined />}
+              onClick={isRecording ? stopRecording : startRecording}
+              style={{ 
+                backgroundColor: isRecording ? '#ff4d4f' : undefined,
+                borderColor: isRecording ? '#ff4d4f' : undefined,
+                color: isRecording ? 'white' : undefined
+              }}
+            />
+          </Space>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
