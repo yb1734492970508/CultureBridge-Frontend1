@@ -9,6 +9,8 @@ import socketService from './services/socketService';
 // Import existing components and pages
 import BNBWalletConnector from './components/blockchain/BNBWalletConnector';
 import CBTTokenManager from './components/token/CBTTokenManager';
+import EnhancedCBTManager from './components/token/EnhancedCBTManager';
+import EnhancedWalletConnector from './components/blockchain/EnhancedWalletConnector';
 import NFTMinter from './components/blockchain/NFTMinter';
 import NFTGallery from './components/blockchain/NFTGallery';
 import NFTDetail from './components/blockchain/NFTDetail';
@@ -92,7 +94,8 @@ function App() {
                   <Route path="/bridge" element={<AuthGuard><BridgeInterface /></AuthGuard>} />
                   <Route path="/assets" element={<AuthGuard><MultiChainAssetManager /></AuthGuard>} />
                   <Route path="/token-economy" element={<TokenEconomyDashboard />} />
-                  <Route path="/cbt-manager" element={<AuthGuard><CBTTokenManager /></AuthGuard>} />
+                  <Route path="/cbt-manager" element={<AuthGuard><EnhancedCBTManager /></AuthGuard>} />
+                  <Route path="/wallet-connector" element={<AuthGuard><EnhancedWalletConnector /></AuthGuard>} />
                   <Route path="/swap" element={<AuthGuard><SwapInterface /></AuthGuard>} />
                   <Route path="/farming" element={<AuthGuard><FarmList /></AuthGuard>} />
                   <Route path="/register" element={<Register />} />
@@ -188,9 +191,15 @@ function Home() {
         </div>
         
         <div className="feature-card highlight-card">
-          <h3>CBT代币管理</h3>
-          <p>管理您的CBT代币，包括转账、质押和授权操作</p>
+          <h3>增强版CBT管理</h3>
+          <p>全新的CBT代币管理界面，支持质押、奖励和实时统计</p>
           <a href="/cbt-manager" className="feature-link">管理CBT</a>
+        </div>
+        
+        <div className="feature-card highlight-card">
+          <h3>增强版钱包连接</h3>
+          <p>支持多种钱包，实时余额显示和网络状态监控</p>
+          <a href="/wallet-connector" className="feature-link">连接钱包</a>
         </div>
         
         <div className="feature-card highlight-card">

@@ -1,811 +1,675 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useDAO } from '../../context/dao/DAOContext';
-import { Card, Tabs, Spin, Alert, Table, Tag, Tooltip, Button, Space, Radio, Select } from 'antd';
-import { 
-  BarChart, Bar, LineChart, Line, PieChart, Pie, 
-  XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, 
-  ResponsiveContainer, Cell
-} from 'recharts';
-import { 
-  DownloadOutlined,
-  InfoCircleOutlined,
-  UserOutlined,
-  TeamOutlined,
-  RiseOutlined,
-  FallOutlined
-} from '@ant-design/icons';
+import React, { useState, useEffect, useContext } from 'react';
+import { DAOContext } from '../../context/dao/DAOContext';
 import './VotingAnalytics.css';
 
-/**
- * 投票分析组件
- * 提供对投票数据的多维度分析和可视化
- */
+// 投票分析组件
 const VotingAnalytics = () => {
-  const { 
-    proposals, 
-    votes,
-    loadProposals,
-    loadVotes,
-    isLoading, 
-    error 
-  } = useDAO();
-  
-  // 状态
-  const [activeTab, setActiveTab] = useState('overview');
-  const [timeRange, setTimeRange] = useState('month'); // week, month, year, all
-  const [selectedProposal, setSelectedProposal] = useState(null);
-  const [votingPowerDistribution, setVotingPowerDistribution] = useState([]);
-  const [votingTimeDistribution, setVotingTimeDistribution] = useState([]);
-  const [voterActivityData, setVoterActivityData] = useState([]);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
-  
-  // 加载数据
+  const { proposals, votes, delegates } = useContext(DAOContext);
+  const [timeRange, setTimeRange] = useState('30d');
+  const [selectedMetric, setSelectedMetric] = useState('participation');
+  const [analyticsData, setAnalyticsData] = useState({
+    participation: {},
+    patterns: {},
+    demographics: {},
+    trends: {}
+  });
+
+  // 时间范围选项
+  const timeRangeOptions = [
+    { value: '7d', label: '最近7天' },
+    { value: '30d', label: '最近30天' },
+    { value: '90d', label: '最近90天' },
+    { value: '1y', label: '最近1年' },
+    { value: 'all', label: '全部时间' }
+  ];
+
+  // 分析指标选项
+  const metricOptions = [
+    { value: 'participation', label: '参与度分析' },
+    { value: 'patterns', label: '投票模式' },
+    { value: 'demographics', label: '用户画像' },
+    { value: 'trends', label: '趋势分析' }
+  ];
+
+  // 计算投票分析数据
   useEffect(() => {
-    if (!isDataLoaded) {
-      loadProposals(1);
-      loadVotes();
-      setIsDataLoaded(true);
-    }
-  }, [loadProposals, loadVotes, isDataLoaded]);
-  
-  // 处理时间范围变更
-  const handleTimeRangeChange = (range) => {
-    setTimeRange(range);
-    // 在实际应用中，这里应该根据时间范围重新加载数据
-  };
-  
-  // 处理标签页切换
-  const handleTabChange = (key) => {
-    setActiveTab(key);
-  };
-  
-  // 处理提案选择
-  const handleProposalSelect = (proposalId) => {
-    const proposal = proposals.find(p => p.id === proposalId);
-    setSelectedProposal(proposal);
-  };
-  
-  // 导出数据
-  const handleExportData = () => {
-    // 实现数据导出功能
-    alert('数据导出功能即将推出');
-  };
-  
-  // 生成总体投票分布数据
-  const overallVotingDistribution = useMemo(() => {
-    if (!proposals || proposals.length === 0) return [];
-    
-    let totalFor = 0;
-    let totalAgainst = 0;
-    let totalAbstain = 0;
-    
-    proposals.forEach(proposal => {
-      totalFor += parseInt(proposal.forVotes || 0);
-      totalAgainst += parseInt(proposal.againstVotes || 0);
-      totalAbstain += parseInt(proposal.abstainVotes || 0);
-    });
-    
-    const total = totalFor + totalAgainst + totalAbstain;
-    
-    if (total === 0) return [];
-    
-    return [
-      { name: '支持', value: totalFor, percentage: Math.round((totalFor / total) * 100) },
-      { name: '反对', value: totalAgainst, percentage: Math.round((totalAgainst / total) * 100) },
-      { name: '弃权', value: totalAbstain, percentage: Math.round((totalAbstain / total) * 100) }
-    ];
-  }, [proposals]);
-  
-  // 生成月度投票参与率趋势数据
-  const monthlyParticipationTrendData = useMemo(() => {
-    if (!proposals || proposals.length === 0) return [];
-    
+    calculateAnalytics();
+  }, [proposals, votes, timeRange]);
+
+  const calculateAnalytics = () => {
     const now = new Date();
-    const monthsData = {};
+    const timeRangeMs = getTimeRangeMs(timeRange);
+    const cutoffDate = new Date(now.getTime() - timeRangeMs);
+
+    // 筛选时间范围内的数据
+    const filteredProposals = proposals.filter(p => 
+      new Date(p.createdAt) >= cutoffDate
+    );
+    const filteredVotes = votes.filter(v => 
+      new Date(v.timestamp) >= cutoffDate
+    );
+
+    // 计算参与度分析
+    const participation = calculateParticipation(filteredProposals, filteredVotes);
     
-    // 初始化过去12个月的数据
-    for (let i = 11; i >= 0; i--) {
-      const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthKey = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
-      monthsData[monthKey] = {
-        month: `${month.getFullYear()}/${month.getMonth() + 1}`,
-        participation: 0,
-        proposalCount: 0
-      };
-    }
+    // 计算投票模式
+    const patterns = calculateVotingPatterns(filteredVotes);
     
-    // 填充提案数据
-    proposals.forEach(proposal => {
-      if (proposal.state >= 3) { // 已完成投票的提案
-        const createdDate = new Date(proposal.createdTimestamp * 1000);
-        const monthKey = `${createdDate.getFullYear()}-${String(createdDate.getMonth() + 1).padStart(2, '0')}`;
-        
-        if (monthsData[monthKey]) {
-          const totalVotes = parseInt(proposal.forVotes || 0) + parseInt(proposal.againstVotes || 0) + parseInt(proposal.abstainVotes || 0);
-          const totalPossibleVotes = parseInt(proposal.totalVotingPower || 1);
-          const participationRate = totalPossibleVotes > 0 ? (totalVotes / totalPossibleVotes) * 100 : 0;
-          
-          monthsData[monthKey].participation += participationRate;
-          monthsData[monthKey].proposalCount++;
-        }
-      }
+    // 计算用户画像
+    const demographics = calculateDemographics(filteredVotes);
+    
+    // 计算趋势分析
+    const trends = calculateTrends(filteredProposals, filteredVotes);
+
+    setAnalyticsData({
+      participation,
+      patterns,
+      demographics,
+      trends
     });
+  };
+
+  // 获取时间范围毫秒数
+  const getTimeRangeMs = (range) => {
+    const timeMap = {
+      '7d': 7 * 24 * 60 * 60 * 1000,
+      '30d': 30 * 24 * 60 * 60 * 1000,
+      '90d': 90 * 24 * 60 * 60 * 1000,
+      '1y': 365 * 24 * 60 * 60 * 1000,
+      'all': Infinity
+    };
+    return timeMap[range] || timeMap['30d'];
+  };
+
+  // 计算参与度分析
+  const calculateParticipation = (proposals, votes) => {
+    const totalProposals = proposals.length;
+    const totalVotes = votes.length;
+    const uniqueVoters = new Set(votes.map(v => v.voter)).size;
     
     // 计算平均参与率
-    Object.values(monthsData).forEach(data => {
-      data.participation = data.proposalCount > 0 ? Math.round(data.participation / data.proposalCount) : 0;
-    });
-    
-    return Object.values(monthsData);
-  }, [proposals]);
-  
-  // 生成投票权重分布数据
-  useEffect(() => {
-    if (!votes || votes.length === 0) return;
-    
-    // 按投票权重分组
-    const powerGroups = {
-      'small': { name: '小额投票 (<100)', count: 0, totalPower: 0 },
-      'medium': { name: '中额投票 (100-1000)', count: 0, totalPower: 0 },
-      'large': { name: '大额投票 (1000-10000)', count: 0, totalPower: 0 },
-      'whale': { name: '巨额投票 (>10000)', count: 0, totalPower: 0 }
-    };
-    
-    votes.forEach(vote => {
-      const power = parseInt(vote.votingPower || 0);
-      
-      if (power < 100) {
-        powerGroups.small.count++;
-        powerGroups.small.totalPower += power;
-      } else if (power < 1000) {
-        powerGroups.medium.count++;
-        powerGroups.medium.totalPower += power;
-      } else if (power < 10000) {
-        powerGroups.large.count++;
-        powerGroups.large.totalPower += power;
-      } else {
-        powerGroups.whale.count++;
-        powerGroups.whale.totalPower += power;
-      }
-    });
-    
-    const totalPower = Object.values(powerGroups).reduce((sum, group) => sum + group.totalPower, 0);
-    
-    const distribution = Object.values(powerGroups).map(group => ({
-      name: group.name,
-      count: group.count,
-      totalPower: group.totalPower,
-      percentage: totalPower > 0 ? Math.round((group.totalPower / totalPower) * 100) : 0
-    }));
-    
-    setVotingPowerDistribution(distribution);
-  }, [votes]);
-  
-  // 生成投票时间分布数据
-  useEffect(() => {
-    if (!votes || votes.length === 0 || !proposals || proposals.length === 0) return;
-    
-    // 创建提案ID到开始时间的映射
-    const proposalStartTimes = {};
+    const avgParticipation = totalProposals > 0 ? 
+      (totalVotes / totalProposals / uniqueVoters * 100) : 0;
+
+    // 按提案类型分析参与度
+    const participationByType = {};
     proposals.forEach(proposal => {
-      proposalStartTimes[proposal.id] = proposal.startTimestamp;
+      const proposalVotes = votes.filter(v => v.proposalId === proposal.id);
+      const participationRate = proposalVotes.length / uniqueVoters * 100;
+      
+      if (!participationByType[proposal.type]) {
+        participationByType[proposal.type] = [];
+      }
+      participationByType[proposal.type].push(participationRate);
     });
-    
-    // 按投票时间分组
-    const timeGroups = {
-      'early': { name: '早期投票 (0-25%)', count: 0 },
-      'mid': { name: '中期投票 (25-75%)', count: 0 },
-      'late': { name: '晚期投票 (75-100%)', count: 0 }
+
+    // 计算每种类型的平均参与率
+    Object.keys(participationByType).forEach(type => {
+      const rates = participationByType[type];
+      participationByType[type] = {
+        average: rates.reduce((a, b) => a + b, 0) / rates.length,
+        count: rates.length,
+        rates
+      };
+    });
+
+    // 活跃投票者分析
+    const voterActivity = {};
+    votes.forEach(vote => {
+      if (!voterActivity[vote.voter]) {
+        voterActivity[vote.voter] = 0;
+      }
+      voterActivity[vote.voter]++;
+    });
+
+    const activityLevels = {
+      high: 0, // 参与超过80%的提案
+      medium: 0, // 参与50-80%的提案
+      low: 0 // 参与少于50%的提案
     };
+
+    Object.values(voterActivity).forEach(count => {
+      const participationRate = count / totalProposals;
+      if (participationRate >= 0.8) {
+        activityLevels.high++;
+      } else if (participationRate >= 0.5) {
+        activityLevels.medium++;
+      } else {
+        activityLevels.low++;
+      }
+    });
+
+    return {
+      totalProposals,
+      totalVotes,
+      uniqueVoters,
+      avgParticipation: avgParticipation.toFixed(2),
+      participationByType,
+      activityLevels
+    };
+  };
+
+  // 计算投票模式
+  const calculateVotingPatterns = (votes) => {
+    // 投票选择分布
+    const voteDistribution = {
+      for: votes.filter(v => v.choice === 'for').length,
+      against: votes.filter(v => v.choice === 'against').length,
+      abstain: votes.filter(v => v.choice === 'abstain').length
+    };
+
+    // 投票时间模式
+    const hourlyPattern = new Array(24).fill(0);
+    const dailyPattern = new Array(7).fill(0);
     
     votes.forEach(vote => {
-      const proposalStart = proposalStartTimes[vote.proposalId];
-      const proposalEnd = proposalStart + (3 * 24 * 60 * 60); // 假设投票期为3天
-      const voteTime = vote.timestamp;
-      
-      if (!proposalStart || !voteTime) return;
-      
-      const totalDuration = proposalEnd - proposalStart;
-      const elapsedTime = voteTime - proposalStart;
-      const percentComplete = (elapsedTime / totalDuration) * 100;
-      
-      if (percentComplete < 25) {
-        timeGroups.early.count++;
-      } else if (percentComplete < 75) {
-        timeGroups.mid.count++;
-      } else {
-        timeGroups.late.count++;
-      }
+      const date = new Date(vote.timestamp);
+      hourlyPattern[date.getHours()]++;
+      dailyPattern[date.getDay()]++;
     });
-    
-    const totalVotes = Object.values(timeGroups).reduce((sum, group) => sum + group.count, 0);
-    
-    const distribution = Object.values(timeGroups).map(group => ({
-      name: group.name,
-      count: group.count,
-      percentage: totalVotes > 0 ? Math.round((group.count / totalVotes) * 100) : 0
-    }));
-    
-    setVotingTimeDistribution(distribution);
-  }, [votes, proposals]);
-  
-  // 生成投票者活跃度数据
-  useEffect(() => {
-    if (!votes || votes.length === 0) return;
-    
-    // 按投票者地址分组
-    const voterCounts = {};
-    
-    votes.forEach(vote => {
-      const voter = vote.voter;
-      if (!voter) return;
-      
-      if (!voterCounts[voter]) {
-        voterCounts[voter] = 1;
-      } else {
-        voterCounts[voter]++;
-      }
-    });
-    
-    // 按活跃度分组
-    const activityGroups = {
-      'oneTime': { name: '一次性投票者', count: 0 },
-      'occasional': { name: '偶尔投票者 (2-5次)', count: 0 },
-      'regular': { name: '常规投票者 (6-20次)', count: 0 },
-      'active': { name: '活跃投票者 (>20次)', count: 0 }
+
+    // 投票权重分析
+    const weightDistribution = {
+      small: votes.filter(v => v.weight < 1000).length,
+      medium: votes.filter(v => v.weight >= 1000 && v.weight < 10000).length,
+      large: votes.filter(v => v.weight >= 10000).length
     };
-    
-    Object.values(voterCounts).forEach(count => {
-      if (count === 1) {
-        activityGroups.oneTime.count++;
-      } else if (count <= 5) {
-        activityGroups.occasional.count++;
-      } else if (count <= 20) {
-        activityGroups.regular.count++;
-      } else {
-        activityGroups.active.count++;
-      }
-    });
-    
-    const totalVoters = Object.values(activityGroups).reduce((sum, group) => sum + group.count, 0);
-    
-    const activityData = Object.values(activityGroups).map(group => ({
-      name: group.name,
-      count: group.count,
-      percentage: totalVoters > 0 ? Math.round((group.count / totalVoters) * 100) : 0
-    }));
-    
-    setVoterActivityData(activityData);
-  }, [votes]);
-  
-  // 生成选定提案的投票分布数据
-  const selectedProposalVotingData = useMemo(() => {
-    if (!selectedProposal) return [];
-    
-    const forVotes = parseInt(selectedProposal.forVotes || 0);
-    const againstVotes = parseInt(selectedProposal.againstVotes || 0);
-    const abstainVotes = parseInt(selectedProposal.abstainVotes || 0);
-    
-    const total = forVotes + againstVotes + abstainVotes;
-    
-    if (total === 0) return [];
-    
-    return [
-      { name: '支持', value: forVotes, percentage: Math.round((forVotes / total) * 100) },
-      { name: '反对', value: againstVotes, percentage: Math.round((againstVotes / total) * 100) },
-      { name: '弃权', value: abstainVotes, percentage: Math.round((abstainVotes / total) * 100) }
-    ];
-  }, [selectedProposal]);
-  
-  // 表格列定义 - 活跃投票者
-  const activeVotersColumns = [
-    {
-      title: '排名',
-      dataIndex: 'rank',
-      key: 'rank',
-      width: 80,
-    },
-    {
-      title: '地址',
-      dataIndex: 'address',
-      key: 'address',
-      render: (address) => (
-        <Tooltip title={address}>
-          <span className="voter-address">{address.substring(0, 8)}...{address.substring(address.length - 6)}</span>
-        </Tooltip>
-      ),
-    },
-    {
-      title: '投票次数',
-      dataIndex: 'voteCount',
-      key: 'voteCount',
-      sorter: (a, b) => a.voteCount - b.voteCount,
-    },
-    {
-      title: '总投票权重',
-      dataIndex: 'totalPower',
-      key: 'totalPower',
-      sorter: (a, b) => a.totalPower - b.totalPower,
-    },
-    {
-      title: '投票倾向',
-      dataIndex: 'tendency',
-      key: 'tendency',
-      render: (tendency) => {
-        if (tendency > 0.6) {
-          return <Tag color="green">支持倾向 <RiseOutlined /></Tag>;
-        } else if (tendency < 0.4) {
-          return <Tag color="red">反对倾向 <FallOutlined /></Tag>;
+
+    // 快速投票 vs 深思熟虑投票
+    const votingSpeed = {
+      quick: 0, // 提案发布后24小时内投票
+      normal: 0, // 24-72小时内投票
+      late: 0 // 72小时后投票
+    };
+
+    votes.forEach(vote => {
+      const proposal = proposals.find(p => p.id === vote.proposalId);
+      if (proposal) {
+        const timeDiff = new Date(vote.timestamp) - new Date(proposal.createdAt);
+        const hoursDiff = timeDiff / (1000 * 60 * 60);
+        
+        if (hoursDiff <= 24) {
+          votingSpeed.quick++;
+        } else if (hoursDiff <= 72) {
+          votingSpeed.normal++;
         } else {
-          return <Tag color="blue">中立</Tag>;
+          votingSpeed.late++;
         }
-      },
-    },
-    {
-      title: '最近投票',
-      dataIndex: 'lastVote',
-      key: 'lastVote',
-    },
-  ];
-  
-  // 模拟活跃投票者数据
-  const activeVotersData = [
-    {
-      key: '1',
-      rank: 1,
-      address: '0x1234567890abcdef1234567890abcdef12345678',
-      voteCount: 42,
-      totalPower: 125000,
-      tendency: 0.85,
-      lastVote: '2025-06-10',
-    },
-    {
-      key: '2',
-      rank: 2,
-      address: '0xabcdef1234567890abcdef1234567890abcdef12',
-      voteCount: 38,
-      totalPower: 98500,
-      tendency: 0.32,
-      lastVote: '2025-06-09',
-    },
-    {
-      key: '3',
-      rank: 3,
-      address: '0x7890abcdef1234567890abcdef1234567890abcd',
-      voteCount: 35,
-      totalPower: 76200,
-      tendency: 0.51,
-      lastVote: '2025-06-11',
-    },
-    {
-      key: '4',
-      rank: 4,
-      address: '0xdef1234567890abcdef1234567890abcdef12345',
-      voteCount: 29,
-      totalPower: 65800,
-      tendency: 0.78,
-      lastVote: '2025-06-08',
-    },
-    {
-      key: '5',
-      rank: 5,
-      address: '0x567890abcdef1234567890abcdef1234567890ab',
-      voteCount: 27,
-      totalPower: 54300,
-      tendency: 0.22,
-      lastVote: '2025-06-10',
-    },
-  ];
-  
-  // 如果正在加载，显示加载状态
-  if (isLoading && !isDataLoaded) {
+      }
+    });
+
+    return {
+      voteDistribution,
+      hourlyPattern,
+      dailyPattern,
+      weightDistribution,
+      votingSpeed
+    };
+  };
+
+  // 计算用户画像
+  const calculateDemographics = (votes) => {
+    // 按投票权重分组用户
+    const usersByWeight = {
+      whale: [], // 权重 > 100k
+      dolphin: [], // 权重 10k-100k
+      fish: [], // 权重 1k-10k
+      shrimp: [] // 权重 < 1k
+    };
+
+    const userWeights = {};
+    votes.forEach(vote => {
+      if (!userWeights[vote.voter]) {
+        userWeights[vote.voter] = 0;
+      }
+      userWeights[vote.voter] = Math.max(userWeights[vote.voter], vote.weight);
+    });
+
+    Object.entries(userWeights).forEach(([user, weight]) => {
+      if (weight > 100000) {
+        usersByWeight.whale.push(user);
+      } else if (weight > 10000) {
+        usersByWeight.dolphin.push(user);
+      } else if (weight > 1000) {
+        usersByWeight.fish.push(user);
+      } else {
+        usersByWeight.shrimp.push(user);
+      }
+    });
+
+    // 投票行为分析
+    const behaviorAnalysis = {};
+    votes.forEach(vote => {
+      if (!behaviorAnalysis[vote.voter]) {
+        behaviorAnalysis[vote.voter] = {
+          for: 0,
+          against: 0,
+          abstain: 0,
+          total: 0
+        };
+      }
+      behaviorAnalysis[vote.voter][vote.choice]++;
+      behaviorAnalysis[vote.voter].total++;
+    });
+
+    // 分类用户行为类型
+    const behaviorTypes = {
+      supporter: 0, // 主要投赞成票
+      critic: 0, // 主要投反对票
+      neutral: 0, // 经常弃权
+      balanced: 0 // 各种投票都有
+    };
+
+    Object.values(behaviorAnalysis).forEach(behavior => {
+      const forRate = behavior.for / behavior.total;
+      const againstRate = behavior.against / behavior.total;
+      const abstainRate = behavior.abstain / behavior.total;
+
+      if (forRate > 0.7) {
+        behaviorTypes.supporter++;
+      } else if (againstRate > 0.7) {
+        behaviorTypes.critic++;
+      } else if (abstainRate > 0.5) {
+        behaviorTypes.neutral++;
+      } else {
+        behaviorTypes.balanced++;
+      }
+    });
+
+    return {
+      usersByWeight,
+      behaviorTypes,
+      totalUsers: Object.keys(userWeights).length
+    };
+  };
+
+  // 计算趋势分析
+  const calculateTrends = (proposals, votes) => {
+    // 按月统计参与度趋势
+    const monthlyTrends = {};
+    
+    proposals.forEach(proposal => {
+      const month = new Date(proposal.createdAt).toISOString().slice(0, 7);
+      if (!monthlyTrends[month]) {
+        monthlyTrends[month] = {
+          proposals: 0,
+          votes: 0,
+          uniqueVoters: new Set()
+        };
+      }
+      monthlyTrends[month].proposals++;
+      
+      const proposalVotes = votes.filter(v => v.proposalId === proposal.id);
+      monthlyTrends[month].votes += proposalVotes.length;
+      proposalVotes.forEach(vote => {
+        monthlyTrends[month].uniqueVoters.add(vote.voter);
+      });
+    });
+
+    // 转换为数组格式
+    const trendsArray = Object.entries(monthlyTrends).map(([month, data]) => ({
+      month,
+      proposals: data.proposals,
+      votes: data.votes,
+      uniqueVoters: data.uniqueVoters.size,
+      avgVotesPerProposal: data.proposals > 0 ? data.votes / data.proposals : 0
+    })).sort((a, b) => a.month.localeCompare(b.month));
+
+    // 计算增长率
+    const growthRates = trendsArray.map((current, index) => {
+      if (index === 0) return { ...current, growth: 0 };
+      
+      const previous = trendsArray[index - 1];
+      const growth = previous.uniqueVoters > 0 ? 
+        ((current.uniqueVoters - previous.uniqueVoters) / previous.uniqueVoters * 100) : 0;
+      
+      return { ...current, growth: growth.toFixed(2) };
+    });
+
+    return {
+      monthlyTrends: growthRates,
+      totalGrowth: growthRates.length > 1 ? 
+        growthRates[growthRates.length - 1].growth : 0
+    };
+  };
+
+  // 渲染参与度分析
+  const renderParticipationAnalysis = () => {
+    const { participation } = analyticsData;
+    
     return (
-      <div className="analytics-loading">
-        <Spin size="large" />
-        <p>正在加载投票数据...</p>
+      <div className="analytics-section">
+        <h3>参与度分析</h3>
+        
+        <div className="metrics-grid">
+          <div className="metric-card">
+            <h4>总体统计</h4>
+            <div className="metric-value">{participation.totalProposals}</div>
+            <div className="metric-label">总提案数</div>
+          </div>
+          
+          <div className="metric-card">
+            <h4>投票总数</h4>
+            <div className="metric-value">{participation.totalVotes}</div>
+            <div className="metric-label">累计投票</div>
+          </div>
+          
+          <div className="metric-card">
+            <h4>活跃用户</h4>
+            <div className="metric-value">{participation.uniqueVoters}</div>
+            <div className="metric-label">独立投票者</div>
+          </div>
+          
+          <div className="metric-card">
+            <h4>平均参与率</h4>
+            <div className="metric-value">{participation.avgParticipation}%</div>
+            <div className="metric-label">参与度</div>
+          </div>
+        </div>
+
+        <div className="participation-breakdown">
+          <h4>按提案类型参与度</h4>
+          <div className="type-participation">
+            {Object.entries(participation.participationByType || {}).map(([type, data]) => (
+              <div key={type} className="type-item">
+                <span className="type-name">{type}</span>
+                <div className="participation-bar">
+                  <div 
+                    className="participation-fill" 
+                    style={{ width: `${data.average}%` }}
+                  ></div>
+                </div>
+                <span className="participation-value">{data.average.toFixed(1)}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="activity-levels">
+          <h4>用户活跃度分布</h4>
+          <div className="activity-chart">
+            <div className="activity-item">
+              <div className="activity-label">高活跃度</div>
+              <div className="activity-bar">
+                <div 
+                  className="activity-fill high" 
+                  style={{ width: `${(participation.activityLevels?.high || 0) / participation.uniqueVoters * 100}%` }}
+                ></div>
+              </div>
+              <span>{participation.activityLevels?.high || 0}</span>
+            </div>
+            
+            <div className="activity-item">
+              <div className="activity-label">中等活跃度</div>
+              <div className="activity-bar">
+                <div 
+                  className="activity-fill medium" 
+                  style={{ width: `${(participation.activityLevels?.medium || 0) / participation.uniqueVoters * 100}%` }}
+                ></div>
+              </div>
+              <span>{participation.activityLevels?.medium || 0}</span>
+            </div>
+            
+            <div className="activity-item">
+              <div className="activity-label">低活跃度</div>
+              <div className="activity-bar">
+                <div 
+                  className="activity-fill low" 
+                  style={{ width: `${(participation.activityLevels?.low || 0) / participation.uniqueVoters * 100}%` }}
+                ></div>
+              </div>
+              <span>{participation.activityLevels?.low || 0}</span>
+            </div>
+          </div>
+        </div>
       </div>
     );
-  }
-  
-  // 如果有错误，显示错误信息
-  if (error) {
+  };
+
+  // 渲染投票模式分析
+  const renderPatternsAnalysis = () => {
+    const { patterns } = analyticsData;
+    
     return (
-      <div className="analytics-error">
-        <Alert
-          message="加载失败"
-          description={error}
-          type="error"
-          showIcon
-        />
+      <div className="analytics-section">
+        <h3>投票模式分析</h3>
+        
+        <div className="patterns-grid">
+          <div className="pattern-card">
+            <h4>投票选择分布</h4>
+            <div className="vote-distribution">
+              <div className="vote-item for">
+                <span>赞成</span>
+                <span>{patterns.voteDistribution?.for || 0}</span>
+              </div>
+              <div className="vote-item against">
+                <span>反对</span>
+                <span>{patterns.voteDistribution?.against || 0}</span>
+              </div>
+              <div className="vote-item abstain">
+                <span>弃权</span>
+                <span>{patterns.voteDistribution?.abstain || 0}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="pattern-card">
+            <h4>投票权重分布</h4>
+            <div className="weight-distribution">
+              <div className="weight-item">
+                <span>小额投票者 (&lt;1K)</span>
+                <span>{patterns.weightDistribution?.small || 0}</span>
+              </div>
+              <div className="weight-item">
+                <span>中等投票者 (1K-10K)</span>
+                <span>{patterns.weightDistribution?.medium || 0}</span>
+              </div>
+              <div className="weight-item">
+                <span>大额投票者 (&gt;10K)</span>
+                <span>{patterns.weightDistribution?.large || 0}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="timing-patterns">
+          <h4>投票时间模式</h4>
+          <div className="timing-grid">
+            <div className="timing-chart">
+              <h5>每日投票分布</h5>
+              <div className="daily-chart">
+                {['周日', '周一', '周二', '周三', '周四', '周五', '周六'].map((day, index) => (
+                  <div key={day} className="day-bar">
+                    <div 
+                      className="day-fill" 
+                      style={{ 
+                        height: `${(patterns.dailyPattern?.[index] || 0) / Math.max(...(patterns.dailyPattern || [1])) * 100}%` 
+                      }}
+                    ></div>
+                    <span className="day-label">{day}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="speed-analysis">
+              <h5>投票响应速度</h5>
+              <div className="speed-distribution">
+                <div className="speed-item quick">
+                  <span>快速投票 (24h内)</span>
+                  <span>{patterns.votingSpeed?.quick || 0}</span>
+                </div>
+                <div className="speed-item normal">
+                  <span>正常投票 (24-72h)</span>
+                  <span>{patterns.votingSpeed?.normal || 0}</span>
+                </div>
+                <div className="speed-item late">
+                  <span>延迟投票 (72h后)</span>
+                  <span>{patterns.votingSpeed?.late || 0}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
-  }
-  
+  };
+
+  // 渲染用户画像分析
+  const renderDemographicsAnalysis = () => {
+    const { demographics } = analyticsData;
+    
+    return (
+      <div className="analytics-section">
+        <h3>用户画像分析</h3>
+        
+        <div className="demographics-grid">
+          <div className="demo-card">
+            <h4>按投票权重分类</h4>
+            <div className="weight-categories">
+              <div className="category-item whale">
+                <span>鲸鱼用户 (&gt;100K)</span>
+                <span>{demographics.usersByWeight?.whale?.length || 0}</span>
+              </div>
+              <div className="category-item dolphin">
+                <span>海豚用户 (10K-100K)</span>
+                <span>{demographics.usersByWeight?.dolphin?.length || 0}</span>
+              </div>
+              <div className="category-item fish">
+                <span>鱼类用户 (1K-10K)</span>
+                <span>{demographics.usersByWeight?.fish?.length || 0}</span>
+              </div>
+              <div className="category-item shrimp">
+                <span>虾米用户 (&lt;1K)</span>
+                <span>{demographics.usersByWeight?.shrimp?.length || 0}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="demo-card">
+            <h4>投票行为类型</h4>
+            <div className="behavior-types">
+              <div className="behavior-item supporter">
+                <span>支持者</span>
+                <span>{demographics.behaviorTypes?.supporter || 0}</span>
+              </div>
+              <div className="behavior-item critic">
+                <span>批评者</span>
+                <span>{demographics.behaviorTypes?.critic || 0}</span>
+              </div>
+              <div className="behavior-item neutral">
+                <span>中立者</span>
+                <span>{demographics.behaviorTypes?.neutral || 0}</span>
+              </div>
+              <div className="behavior-item balanced">
+                <span>平衡者</span>
+                <span>{demographics.behaviorTypes?.balanced || 0}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染趋势分析
+  const renderTrendsAnalysis = () => {
+    const { trends } = analyticsData;
+    
+    return (
+      <div className="analytics-section">
+        <h3>趋势分析</h3>
+        
+        <div className="trends-overview">
+          <div className="trend-metric">
+            <h4>总体增长率</h4>
+            <div className={`trend-value ${trends.totalGrowth >= 0 ? 'positive' : 'negative'}`}>
+              {trends.totalGrowth}%
+            </div>
+          </div>
+        </div>
+
+        <div className="monthly-trends">
+          <h4>月度参与趋势</h4>
+          <div className="trends-chart">
+            {trends.monthlyTrends?.map((month, index) => (
+              <div key={month.month} className="trend-item">
+                <div className="trend-month">{month.month}</div>
+                <div className="trend-metrics">
+                  <div className="trend-proposals">{month.proposals} 提案</div>
+                  <div className="trend-voters">{month.uniqueVoters} 投票者</div>
+                  <div className={`trend-growth ${month.growth >= 0 ? 'positive' : 'negative'}`}>
+                    {month.growth}%
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染当前选中的分析内容
+  const renderCurrentAnalysis = () => {
+    switch (selectedMetric) {
+      case 'participation':
+        return renderParticipationAnalysis();
+      case 'patterns':
+        return renderPatternsAnalysis();
+      case 'demographics':
+        return renderDemographicsAnalysis();
+      case 'trends':
+        return renderTrendsAnalysis();
+      default:
+        return renderParticipationAnalysis();
+    }
+  };
+
   return (
     <div className="voting-analytics">
       <div className="analytics-header">
         <h2>投票分析</h2>
-        <div className="analytics-actions">
-          <div className="time-range-selector">
-            <span className={timeRange === 'week' ? 'active' : ''} onClick={() => handleTimeRangeChange('week')}>周</span>
-            <span className={timeRange === 'month' ? 'active' : ''} onClick={() => handleTimeRangeChange('month')}>月</span>
-            <span className={timeRange === 'year' ? 'active' : ''} onClick={() => handleTimeRangeChange('year')}>年</span>
-            <span className={timeRange === 'all' ? 'active' : ''} onClick={() => handleTimeRangeChange('all')}>全部</span>
+        
+        <div className="analytics-controls">
+          <div className="control-group">
+            <label>时间范围:</label>
+            <select 
+              value={timeRange} 
+              onChange={(e) => setTimeRange(e.target.value)}
+              className="time-range-select"
+            >
+              {timeRangeOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
-          <Button 
-            type="primary" 
-            icon={<DownloadOutlined />} 
-            onClick={handleExportData}
-          >
-            导出数据
-          </Button>
+          
+          <div className="control-group">
+            <label>分析指标:</label>
+            <select 
+              value={selectedMetric} 
+              onChange={(e) => setSelectedMetric(e.target.value)}
+              className="metric-select"
+            >
+              {metricOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
-      
+
       <div className="analytics-content">
-        <Tabs activeKey={activeTab} onChange={handleTabChange}>
-          <Tabs.TabPane tab="概览" key="overview">
-            <div className="overview-content">
-              <div className="overview-metrics">
-                <Card className="metric-card">
-                  <Tooltip title="参与投票的总人数">
-                    <h3>
-                      总投票人数
-                      <InfoCircleOutlined className="info-icon" />
-                    </h3>
-                  </Tooltip>
-                  <div className="metric-value">
-                    {votes ? new Set(votes.map(v => v.voter)).size : 0}
-                  </div>
-                  <div className="metric-icon">
-                    <TeamOutlined />
-                  </div>
-                </Card>
-                
-                <Card className="metric-card">
-                  <Tooltip title="平均每个提案的投票人数">
-                    <h3>
-                      平均投票人数
-                      <InfoCircleOutlined className="info-icon" />
-                    </h3>
-                  </Tooltip>
-                  <div className="metric-value">
-                    {proposals && proposals.length > 0 && votes
-                      ? Math.round(votes.length / proposals.filter(p => p.state >= 3).length)
-                      : 0}
-                  </div>
-                  <div className="metric-icon">
-                    <UserOutlined />
-                  </div>
-                </Card>
-                
-                <Card className="metric-card">
-                  <Tooltip title="平均投票参与率（投票权重/总可投票权重）">
-                    <h3>
-                      平均参与率
-                      <InfoCircleOutlined className="info-icon" />
-                    </h3>
-                  </Tooltip>
-                  <div className="metric-value">
-                    {(() => {
-                      if (!proposals || proposals.length === 0) return '0%';
-                      
-                      const completedProposals = proposals.filter(p => p.state >= 3);
-                      if (completedProposals.length === 0) return '0%';
-                      
-                      let totalParticipation = 0;
-                      completedProposals.forEach(proposal => {
-                        const totalVotes = parseInt(proposal.forVotes || 0) + parseInt(proposal.againstVotes || 0) + parseInt(proposal.abstainVotes || 0);
-                        const totalPossibleVotes = parseInt(proposal.totalVotingPower || 1);
-                        const participationRate = totalPossibleVotes > 0 ? (totalVotes / totalPossibleVotes) * 100 : 0;
-                        totalParticipation += participationRate;
-                      });
-                      
-                      return `${Math.round(totalParticipation / completedProposals.length)}%`;
-                    })()}
-                  </div>
-                  <div className="metric-icon">
-                    <RiseOutlined />
-                  </div>
-                </Card>
-                
-                <Card className="metric-card">
-                  <Tooltip title="投票结果与最终执行结果的一致性">
-                    <h3>
-                      决策有效率
-                      <InfoCircleOutlined className="info-icon" />
-                    </h3>
-                  </Tooltip>
-                  <div className="metric-value">
-                    {(() => {
-                      if (!proposals || proposals.length === 0) return '0%';
-                      
-                      const passedProposals = proposals.filter(p => p.state >= 4);
-                      if (passedProposals.length === 0) return '0%';
-                      
-                      const executedProposals = proposals.filter(p => p.state === 7);
-                      return `${Math.round((executedProposals.length / passedProposals.length) * 100)}%`;
-                    })()}
-                  </div>
-                  <div className="metric-icon">
-                    <FallOutlined />
-                  </div>
-                </Card>
-              </div>
-              
-              <Card title="月度投票参与率趋势" className="chart-card">
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={monthlyParticipationTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                    <RechartsTooltip formatter={(value) => `${value}%`} />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="participation" 
-                      name="参与率" 
-                      stroke="#8884d8" 
-                      activeDot={{ r: 8 }} 
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Card>
-              
-              <div className="chart-row">
-                <Card title="总体投票分布" className="chart-card">
-                  <div className="pie-chart-container">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={overallVotingDistribution}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                          label={({ name, percentage }) => `${name}: ${percentage}%`}
-                        >
-                          <Cell fill="#4CAF50" /> {/* 支持 */}
-                          <Cell fill="#F44336" /> {/* 反对 */}
-                          <Cell fill="#FFEB3B" /> {/* 弃权 */}
-                        </Pie>
-                        <RechartsTooltip formatter={(value, name) => [`${value} (${overallVotingDistribution.find(item => item.name === name)?.percentage}%)`, name]} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    
-                    <div className="pie-chart-legend">
-                      {overallVotingDistribution.map((entry, index) => (
-                        <div key={`legend-${index}`} className="legend-item">
-                          <div 
-                            className="legend-color" 
-                            style={{ 
-                              backgroundColor: index === 0 ? '#4CAF50' : index === 1 ? '#F44336' : '#FFEB3B' 
-                            }}
-                          ></div>
-                          <div className="legend-text">
-                            <div className="legend-name">{entry.name}</div>
-                            <div className="legend-value">{entry.value} ({entry.percentage}%)</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </Card>
-                
-                <Card title="投票权重分布" className="chart-card">
-                  <div className="pie-chart-container">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={votingPowerDistribution}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="totalPower"
-                          label={({ name, percentage }) => `${name}: ${percentage}%`}
-                        >
-                          {votingPowerDistribution.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={`#${Math.floor(Math.random()*16777215).toString(16)}`} />
-                          ))}
-                        </Pie>
-                        <RechartsTooltip formatter={(value, name) => [`${value} (${votingPowerDistribution.find(item => item.name === name)?.percentage}%)`, name]} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    
-                    <div className="pie-chart-legend">
-                      {votingPowerDistribution.map((entry, index) => (
-                        <div key={`legend-${index}`} className="legend-item">
-                          <div 
-                            className="legend-color" 
-                            style={{ 
-                              backgroundColor: `#${Math.floor(Math.random()*16777215).toString(16)}` 
-                            }}
-                          ></div>
-                          <div className="legend-text">
-                            <div className="legend-name">{entry.name}</div>
-                            <div className="legend-value">{entry.totalPower} ({entry.percentage}%)</div>
-                            <div className="legend-count">{entry.count}个投票者</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </Card>
-              </div>
-              
-              <div className="chart-row">
-                <Card title="投票时间分布" className="chart-card">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={votingTimeDistribution}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <RechartsTooltip formatter={(value, name, props) => [`${value} (${props.payload.percentage}%)`, '投票数']} />
-                      <Bar dataKey="count" name="投票数量" fill="#82ca9d">
-                        {votingTimeDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={index === 0 ? '#8884d8' : index === 1 ? '#82ca9d' : '#ffc658'} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Card>
-                
-                <Card title="投票者活跃度" className="chart-card">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={voterActivityData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <RechartsTooltip formatter={(value, name, props) => [`${value} (${props.payload.percentage}%)`, '投票者数量']} />
-                      <Bar dataKey="count" name="投票者数量" fill="#8884d8">
-                        {voterActivityData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={`#${Math.floor(Math.random()*16777215).toString(16)}`} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Card>
-              </div>
-            </div>
-          </Tabs.TabPane>
-          
-          <Tabs.TabPane tab="提案投票分析" key="proposal">
-            <div className="proposal-voting-analysis">
-              <Card className="proposal-selector-card">
-                <div className="proposal-selector">
-                  <span className="selector-label">选择提案：</span>
-                  <Select
-                    placeholder="请选择提案"
-                    style={{ width: 400 }}
-                    onChange={handleProposalSelect}
-                    options={proposals.map(p => ({ value: p.id, label: p.title }))}
-                  />
-                </div>
-                
-                {selectedProposal ? (
-                  <div className="selected-proposal-info">
-                    <h3>{selectedProposal.title}</h3>
-                    <div className="proposal-meta">
-                      <Tag color="blue">{selectedProposal.category || '其他'}</Tag>
-                      <Tag color={
-                        selectedProposal.state === 1 ? 'processing' :
-                        selectedProposal.state >= 4 ? 'success' :
-                        selectedProposal.state === 3 ? 'error' :
-                        'default'
-                      }>
-                        {
-                          selectedProposal.state === 0 ? '待定' :
-                          selectedProposal.state === 1 ? '活跃' :
-                          selectedProposal.state === 2 ? '已取消' :
-                          selectedProposal.state === 3 ? '已失败' :
-                          selectedProposal.state === 4 ? '已通过' :
-                          selectedProposal.state === 5 ? '已排队' :
-                          selectedProposal.state === 6 ? '已过期' :
-                          selectedProposal.state === 7 ? '已执行' :
-                          '未知'
-                        }
-                      </Tag>
-                      <span className="proposal-date">
-                        创建于: {new Date(selectedProposal.createdTimestamp * 1000).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="no-proposal-selected">
-                    请选择一个提案进行详细分析
-                  </div>
-                )}
-              </Card>
-              
-              {selectedProposal ? (
-                <>
-                  <div className="chart-row">
-                    <Card title="投票分布" className="chart-card">
-                      <div className="pie-chart-container">
-                        <ResponsiveContainer width="100%" height={250}>
-                          <PieChart>
-                            <Pie
-                              data={selectedProposalVotingData}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              outerRadius={80}
-                              fill="#8884d8"
-                              dataKey="value"
-                              label={({ name, percentage }) => `${name}: ${percentage}%`}
-                            >
-                              <Cell fill="#4CAF50" /> {/* 支持 */}
-                              <Cell fill="#F44336" /> {/* 反对 */}
-                              <Cell fill="#FFEB3B" /> {/* 弃权 */}
-                            </Pie>
-                            <RechartsTooltip formatter={(value, name) => [`${value} (${selectedProposalVotingData.find(item => item.name === name)?.percentage}%)`, name]} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                        
-                        <div className="pie-chart-legend">
-                          {selectedProposalVotingData.map((entry, index) => (
-                            <div key={`legend-${index}`} className="legend-item">
-                              <div 
-                                className="legend-color" 
-                                style={{ 
-                                  backgroundColor: index === 0 ? '#4CAF50' : index === 1 ? '#F44336' : '#FFEB3B' 
-                                }}
-                              ></div>
-                              <div className="legend-text">
-                                <div className="legend-name">{entry.name}</div>
-                                <div className="legend-value">{entry.value} ({entry.percentage}%)</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </Card>
-                    
-                    <Card title="投票时间线" className="chart-card">
-                      <div className="coming-soon">
-                        <h3>投票时间线分析</h3>
-                        <p>此功能正在开发中，敬请期待...</p>
-                      </div>
-                    </Card>
-                  </div>
-                  
-                  <Card title="投票详情" className="votes-detail-card">
-                    <div className="coming-soon">
-                      <h3>投票详细记录</h3>
-                      <p>此功能正在开发中，敬请期待...</p>
-                    </div>
-                  </Card>
-                </>
-              ) : null}
-            </div>
-          </Tabs.TabPane>
-          
-          <Tabs.TabPane tab="投票者分析" key="voters">
-            <div className="voter-analysis">
-              <Card title="活跃投票者排名" className="active-voters-card">
-                <Table 
-                  columns={activeVotersColumns} 
-                  dataSource={activeVotersData} 
-                  pagination={{ pageSize: 10 }}
-                />
-              </Card>
-              
-              <Card title="投票者行为分析" className="voter-behavior-card">
-                <div className="coming-soon">
-                  <h3>投票者行为模式分析</h3>
-                  <p>此功能正在开发中，敬请期待...</p>
-                </div>
-              </Card>
-            </div>
-          </Tabs.TabPane>
-        </Tabs>
+        {renderCurrentAnalysis()}
       </div>
     </div>
   );
 };
 
 export default VotingAnalytics;
+
