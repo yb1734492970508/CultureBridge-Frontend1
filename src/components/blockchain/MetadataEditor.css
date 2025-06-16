@@ -1,0 +1,107 @@
+/* 元数据编辑器样式 */
+.metadata-editor {
+  width: 100%;
+}
+
+.color-preview {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  margin-top: 8px;
+  border: 1px solid #d9d9d9;
+}
+
+.attributes-section {
+  margin-top: 16px;
+}
+
+.attributes-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.attribute-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #f5f5f5;
+  border: 1px solid #e8e8e8;
+}
+
+.attribute-name {
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+.attribute-value {
+  color: #1890ff;
+}
+
+.display-type-tag {
+  margin-left: 4px;
+  font-size: 10px;
+  padding: 0 4px;
+  height: 18px;
+  line-height: 18px;
+}
+
+.attribute-input-container {
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px dashed #d9d9d9;
+}
+
+.attribute-input-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.add-attribute-button {
+  width: 100%;
+}
+
+.attributes-tips {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+/* 暗色模式支持 */
+.dark-mode .attribute-tag {
+  background-color: #1f1f1f;
+  border-color: #303030;
+}
+
+.dark-mode .attribute-input-container {
+  background-color: #1a1a1a;
+  border-color: #303030;
+}
+
+.dark-mode .attributes-tips {
+  color: #a6a6a6;
+}
+
+/* 可访问性增强 */
+.attribute-tag:focus-within {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+/* 响应式调整 */
+@media (max-width: 576px) {
+  .attribute-input-form {
+    flex-direction: column;
+  }
+  
+  .attribute-input-form .ant-form-item {
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+}

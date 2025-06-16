@@ -1,0 +1,521 @@
+/* 资产管理界面样式 */
+.asset-management {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+/* 头部区域 */
+.asset-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.asset-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.refresh-button {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-button:hover:not(:disabled) {
+  background: #5a67d8;
+  transform: translateY(-1px);
+}
+
+.refresh-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 标签页 */
+.asset-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  background: #f3f4f6;
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-button.active {
+  background: white;
+  color: #667eea;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tab-button:hover:not(.active) {
+  color: #374151;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* 内容区域 */
+.asset-content {
+  min-height: 400px;
+}
+
+/* NFT资产 */
+.nft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.nft-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.nft-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #667eea;
+}
+
+.nft-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background: #e5e7eb;
+}
+
+.nft-info {
+  padding: 16px;
+}
+
+.nft-info h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.nft-collection {
+  font-size: 12px;
+  color: #667eea;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.nft-description {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.nft-attributes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.attribute {
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* 代币资产 */
+.token-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.token-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.token-item:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.token-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-right: 16px;
+  background: #e5e7eb;
+}
+
+.token-info {
+  flex: 1;
+}
+
+.token-info h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 2px;
+}
+
+.token-symbol {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.token-balance {
+  text-align: right;
+}
+
+.balance {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 2px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.value {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* 交易历史 */
+.transaction-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.transaction-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.transaction-item:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.tx-info h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.tx-type.transfer {
+  color: #dc2626;
+}
+
+.tx-type.receive {
+  color: #059669;
+}
+
+.tx-hash {
+  font-size: 12px;
+  color: #6b7280;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  margin-bottom: 2px;
+}
+
+.tx-time {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.tx-details {
+  text-align: right;
+}
+
+.tx-amount {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.tx-status {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.tx-status.success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.tx-status.failed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* 空状态和加载状态 */
+.loading,
+.empty-state,
+.no-wallet,
+.unsupported-network {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.empty-state {
+  color: #9ca3af;
+  font-size: 16px;
+}
+
+.no-wallet h3,
+.unsupported-network h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.no-wallet p,
+.unsupported-network p {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.error-message {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #fca5a5;
+  margin-bottom: 20px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .asset-management {
+    margin: 16px;
+    padding: 20px;
+  }
+  
+  .asset-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .asset-header h2 {
+    text-align: center;
+  }
+  
+  .asset-tabs {
+    flex-direction: column;
+  }
+  
+  .nft-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .token-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+  
+  .token-logo {
+    margin-right: 0;
+  }
+  
+  .token-balance {
+    text-align: center;
+  }
+  
+  .transaction-item {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .tx-details {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .asset-management {
+    margin: 8px;
+    padding: 16px;
+  }
+  
+  .nft-info {
+    padding: 12px;
+  }
+  
+  .token-item,
+  .transaction-item {
+    padding: 12px;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.asset-content > div {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 加载动画 */
+.loading::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 8px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .asset-management {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .asset-header {
+    border-color: #374151;
+  }
+  
+  .asset-header h2 {
+    color: #f9fafb;
+  }
+  
+  .asset-tabs {
+    background: #374151;
+  }
+  
+  .tab-button {
+    color: #d1d5db;
+  }
+  
+  .tab-button.active {
+    background: #4b5563;
+    color: #60a5fa;
+  }
+  
+  .nft-card,
+  .token-item,
+  .transaction-item {
+    background: #374151;
+    border-color: #4b5563;
+  }
+  
+  .nft-card:hover,
+  .token-item:hover,
+  .transaction-item:hover {
+    background: #4b5563;
+    border-color: #6b7280;
+  }
+  
+  .nft-info h4,
+  .token-info h4,
+  .balance,
+  .tx-amount {
+    color: #f9fafb;
+  }
+  
+  .nft-description,
+  .token-symbol,
+  .value,
+  .tx-hash {
+    color: #d1d5db;
+  }
+  
+  .tx-time {
+    color: #9ca3af;
+  }
+  
+  .no-wallet h3,
+  .unsupported-network h3 {
+    color: #f9fafb;
+  }
+  
+  .no-wallet p,
+  .unsupported-network p {
+    color: #d1d5db;
+  }
+}
+

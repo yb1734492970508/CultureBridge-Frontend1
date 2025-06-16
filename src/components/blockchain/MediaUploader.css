@@ -1,0 +1,254 @@
+/* 媒体上传组件样式 */
+.media-uploader-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.media-uploader {
+  width: 100%;
+}
+
+.media-uploader .ant-upload {
+  width: 100%;
+  margin: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.media-uploader .ant-upload:hover {
+  border-color: #40a9ff;
+}
+
+/* 不同尺寸的预览区域 */
+.size-small .ant-upload {
+  height: 120px;
+}
+
+.size-medium .ant-upload {
+  height: 200px;
+}
+
+.size-large .ant-upload {
+  height: 300px;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #8c8c8c;
+}
+
+.upload-text {
+  margin-top: 8px;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.media-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.media-preview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.media-icon-only {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.media-icon-only .anticon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.media-name {
+  font-size: 12px;
+  color: #8c8c8c;
+  text-align: center;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.audio-preview-container,
+.model-preview-container,
+.file-preview-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.audio-preview-icon,
+.model-preview-icon,
+.file-preview-icon {
+  font-size: 32px;
+  margin-bottom: 16px;
+  color: #1890ff;
+}
+
+.audio-preview-name,
+.model-preview-name,
+.file-preview-name {
+  font-size: 12px;
+  color: #8c8c8c;
+  text-align: center;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.audio-preview {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.media-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 8px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  padding: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.media-content:hover .media-actions {
+  opacity: 1;
+}
+
+.media-action-btn {
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.media-action-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.preview-btn {
+  color: #1890ff;
+}
+
+.remove-btn {
+  color: #ff4d4f;
+}
+
+.upload-tips {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+/* 预览模态框样式 */
+.media-preview-modal .ant-modal-body {
+  padding: 0;
+}
+
+.media-preview-modal-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  background-color: #000;
+}
+
+.media-preview-modal-content .media-preview {
+  max-width: 100%;
+  max-height: 80vh;
+}
+
+.media-preview-modal-content .audio-preview-container,
+.media-preview-modal-content .model-preview-container,
+.media-preview-modal-content .file-preview-container {
+  background-color: #1a1a1a;
+  color: #fff;
+  width: 100%;
+  height: 400px;
+}
+
+.media-preview-modal-content .audio-preview-name,
+.media-preview-modal-content .model-preview-name,
+.media-preview-modal-content .file-preview-name {
+  color: #d9d9d9;
+}
+
+/* 暗色模式支持 */
+.dark-mode .audio-preview-container,
+.dark-mode .model-preview-container,
+.dark-mode .file-preview-container {
+  background-color: #1a1a1a;
+}
+
+.dark-mode .audio-preview-name,
+.dark-mode .model-preview-name,
+.dark-mode .file-preview-name {
+  color: #d9d9d9;
+}
+
+.dark-mode .media-actions {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.dark-mode .media-action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 可访问性增强 */
+.media-uploader .ant-upload:focus-visible {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+.media-action-btn:focus-visible {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+/* 响应式调整 */
+@media (max-width: 576px) {
+  .size-medium .ant-upload {
+    height: 160px;
+  }
+  
+  .size-large .ant-upload {
+    height: 240px;
+  }
+}
