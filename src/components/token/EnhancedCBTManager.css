@@ -1,0 +1,584 @@
+.enhanced-cbt-manager {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.manager-header h2 {
+  color: #333;
+  margin: 0;
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.refresh-btn:hover {
+  background-color: #0056b3;
+}
+
+/* 余额概览 */
+.balance-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.balance-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.balance-card.main-balance {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.balance-card.staked-balance {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.balance-card.total-balance {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.balance-icon {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.balance-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.balance-amount {
+  margin: 0 0 4px 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.balance-usd, .balance-rewards, .balance-growth {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* 快速操作 */
+.quick-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.quick-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background-color: white;
+  color: #333;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.quick-action-btn:hover:not(:disabled) {
+  border-color: #007bff;
+  color: #007bff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+}
+
+.quick-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 标签页 */
+.manager-tabs {
+  display: flex;
+  background-color: white;
+  border-radius: 8px;
+  padding: 4px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+  background-color: #007bff;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.tab-btn:hover:not(.active) {
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+/* 标签页内容 */
+.tab-content {
+  background-color: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 概览标签页 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.stat-card h4 {
+  margin: 0 0 8px 0;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.stat-card p {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.price-change {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.price-change.positive {
+  color: #28a745;
+}
+
+.price-change.negative {
+  color: #dc3545;
+}
+
+.recent-activity h3 {
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.rewards-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.reward-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.reward-item:last-child {
+  border-bottom: none;
+}
+
+.reward-icon {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reward-info {
+  flex-grow: 1;
+}
+
+.reward-type {
+  margin: 0 0 4px 0;
+  font-weight: 500;
+  color: #333;
+}
+
+.reward-time {
+  font-size: 12px;
+  color: #666;
+}
+
+.reward-amount {
+  font-weight: bold;
+  color: #28a745;
+}
+
+/* 转账标签页 */
+.transfer-form {
+  max-width: 500px;
+}
+
+.transfer-form h3 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input, .form-group select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus, .form-group select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.amount-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.amount-input-group input {
+  padding-right: 100px;
+}
+
+.token-symbol {
+  position: absolute;
+  right: 60px;
+  color: #666;
+  font-weight: 500;
+}
+
+.max-btn {
+  position: absolute;
+  right: 8px;
+  padding: 4px 8px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.max-btn:hover {
+  background-color: #0056b3;
+}
+
+.available-balance {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.submit-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* 质押标签页 */
+.staking-overview {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.staking-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.staking-stat {
+  text-align: center;
+}
+
+.staking-stat h4 {
+  margin: 0 0 8px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.staking-stat p {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.claim-rewards-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.claim-rewards-btn:hover {
+  background-color: #218838;
+}
+
+.staking-form {
+  max-width: 500px;
+}
+
+.staking-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.staking-actions .submit-btn {
+  flex: 1;
+}
+
+.unstake-btn {
+  flex: 1;
+  padding: 14px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.unstake-btn:hover {
+  background-color: #c82333;
+}
+
+/* 历史记录标签页 */
+.transactions-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.transaction-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.transaction-item:last-child {
+  border-bottom: none;
+}
+
+.tx-icon {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tx-info {
+  flex-grow: 1;
+}
+
+.tx-type {
+  margin: 0 0 4px 0;
+  font-weight: 500;
+  color: #333;
+}
+
+.tx-time {
+  font-size: 12px;
+  color: #666;
+  display: block;
+}
+
+.tx-note {
+  font-size: 12px;
+  color: #888;
+  font-style: italic;
+  display: block;
+}
+
+.tx-amount {
+  text-align: right;
+}
+
+.tx-amount span {
+  display: block;
+}
+
+.tx-amount .positive {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.tx-amount .negative {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.tx-status {
+  font-size: 12px;
+  color: #666;
+}
+
+/* 通用样式 */
+.loading, .error-message, .not-authenticated, .no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.error-message {
+  color: #dc3545;
+}
+
+.not-authenticated {
+  color: #ffc107;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .enhanced-cbt-manager {
+    margin: 10px;
+    padding: 16px;
+  }
+
+  .balance-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions {
+    justify-content: center;
+  }
+
+  .quick-action-btn {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .manager-tabs {
+    flex-direction: column;
+  }
+
+  .tab-btn {
+    text-align: center;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .staking-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .staking-actions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .balance-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .balance-amount {
+    font-size: 20px;
+  }
+}
+

@@ -1,19 +1,10 @@
 /**
- * CultureBridge Unified Frontend Application
- * 文化桥梁统一前端应用程序
- * 
- * @author Bin Yi <binyi@culturebridge.com>
- * @version 2.1.0
- * @description 基于区块链的跨文化交流平台前端应用
- *              Blockchain-based cross-cultural communication platform frontend application
+ * CultureBridge 主应用组件 - Main Application Component
+ * 集成钱包连接、实时聊天、语音翻译等功能
  */
 
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button.jsx';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx';
-import { Badge } from '@/components/ui/badge.jsx';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.jsx';
 import { 
   Globe, 
   MessageCircle, 
@@ -28,8 +19,12 @@ import {
   Star,
   TrendingUp,
   Award,
-  Languages
+  Languages,
+  Wallet
 } from 'lucide-react';
+import WalletConnect from './components/WalletConnect';
+import ChatRoom from './components/ChatRoom';
+import VoiceTranslation from './components/VoiceTranslation';
 import './App.css';
 
 // 模拟API服务
@@ -70,6 +65,9 @@ const HomePage = () => {
   const [languages, setLanguages] = useState([]);
   const [activities, setActivities] = useState([]);
   const [currentLang, setCurrentLang] = useState('zh');
+  const [connectedWallet, setConnectedWallet] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('home');
 
   useEffect(() => {
     // 模拟API调用
@@ -105,7 +103,10 @@ const HomePage = () => {
       securePrivate: '安全私密',
       securePrivateDesc: '端到端加密，保护用户隐私和数据安全',
       aiPowered: 'AI驱动',
-      aiPoweredDesc: '人工智能增强的翻译和文化理解功能'
+      aiPoweredDesc: '人工智能增强的翻译和文化理解功能',
+      wallet: '钱包',
+      chat: '聊天',
+      translate: '翻译'
     },
     en: {
       title: 'Culture Bridge',
@@ -133,11 +134,167 @@ const HomePage = () => {
       securePrivate: 'Secure & Private',
       securePrivateDesc: 'End-to-end encryption protecting user privacy and data security',
       aiPowered: 'AI Powered',
-      aiPoweredDesc: 'AI-enhanced translation and cultural understanding features'
+      aiPoweredDesc: 'AI-enhanced translation and cultural understanding features',
+      wallet: 'Wallet',
+      chat: 'Chat',
+      translate: 'Translate'
     }
   };
 
   const t = translations[currentLang];
+
+  const handleWalletConnected = (address) => {
+    setConnectedWallet(address);
+    setCurrentUser({
+      id: 'user_' + Date.now(),
+      username: '用户_' + address.slice(-4),
+      walletAddress: address
+    });
+  };
+
+  const handleWalletDisconnected = () => {
+    setConnectedWallet(null);
+    setCurrentUser(null);
+  };
+
+  const handleEarnTokens = (amount, activityType) => {
+    console.log(`用户获得 ${amount} CBT 代币 (${activityType})`);
+    // 这里可以添加通知或更新UI的逻辑
+  };
+
+  if (activeTab === 'chat') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* 导航栏 */}
+        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-2">
+                <Globe className="h-8 w-8 text-blue-600" />
+                <span className="text-xl font-bold text-gray-900">{t.title}</span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveTab('home')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  首页
+                </button>
+                <button
+                  onClick={() => setActiveTab('wallet')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  {t.wallet}
+                </button>
+                <button
+                  onClick={() => setActiveTab('translate')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  {t.translate}
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* 聊天界面 */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <ChatRoom user={currentUser} onEarnTokens={handleEarnTokens} />
+        </div>
+      </div>
+    );
+  }
+
+  if (activeTab === 'wallet') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* 导航栏 */}
+        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-2">
+                <Globe className="h-8 w-8 text-blue-600" />
+                <span className="text-xl font-bold text-gray-900">{t.title}</span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveTab('home')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  首页
+                </button>
+                <button
+                  onClick={() => setActiveTab('chat')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  {t.chat}
+                </button>
+                <button
+                  onClick={() => setActiveTab('translate')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  {t.translate}
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* 钱包界面 */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-center">
+            <WalletConnect 
+              onWalletConnected={handleWalletConnected}
+              onDisconnect={handleWalletDisconnected}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeTab === 'translate') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* 导航栏 */}
+        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-2">
+                <Globe className="h-8 w-8 text-blue-600" />
+                <span className="text-xl font-bold text-gray-900">{t.title}</span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveTab('home')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  首页
+                </button>
+                <button
+                  onClick={() => setActiveTab('wallet')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  {t.wallet}
+                </button>
+                <button
+                  onClick={() => setActiveTab('chat')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  {t.chat}
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* 翻译界面 */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <VoiceTranslation onEarnTokens={handleEarnTokens} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -150,21 +307,34 @@ const HomePage = () => {
               <span className="text-xl font-bold text-gray-900">{t.title}</span>
             </div>
             <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={() => setCurrentLang(currentLang === 'zh' ? 'en' : 'zh')}
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-600 hover:text-gray-900 flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium"
               >
-                <Languages className="h-4 w-4 mr-1" />
-                {currentLang === 'zh' ? 'EN' : '中文'}
-              </Button>
-              <Button variant="outline" size="sm">
-                {t.learnMore}
-              </Button>
-              <Button size="sm">
-                {t.getStarted}
-              </Button>
+                <Languages className="h-4 w-4" />
+                <span>{currentLang === 'zh' ? 'EN' : '中文'}</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('wallet')}
+                className="text-gray-600 hover:text-gray-900 flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                <Wallet className="h-4 w-4" />
+                <span>{t.wallet}</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('chat')}
+                className="text-gray-600 hover:text-gray-900 flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span>{t.chat}</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('translate')}
+                className="bg-blue-600 text-white hover:bg-blue-700 flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                <Mic className="h-4 w-4" />
+                <span>{t.translate}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -181,14 +351,17 @@ const HomePage = () => {
             {t.description}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-              <Play className="h-5 w-5 mr-2" />
-              {t.getStarted}
-            </Button>
-            <Button variant="outline" size="lg">
-              {t.learnMore}
-              <ChevronRight className="h-5 w-5 ml-2" />
-            </Button>
+            <button 
+              onClick={() => setActiveTab('chat')}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2"
+            >
+              <Play className="h-5 w-5" />
+              <span>{t.getStarted}</span>
+            </button>
+            <button className="border border-gray-300 hover:border-gray-400 text-gray-700 px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2">
+              <span>{t.learnMore}</span>
+              <ChevronRight className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </section>
@@ -199,41 +372,31 @@ const HomePage = () => {
           <div className="max-w-7xl mx-auto">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">{t.stats}</h2>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <Users className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-gray-900">{stats.totalUsers.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600">{t.totalUsers}</div>
-                </CardContent>
-              </Card>
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="h-2 w-2 bg-green-500 rounded-full mx-auto mb-2"></div>
-                  <div className="text-2xl font-bold text-gray-900">{stats.onlineUsers.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600">{t.onlineUsers}</div>
-                </CardContent>
-              </Card>
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <MessageCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-gray-900">{stats.totalMessages.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600">{t.totalMessages}</div>
-                </CardContent>
-              </Card>
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <Mic className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-gray-900">{stats.totalTranslations.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600">{t.totalTranslations}</div>
-                </CardContent>
-              </Card>
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <Coins className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-gray-900">{stats.totalRewards.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600">{t.totalRewards}</div>
-                </CardContent>
-              </Card>
+              <div className="text-center p-6 bg-gray-50 rounded-lg">
+                <Users className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900">{stats.totalUsers.toLocaleString()}</div>
+                <div className="text-sm text-gray-600">{t.totalUsers}</div>
+              </div>
+              <div className="text-center p-6 bg-gray-50 rounded-lg">
+                <div className="h-2 w-2 bg-green-500 rounded-full mx-auto mb-2"></div>
+                <div className="text-2xl font-bold text-gray-900">{stats.onlineUsers.toLocaleString()}</div>
+                <div className="text-sm text-gray-600">{t.onlineUsers}</div>
+              </div>
+              <div className="text-center p-6 bg-gray-50 rounded-lg">
+                <MessageCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900">{stats.totalMessages.toLocaleString()}</div>
+                <div className="text-sm text-gray-600">{t.totalMessages}</div>
+              </div>
+              <div className="text-center p-6 bg-gray-50 rounded-lg">
+                <Mic className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900">{stats.totalTranslations.toLocaleString()}</div>
+                <div className="text-sm text-gray-600">{t.totalTranslations}</div>
+              </div>
+              <div className="text-center p-6 bg-gray-50 rounded-lg">
+                <Coins className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900">{stats.totalRewards.toLocaleString()}</div>
+                <div className="text-sm text-gray-600">{t.totalRewards}</div>
+              </div>
             </div>
           </div>
         </section>
@@ -244,96 +407,35 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">{t.features}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <MessageCircle className="h-10 w-10 text-blue-600 mb-2" />
-                <CardTitle>{t.realTimeChat}</CardTitle>
-                <CardDescription>{t.realTimeChatDesc}</CardDescription>
-              </CardHeader>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Mic className="h-10 w-10 text-green-600 mb-2" />
-                <CardTitle>{t.voiceTranslation}</CardTitle>
-                <CardDescription>{t.voiceTranslationDesc}</CardDescription>
-              </CardHeader>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Coins className="h-10 w-10 text-yellow-600 mb-2" />
-                <CardTitle>{t.blockchainRewards}</CardTitle>
-                <CardDescription>{t.blockchainRewardsDesc}</CardDescription>
-              </CardHeader>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Heart className="h-10 w-10 text-red-600 mb-2" />
-                <CardTitle>{t.culturalExchange}</CardTitle>
-                <CardDescription>{t.culturalExchangeDesc}</CardDescription>
-              </CardHeader>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Shield className="h-10 w-10 text-purple-600 mb-2" />
-                <CardTitle>{t.securePrivate}</CardTitle>
-                <CardDescription>{t.securePrivateDesc}</CardDescription>
-              </CardHeader>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <Zap className="h-10 w-10 text-orange-600 mb-2" />
-                <CardTitle>{t.aiPowered}</CardTitle>
-                <CardDescription>{t.aiPoweredDesc}</CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* 支持的语言和最近活动 */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* 支持的语言 */}
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">{t.supportedLanguages}</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {languages.map((lang) => (
-                  <Card key={lang.code} className="p-4">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-2xl">{lang.flag}</span>
-                      <div>
-                        <div className="font-medium text-gray-900">{lang.name}</div>
-                        <div className="text-sm text-gray-500">{lang.code.toUpperCase()}</div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+            <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+              <MessageCircle className="h-10 w-10 text-blue-600 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t.realTimeChat}</h3>
+              <p className="text-gray-600">{t.realTimeChatDesc}</p>
             </div>
-
-            {/* 最近活动 */}
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">{t.recentActivities}</h3>
-              <div className="space-y-4">
-                {activities.map((activity) => (
-                  <Card key={activity.id} className="p-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0">
-                        <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Star className="h-4 w-4 text-blue-600" />
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm text-gray-900">
-                          <span className="font-medium">{activity.user}</span> {activity.action}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">{activity.time}</div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+            <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+              <Mic className="h-10 w-10 text-green-600 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t.voiceTranslation}</h3>
+              <p className="text-gray-600">{t.voiceTranslationDesc}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+              <Coins className="h-10 w-10 text-yellow-600 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t.blockchainRewards}</h3>
+              <p className="text-gray-600">{t.blockchainRewardsDesc}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+              <Heart className="h-10 w-10 text-red-600 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t.culturalExchange}</h3>
+              <p className="text-gray-600">{t.culturalExchangeDesc}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+              <Shield className="h-10 w-10 text-purple-600 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t.securePrivate}</h3>
+              <p className="text-gray-600">{t.securePrivateDesc}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+              <Zap className="h-10 w-10 text-orange-600 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t.aiPowered}</h3>
+              <p className="text-gray-600">{t.aiPoweredDesc}</p>
             </div>
           </div>
         </div>
@@ -349,7 +451,7 @@ const HomePage = () => {
           <p className="text-gray-400 mb-4">{t.subtitle}</p>
           <div className="text-sm text-gray-500">
             <p>© 2024 CultureBridge. Developed by Bin Yi. All rights reserved.</p>
-            <p className="mt-2">Version 2.1.0 | Project ID: CB-BACKEND-001</p>
+            <p className="mt-2">Version 2.1.0 | Project ID: CB-FRONTEND-001</p>
           </div>
         </div>
       </footer>
