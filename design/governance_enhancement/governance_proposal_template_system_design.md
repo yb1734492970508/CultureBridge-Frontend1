@@ -1,36 +1,59 @@
+# Governance Proposal Template System Design Specification
 # 治理提案模板系统设计规范
 
+## Design Overview
 ## 设计概述
 
+The governance proposal template system is an important component of the CultureBridge DAO governance function, aiming to provide community members with standardized, structured proposal creation tools. Through predefined templates and intelligent guidance, it helps users create high-quality governance proposals, enhancing governance participation and decision-making efficiency.
 治理提案模板系统是CultureBridge DAO治理功能的重要组成部分，旨在为社区成员提供标准化、结构化的提案创建工具。通过预定义的模板和智能引导，帮助用户创建高质量的治理提案，提升治理参与度和决策效率。
 
+## Design Principles
 ## 设计原则
 
+### 1. Standardized Process
 ### 1. 标准化流程
+- Provide various types of proposal templates
 - 提供多种类型的提案模板
+- Ensure consistency and completeness of proposal format
 - 确保提案格式的一致性和完整性
+- Simplify the proposal creation process
 - 简化提案创建流程
+- Provide intelligent validation and suggestions
 - 提供智能验证和建议
 
+### 2. User-Friendly
 ### 2. 用户友好
+- Intuitive template selection interface
 - 直观的模板选择界面
+- Step-by-step proposal creation wizard
 - 分步骤的提案创建向导
+- Real-time preview and editing functions
 - 实时预览和编辑功能
+- Rich help and guidance information
 - 丰富的帮助和指导信息
 
+### 3. Flexible and Extensible
 ### 3. 灵活可扩展
+- Support custom template creation
 - 支持自定义模板创建
+- Template version management and updates
 - 模板版本管理和更新
+- Multi-language support
 - 多语言支持
+- Seamless integration with blockchain governance contracts
 - 与区块链治理合约的无缝集成
 
+## Proposal Template Types
 ## 提案模板类型
 
-### 1. 资金申请提案 (Funding Proposal)
+### 1. Funding Proposal
+### 1. 资金申请提案
 ```javascript
 const fundingProposalTemplate = {
   id: 'funding-proposal',
+  name: 'Funding Proposal',
   name: '资金申请提案',
+  description: 'Apply for DAO funding to support projects or activities',
   description: '申请DAO资金支持项目或活动',
   category: 'funding',
   icon: '💰',
@@ -38,22 +61,27 @@ const fundingProposalTemplate = {
     {
       id: 'project_title',
       type: 'text',
+      label: 'Project Title',
       label: '项目标题',
       required: true,
       maxLength: 100,
+      placeholder: 'Enter a concise title for the project'
       placeholder: '请输入项目的简洁标题'
     },
     {
       id: 'project_summary',
       type: 'textarea',
+      label: 'Project Summary',
       label: '项目摘要',
       required: true,
       maxLength: 500,
+      placeholder: 'Briefly describe the core content and goals of the project'
       placeholder: '简要描述项目的核心内容和目标'
     },
     {
       id: 'funding_amount',
       type: 'number',
+      label: 'Requested Amount (ETH)',
       label: '申请金额 (ETH)',
       required: true,
       min: 0.1,
@@ -63,37 +91,44 @@ const fundingProposalTemplate = {
     {
       id: 'project_description',
       type: 'richtext',
+      label: 'Detailed Description',
       label: '详细描述',
       required: true,
+      placeholder: 'Detailed description of project background, goals, implementation plan, etc.'
       placeholder: '详细描述项目背景、目标、实施计划等'
     },
     {
       id: 'team_info',
       type: 'team',
+      label: 'Team Information',
       label: '团队信息',
       required: true
     },
     {
       id: 'timeline',
       type: 'timeline',
+      label: 'Project Timeline',
       label: '项目时间线',
       required: true
     },
     {
       id: 'budget_breakdown',
       type: 'budget',
+      label: 'Budget Breakdown',
       label: '预算明细',
       required: true
     },
     {
       id: 'success_metrics',
       type: 'metrics',
+      label: 'Success Metrics',
       label: '成功指标',
       required: true
     },
     {
       id: 'risks_mitigation',
       type: 'textarea',
+      label: 'Risk Assessment and Mitigation Measures',
       label: '风险评估与缓解措施',
       required: true,
       maxLength: 1000
@@ -103,16 +138,21 @@ const fundingProposalTemplate = {
     minVotingPower: 1000,
     requiredStake: 10,
     votingPeriod: 7 * 24 * 60 * 60, // 7 days
+    votingPeriod: 7 * 24 * 60 * 60, // 7 天
     executionDelay: 2 * 24 * 60 * 60 // 2 days
+    executionDelay: 2 * 24 * 60 * 60 // 2 天
   }
 };
 ```
 
-### 2. 协议升级提案 (Protocol Upgrade)
+### 2. Protocol Upgrade Proposal
+### 2. 协议升级提案
 ```javascript
 const protocolUpgradeTemplate = {
   id: 'protocol-upgrade',
+  name: 'Protocol Upgrade Proposal',
   name: '协议升级提案',
+  description: 'Propose technical upgrades to the platform protocol',
   description: '提议对平台协议进行技术升级',
   category: 'technical',
   icon: '⚙️',
@@ -120,6 +160,7 @@ const protocolUpgradeTemplate = {
     {
       id: 'upgrade_title',
       type: 'text',
+      label: 'Upgrade Title',
       label: '升级标题',
       required: true,
       maxLength: 100
@@ -127,6 +168,7 @@ const protocolUpgradeTemplate = {
     {
       id: 'current_version',
       type: 'text',
+      label: 'Current Version',
       label: '当前版本',
       required: true,
       pattern: '^v\\d+\\.\\d+\\.\\d+$'
@@ -134,6 +176,7 @@ const protocolUpgradeTemplate = {
     {
       id: 'target_version',
       type: 'text',
+      label: 'Target Version',
       label: '目标版本',
       required: true,
       pattern: '^v\\d+\\.\\d+\\.\\d+$'
@@ -141,13 +184,16 @@ const protocolUpgradeTemplate = {
     {
       id: 'upgrade_rationale',
       type: 'richtext',
+      label: 'Upgrade Rationale',
       label: '升级理由',
       required: true,
+      placeholder: 'Detailed explanation of why this upgrade is needed'
       placeholder: '详细说明为什么需要进行此次升级'
     },
     {
       id: 'technical_changes',
       type: 'code',
+      label: 'Technical Changes',
       label: '技术变更',
       required: true,
       language: 'solidity'
@@ -155,6 +201,7 @@ const protocolUpgradeTemplate = {
     {
       id: 'security_audit',
       type: 'file',
+      label: 'Security Audit Report',
       label: '安全审计报告',
       required: true,
       accept: '.pdf,.doc,.docx'
@@ -162,18 +209,21 @@ const protocolUpgradeTemplate = {
     {
       id: 'testing_results',
       type: 'richtext',
+      label: 'Testing Results',
       label: '测试结果',
       required: true
     },
     {
       id: 'migration_plan',
       type: 'richtext',
+      label: 'Migration Plan',
       label: '迁移计划',
       required: true
     },
     {
       id: 'rollback_plan',
       type: 'richtext',
+      label: 'Rollback Plan',
       label: '回滚计划',
       required: true
     }
@@ -182,17 +232,23 @@ const protocolUpgradeTemplate = {
     minVotingPower: 5000,
     requiredStake: 50,
     votingPeriod: 14 * 24 * 60 * 60, // 14 days
+    votingPeriod: 14 * 24 * 60 * 60, // 14 天
     executionDelay: 7 * 24 * 60 * 60, // 7 days
+    executionDelay: 7 * 24 * 60 * 60, // 7 天
     requiredApproval: 0.75 // 75% approval required
+    requiredApproval: 0.75 // 需要75%的批准
   }
 };
 ```
 
-### 3. 社区治理提案 (Governance Proposal)
+### 3. Community Governance Proposal
+### 3. 社区治理提案
 ```javascript
 const governanceProposalTemplate = {
   id: 'governance-proposal',
+  name: 'Community Governance Proposal',
   name: '社区治理提案',
+  description: 'Propose changes to DAO governance rules or processes',
   description: '提议修改DAO治理规则或流程',
   category: 'governance',
   icon: '🏛️',
@@ -200,6 +256,7 @@ const governanceProposalTemplate = {
     {
       id: 'governance_title',
       type: 'text',
+      label: 'Governance Proposal Title',
       label: '治理提案标题',
       required: true,
       maxLength: 100
@@ -207,42 +264,53 @@ const governanceProposalTemplate = {
     {
       id: 'current_rule',
       type: 'richtext',
+      label: 'Current Rule/Process',
       label: '当前规则/流程',
       required: true,
+      placeholder: 'Describe the current governance rules or processes'
       placeholder: '描述当前的治理规则或流程'
     },
     {
       id: 'proposed_changes',
       type: 'richtext',
+      label: 'Proposed Changes',
       label: '提议的变更',
       required: true,
+      placeholder: 'Detailed description of the proposed changes'
       placeholder: '详细描述提议的变更内容'
     },
     {
       id: 'change_rationale',
       type: 'richtext',
+      label: 'Rationale for Change',
       label: '变更理由',
       required: true,
+      placeholder: 'Explain why these changes are needed'
       placeholder: '说明为什么需要进行这些变更'
     },
     {
       id: 'impact_analysis',
       type: 'richtext',
+      label: 'Impact Analysis',
       label: '影响分析',
       required: true,
+      placeholder: 'Analyze the potential impact of changes on the community'
       placeholder: '分析变更对社区的潜在影响'
     },
     {
       id: 'implementation_plan',
       type: 'richtext',
+      label: 'Implementation Plan',
       label: '实施计划',
       required: true
     },
     {
       id: 'community_feedback',
       type: 'textarea',
+      label: 'Community Feedback Collection',
       label: '社区反馈收集',
       required: false,
+      placeholder: 'Record feedback and suggestions from community members'
       placeholder: '记录社区成员的反馈和建议'
     }
   ],
@@ -250,17 +318,23 @@ const governanceProposalTemplate = {
     minVotingPower: 2000,
     requiredStake: 25,
     votingPeriod: 10 * 24 * 60 * 60, // 10 days
+    votingPeriod: 10 * 24 * 60 * 60, // 10 天
     executionDelay: 3 * 24 * 60 * 60, // 3 days
+    executionDelay: 3 * 24 * 60 * 60, // 3 天
     requiredApproval: 0.6 // 60% approval required
+    requiredApproval: 0.6 // 需要60%的批准
   }
 };
 ```
 
-### 4. 合作伙伴提案 (Partnership Proposal)
+### 4. Partnership Proposal
+### 4. 合作伙伴提案
 ```javascript
 const partnershipProposalTemplate = {
   id: 'partnership-proposal',
+  name: 'Partnership Proposal',
   name: '合作伙伴提案',
+  description: 'Propose establishing a partnership with an external organization',
   description: '提议与外部组织建立合作关系',
   category: 'partnership',
   icon: '🤝',
@@ -268,6 +342,7 @@ const partnershipProposalTemplate = {
     {
       id: 'partnership_title',
       type: 'text',
+      label: 'Partnership Proposal Title',
       label: '合作提案标题',
       required: true,
       maxLength: 100
@@ -275,57 +350,72 @@ const partnershipProposalTemplate = {
     {
       id: 'partner_info',
       type: 'organization',
+      label: 'Partner Information',
       label: '合作伙伴信息',
       required: true
     },
     {
       id: 'partnership_type',
       type: 'select',
+      label: 'Partnership Type',
       label: '合作类型',
       required: true,
       options: [
+        { value: 'strategic', label: 'Strategic Partnership' },
         { value: 'strategic', label: '战略合作' },
+        { value: 'technical', label: 'Technical Cooperation' },
         { value: 'technical', label: '技术合作' },
+        { value: 'marketing', label: 'Marketing Cooperation' },
         { value: 'marketing', label: '市场合作' },
+        { value: 'investment', label: 'Investment Cooperation' },
         { value: 'investment', label: '投资合作' },
+        { value: 'other', label: 'Other' }
         { value: 'other', label: '其他' }
       ]
     },
     {
       id: 'partnership_goals',
       type: 'richtext',
+      label: 'Partnership Goals',
       label: '合作目标',
       required: true,
+      placeholder: 'Describe the goals to be achieved through cooperation'
       placeholder: '描述通过合作希望达成的目标'
     },
     {
       id: 'mutual_benefits',
       type: 'richtext',
+      label: 'Mutual Benefits',
       label: '互惠利益',
       required: true,
+      placeholder: 'Explain the benefits both parties can gain'
       placeholder: '说明双方能够获得的利益'
     },
     {
       id: 'partnership_terms',
       type: 'richtext',
+      label: 'Partnership Terms',
       label: '合作条款',
       required: true
     },
     {
       id: 'duration',
       type: 'duration',
+      label: 'Partnership Duration',
       label: '合作期限',
       required: true
     },
     {
       id: 'success_metrics',
       type: 'metrics',
+      label: 'Success Metrics',
       label: '成功指标',
       required: true
     },
     {
       id: 'legal_considerations',
       type: 'textarea',
+      label: 'Legal Considerations',
       label: '法律考虑',
       required: false,
       maxLength: 1000
@@ -335,15 +425,20 @@ const partnershipProposalTemplate = {
     minVotingPower: 1500,
     requiredStake: 20,
     votingPeriod: 7 * 24 * 60 * 60, // 7 days
+    votingPeriod: 7 * 24 * 60 * 60, // 7 天
     executionDelay: 1 * 24 * 60 * 60 // 1 day
+    executionDelay: 1 * 24 * 60 * 60 // 1 天
   }
 };
 ```
 
+## Core Component Design
 ## 核心组件设计
 
-### 1. 模板选择器组件 (TemplateSelector)
+### 1. Template Selector Component
+### 1. 模板选择器组件
 
+#### Visual Design
 #### 视觉设计
 ```css
 .template-selector {
@@ -498,14 +593,21 @@ const partnershipProposalTemplate = {
 }
 ```
 
+#### Functional Features
 #### 功能特性
+- Filter templates by category
 - 按类别筛选模板
+- Template preview and details
 - 模板预览和详细信息
+- Usage statistics and difficulty indicators
 - 使用统计和难度指示
+- Custom template creation entry
 - 自定义模板创建入口
 
-### 2. 提案创建向导组件 (ProposalWizard)
+### 2. Proposal Creation Wizard Component
+### 2. 提案创建向导组件
 
+#### Visual Design
 #### 视觉设计
 ```css
 .proposal-wizard {
@@ -672,14 +774,21 @@ const partnershipProposalTemplate = {
 }
 ```
 
+#### Functional Features
 #### 功能特性
+- Step-by-step proposal creation process
 - 分步骤的提案创建流程
+- Real-time form validation and hints
 - 实时表单验证和提示
+- Auto-save draft function
 - 自动保存草稿功能
+- Progress tracking and navigation
 - 进度跟踪和导航
 
-### 3. 字段组件库 (Field Components)
+### 3. Field Component Library
+### 3. 字段组件库
 
+#### Rich Text Editor
 #### 富文本编辑器
 ```css
 .richtext-editor {
@@ -736,6 +845,7 @@ const partnershipProposalTemplate = {
 }
 ```
 
+#### Team Information Component
 #### 团队信息组件
 ```css
 .team-info-field {
@@ -814,6 +924,7 @@ const partnershipProposalTemplate = {
 }
 ```
 
+#### Timeline Component
 #### 时间线组件
 ```css
 .timeline-field {
@@ -827,7 +938,7 @@ const partnershipProposalTemplate = {
 }
 
 .timeline-items::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 20px;
   top: 0;
@@ -843,7 +954,7 @@ const partnershipProposalTemplate = {
 }
 
 .timeline-item::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 12px;
   top: 8px;
@@ -882,8 +993,10 @@ const partnershipProposalTemplate = {
 }
 ```
 
+## Template Validation System
 ## 模板验证系统
 
+### 1. Field Validation Rules
 ### 1. 字段验证规则
 ```javascript
 const validationRules = {
@@ -912,290 +1025,6 @@ const validationRules = {
   },
   
   email: (value) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return !value || emailRegex.test(value);
-  },
-  
-  url: (value) => {
-    try {
-      new URL(value);
-      return true;
-    } catch {
-      return !value;
-    }
-  },
-  
-  ethereum_address: (value) => {
-    const ethRegex = /^0x[a-fA-F0-9]{40}$/;
-    return !value || ethRegex.test(value);
-  }
-};
-```
-
-### 2. 智能建议系统
-```javascript
-const suggestionEngine = {
-  // 基于历史数据的建议
-  getHistoricalSuggestions: (fieldId, userHistory) => {
-    const suggestions = userHistory
-      .filter(proposal => proposal.fields[fieldId])
-      .map(proposal => proposal.fields[fieldId])
-      .slice(0, 5);
-    
-    return suggestions;
-  },
-  
-  // 基于成功提案的建议
-  getSuccessPatterns: (templateId, fieldId) => {
-    const successfulProposals = getSuccessfulProposals(templateId);
-    const patterns = analyzeFieldPatterns(successfulProposals, fieldId);
-    
-    return patterns.map(pattern => ({
-      suggestion: pattern.value,
-      reason: `成功率 ${pattern.successRate}% 的提案使用了类似内容`,
-      confidence: pattern.confidence
-    }));
-  },
-  
-  // 实时内容分析建议
-  getContentSuggestions: (content, fieldType) => {
-    const suggestions = [];
-    
-    if (fieldType === 'richtext') {
-      // 检查内容结构
-      if (!content.includes('##')) {
-        suggestions.push({
-          type: 'structure',
-          message: '建议使用标题来组织内容结构',
-          action: 'add_headings'
-        });
-      }
-      
-      // 检查内容长度
-      if (content.length < 200) {
-        suggestions.push({
-          type: 'length',
-          message: '内容可能过于简短，建议提供更多详细信息',
-          action: 'expand_content'
-        });
-      }
-    }
-    
-    return suggestions;
-  }
-};
-```
-
-## 模板管理系统
-
-### 1. 模板版本控制
-```javascript
-const templateVersioning = {
-  // 创建新版本
-  createVersion: (templateId, changes, author) => {
-    const currentTemplate = getTemplate(templateId);
-    const newVersion = {
-      ...currentTemplate,
-      version: incrementVersion(currentTemplate.version),
-      changes,
-      author,
-      createdAt: new Date().toISOString(),
-      status: 'draft'
-    };
-    
-    return saveTemplateVersion(newVersion);
-  },
-  
-  // 发布版本
-  publishVersion: (templateId, version) => {
-    const template = getTemplateVersion(templateId, version);
-    template.status = 'published';
-    template.publishedAt = new Date().toISOString();
-    
-    // 更新活跃版本
-    updateActiveVersion(templateId, version);
-    
-    return saveTemplateVersion(template);
-  },
-  
-  // 版本比较
-  compareVersions: (templateId, version1, version2) => {
-    const v1 = getTemplateVersion(templateId, version1);
-    const v2 = getTemplateVersion(templateId, version2);
-    
-    return {
-      fieldsAdded: findAddedFields(v1, v2),
-      fieldsRemoved: findRemovedFields(v1, v2),
-      fieldsModified: findModifiedFields(v1, v2),
-      validationChanges: compareValidation(v1, v2)
-    };
-  }
-};
-```
-
-### 2. 自定义模板创建
-```javascript
-const customTemplateBuilder = {
-  // 创建空白模板
-  createBlankTemplate: (name, category, description) => {
-    return {
-      id: generateTemplateId(),
-      name,
-      category,
-      description,
-      icon: '📝',
-      fields: [],
-      validation: getDefaultValidation(),
-      isCustom: true,
-      createdBy: getCurrentUser().id,
-      createdAt: new Date().toISOString(),
-      status: 'draft'
-    };
-  },
-  
-  // 基于现有模板创建
-  createFromTemplate: (baseTemplateId, modifications) => {
-    const baseTemplate = getTemplate(baseTemplateId);
-    const newTemplate = {
-      ...baseTemplate,
-      id: generateTemplateId(),
-      name: `${baseTemplate.name} (自定义)`,
-      isCustom: true,
-      basedOn: baseTemplateId,
-      createdBy: getCurrentUser().id,
-      createdAt: new Date().toISOString(),
-      ...modifications
-    };
-    
-    return newTemplate;
-  },
-  
-  // 添加字段
-  addField: (templateId, field, position) => {
-    const template = getTemplate(templateId);
-    const newFields = [...template.fields];
-    
-    if (position !== undefined) {
-      newFields.splice(position, 0, field);
-    } else {
-      newFields.push(field);
-    }
-    
-    template.fields = newFields;
-    return saveTemplate(template);
-  },
-  
-  // 字段拖拽排序
-  reorderFields: (templateId, fromIndex, toIndex) => {
-    const template = getTemplate(templateId);
-    const newFields = [...template.fields];
-    const [movedField] = newFields.splice(fromIndex, 1);
-    newFields.splice(toIndex, 0, movedField);
-    
-    template.fields = newFields;
-    return saveTemplate(template);
-  }
-};
-```
-
-## 响应式设计
-
-### 桌面端 (≥1024px)
-- 模板卡片3列网格布局
-- 完整的向导步骤显示
-- 侧边栏显示进度和帮助信息
-
-### 平板端 (768px - 1023px)
-- 模板卡片2列网格布局
-- 简化的向导步骤显示
-- 折叠式帮助信息
-
-### 移动端 (<768px)
-- 模板卡片单列布局
-- 底部导航的向导步骤
-- 全屏模式的字段编辑
-
-## 可访问性考虑
-
-### 键盘导航
-- 支持Tab键在模板和字段间导航
-- 支持方向键在模板网格中移动
-- 支持Enter键选择模板和确认操作
-
-### 屏幕阅读器
-- 为所有交互元素提供适当的aria-label
-- 使用语义化的HTML结构
-- 提供表单验证的文字描述
-
-### 视觉辅助
-- 确保足够的颜色对比度
-- 提供清晰的焦点指示器
-- 支持高对比度和大字体模式
-
-## 性能优化
-
-### 模板加载
-- 实现模板的懒加载和缓存
-- 使用虚拟滚动处理大量模板
-- 优化模板预览的渲染性能
-
-### 表单处理
-- 实现表单数据的增量保存
-- 使用防抖优化实时验证
-- 优化富文本编辑器的性能
-
-### 数据管理
-- 使用本地存储缓存草稿
-- 实现离线编辑功能
-- 优化模板数据的传输
-
-## 实现建议
-
-### React组件结构
-```javascript
-// 主要组件层次结构
-ProposalTemplateSystem
-├── TemplateSelector (模板选择器)
-├── ProposalWizard (提案创建向导)
-├── FieldComponents (字段组件库)
-│   ├── RichTextEditor
-│   ├── TeamInfoField
-│   ├── TimelineField
-│   ├── BudgetField
-│   └── MetricsField
-├── TemplateBuilder (自定义模板构建器)
-└── TemplateManager (模板管理)
-```
-
-### 状态管理
-```javascript
-// 模板系统状态
-const templateState = {
-  templates: [],
-  currentTemplate: null,
-  proposalData: {},
-  validationErrors: {},
-  suggestions: {},
-  ui: {
-    currentStep: 0,
-    showPreview: false,
-    isLoading: false
-  }
-};
-```
-
-### API设计
-```javascript
-// 主要API接口
-const templateAPI = {
-  getTemplates: (category) => Promise,
-  getTemplate: (templateId) => Promise,
-  createProposal: (templateId, data) => Promise,
-  saveDraft: (proposalId, data) => Promise,
-  validateField: (fieldId, value, rules) => Promise,
-  getSuggestions: (fieldId, context) => Promise
-};
-```
-
-这个设计规范为治理提案模板系统提供了完整的架构和UI指导，确保能够为DAO成员提供标准化、用户友好的提案创建体验，同时保持系统的灵活性和可扩展性。
+    const emailRegex = /^[^
+(Content truncated due to size limit. Use line ranges to read in chunks)
 

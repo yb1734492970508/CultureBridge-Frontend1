@@ -1,0 +1,383 @@
+/* 多链钱包样式 */
+.multichain-wallet {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+/* 钱包连接部分 */
+.wallet-connect-section {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.wallet-connect-section h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+.wallet-connect-section p {
+  font-size: 16px;
+  color: #6b7280;
+  margin-bottom: 32px;
+  line-height: 1.5;
+}
+
+.connect-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 160px;
+}
+
+.connect-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.connect-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 已连接钱包部分 */
+.wallet-connected-section {
+  padding: 20px;
+}
+
+.wallet-info {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.account-info,
+.network-info,
+.balance-info {
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.account-info h4,
+.network-info h4,
+.balance-info h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.address {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 16px;
+  color: #1f2937;
+  font-weight: 500;
+  margin-right: 12px;
+}
+
+.copy-button {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.copy-button:hover {
+  background: #e5e7eb;
+  transform: scale(1.05);
+}
+
+.network-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.network-status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.network-status.supported {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.network-status.unsupported {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.network-switch-button {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.network-switch-button:hover {
+  background: #5a67d8;
+  transform: translateY(-1px);
+}
+
+.network-selector {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.network-option {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: white;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 14px;
+  color: #374151;
+}
+
+.network-option:hover {
+  background: #f3f4f6;
+}
+
+.network-option.active {
+  background: #667eea;
+  color: white;
+}
+
+.balance {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.unsupported-network-warning {
+  background: #fef3cd;
+  color: #92400e;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #fbbf24;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.wallet-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.disconnect-button {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.disconnect-button:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.error-message {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #fca5a5;
+  margin-top: 16px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .multichain-wallet {
+    margin: 16px;
+    padding: 20px;
+  }
+  
+  .wallet-connect-section {
+    padding: 32px 16px;
+  }
+  
+  .wallet-info {
+    gap: 16px;
+  }
+  
+  .account-info,
+  .network-info,
+  .balance-info {
+    padding: 16px;
+  }
+  
+  .network-display {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .network-switch-button {
+    width: 100%;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.wallet-connected-section {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.network-selector {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* 加载状态 */
+.connect-button:disabled {
+  position: relative;
+  overflow: hidden;
+}
+
+.connect-button:disabled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .multichain-wallet {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .wallet-connect-section h3 {
+    color: #f9fafb;
+  }
+  
+  .wallet-connect-section p {
+    color: #d1d5db;
+  }
+  
+  .account-info,
+  .network-info,
+  .balance-info {
+    background: #374151;
+    border-color: #4b5563;
+  }
+  
+  .account-info h4,
+  .network-info h4,
+  .balance-info h4 {
+    color: #d1d5db;
+  }
+  
+  .address,
+  .balance {
+    color: #f9fafb;
+  }
+  
+  .copy-button {
+    background: #4b5563;
+    border-color: #6b7280;
+    color: #f9fafb;
+  }
+  
+  .copy-button:hover {
+    background: #6b7280;
+  }
+  
+  .network-selector {
+    background: #374151;
+    border-color: #4b5563;
+  }
+  
+  .network-option {
+    background: #374151;
+    color: #f9fafb;
+  }
+  
+  .network-option:hover {
+    background: #4b5563;
+  }
+}
+
