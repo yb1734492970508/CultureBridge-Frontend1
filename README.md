@@ -1,291 +1,211 @@
-# CultureBridge - 文化桥梁 🌍
+# CultureBridge Frontend
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
-[![React Version](https://img.shields.io/badge/react-%5E18.0.0-blue)](https://reactjs.org/)
-[![BNB Chain](https://img.shields.io/badge/blockchain-BNB%20Chain-yellow)](https://www.bnbchain.org/)
+## 项目简介 | Project Overview
 
-> 基于区块链的跨文化交流平台，通过智能语音翻译和CBT代币奖励机制，促进全球文化交流与语言学习。
+CultureBridge是一个基于区块链技术的文化交流和语言学习平台，旨在连接全球用户，促进跨文化交流和语言学习。
 
-## ✨ 核心特性
+CultureBridge is a blockchain-based cultural exchange and language learning platform designed to connect global users and promote cross-cultural communication and language learning.
 
-### 🌐 多语言支持
-- **16种语言**：中文、英语、西班牙语、法语、德语、日语、韩语、葡萄牙语、俄语、阿拉伯语等
-- **实时翻译**：智能语音识别与翻译
-- **文化背景**：提供文化背景注释和解释
+## 主要功能 | Key Features
 
-### 💰 CBT代币经济
-- **奖励机制**：参与文化交流获得CBT代币
-- **等级系统**：Bronze、Silver、Gold、Platinum、Diamond
-- **多种奖励**：聊天、翻译、分享、学习等活动奖励
-- **区块链集成**：基于BNB链的智能合约
+### 🌍 多语言实时聊天 | Multi-language Real-time Chat
+- 支持10种主要语言的实时聊天
+- 自动翻译功能
+- 文化背景注释
+- 语音消息支持
 
-### 🎤 智能语音翻译
-- **实时语音识别**：支持16种主要语言
-- **高质量翻译**：AI驱动的翻译引擎
-- **语音合成**：自然流畅的语音输出
-- **离线支持**：部分功能支持离线使用
+### 🎤 智能语音翻译 | Intelligent Voice Translation
+- 高质量语音识别
+- 实时语音翻译
+- 多语言语音合成
+- 音频文件上传支持
 
-### 💬 实时聊天系统
-- **多房间聊天**：综合讨论、语言交换、文化分享等
-- **自动翻译**：消息自动翻译功能
-- **语音消息**：支持语音消息发送
-- **文化注释**：智能文化背景解释
+### 💰 CBT代币奖励系统 | CBT Token Reward System
+- 基于BNB链的CBT代币
+- 参与聊天和翻译获得奖励
+- 用户等级系统
+- 区块链钱包集成
 
-### 🔗 区块链集成
-- **BNB链支持**：基于币安智能链
-- **智能合约**：CBT代币管理和奖励分发
-- **钱包连接**：支持MetaMask等主流钱包
-- **去中心化**：用户数据和资产安全
+### 🔐 Web3钱包集成 | Web3 Wallet Integration
+- MetaMask钱包连接
+- 安全的身份验证
+- 区块链交易支持
+- 去中心化身份管理
 
-## 🚀 快速开始
+## 技术栈 | Technology Stack
 
-### 环境要求
-- Node.js >= 16.0.0
-- npm >= 8.0.0
-- MongoDB >= 4.4
-- MetaMask钱包（可选）
+### 前端 | Frontend
+- **React 18** - 用户界面框架
+- **Lucide React** - 图标库
+- **Web3.js** - 区块链交互
+- **WebSocket** - 实时通信
+- **Responsive Design** - 响应式设计
 
-### 前端安装
+### 区块链 | Blockchain
+- **BNB Smart Chain** - 区块链网络
+- **CBT Token (ERC20)** - 平台代币
+- **MetaMask** - 钱包连接
+- **Smart Contracts** - 智能合约
 
+## 快速开始 | Quick Start
+
+### 环境要求 | Prerequisites
+- Node.js 16+
+- npm 或 yarn
+- MetaMask浏览器扩展
+
+### 安装步骤 | Installation
+
+1. 克隆仓库 | Clone the repository
 ```bash
-# 克隆前端仓库
 git clone https://github.com/yb1734492970508/CultureBridge-Frontend1.git
 cd CultureBridge-Frontend1
-
-# 安装依赖
-npm install
-
-# 启动开发服务器
-npm start
 ```
 
-访问 http://localhost:3000
-
-### 后端安装
-
+2. 安装依赖 | Install dependencies
 ```bash
-# 克隆后端仓库
-git clone https://github.com/yb1734492970508/CultureBridge-Backend.git
-cd CultureBridge-Backend
-
-# 安装依赖
 npm install
+```
 
-# 配置环境变量
-cp .env.example .env
-# 编辑 .env 文件，配置数据库和其他服务
-
-# 启动服务器
+3. 启动开发服务器 | Start development server
+```bash
 npm start
 ```
 
-API服务运行在 http://localhost:5000
-
-## 📁 项目结构
-
-### 前端结构
-```
-CultureBridge-Frontend1/
-├── public/                 # 静态资源
-├── src/
-│   ├── components/         # React组件
-│   │   ├── WalletConnect.jsx    # 钱包连接
-│   │   ├── ChatRoom.jsx         # 聊天室
-│   │   └── VoiceTranslation.jsx # 语音翻译
-│   ├── services/          # 服务层
-│   │   └── web3Service.js      # Web3集成
-│   ├── contracts/         # 智能合约ABI
-│   └── App.jsx           # 主应用组件
-└── package.json
+4. 构建生产版本 | Build for production
+```bash
+npm run build
 ```
 
-### 后端结构
+## 项目结构 | Project Structure
+
 ```
-CultureBridge-Backend/
-├── src/
-│   ├── controllers/       # 控制器
-│   ├── models/           # 数据模型
-│   ├── routes/           # API路由
-│   ├── services/         # 业务服务
-│   │   ├── cbtRewardService.js    # CBT奖励服务
-│   │   ├── blockchainService.js   # 区块链服务
-│   │   └── voiceTranslationService.js # 语音翻译服务
-│   ├── middleware/       # 中间件
-│   └── app.js           # 主应用文件
-└── package.json
+src/
+├── components/                 # React组件
+│   ├── WalletConnect.jsx      # 钱包连接组件
+│   ├── EnhancedChatRoom.jsx   # 增强版聊天室
+│   ├── EnhancedVoiceTranslation.jsx # 语音翻译组件
+│   ├── ChatRoom.jsx           # 基础聊天室
+│   └── VoiceTranslation.jsx   # 基础语音翻译
+├── SimpleApp.jsx              # 主应用组件
+├── EnhancedApp.jsx           # 增强版应用
+├── App.jsx                   # 原始应用组件
+└── index.js                  # 应用入口
 ```
 
-## 🔧 配置说明
+## 功能特性 | Features
 
-### 环境变量配置
+### 🎯 用户等级系统 | User Level System
+- **Bronze** (0-99 CBT) - 青铜等级
+- **Silver** (100-499 CBT) - 白银等级  
+- **Gold** (500-1999 CBT) - 黄金等级
+- **Platinum** (2000-9999 CBT) - 铂金等级
+- **Diamond** (10000+ CBT) - 钻石等级
+
+### 💎 奖励机制 | Reward Mechanism
+- 发送消息：0.1 CBT
+- 语音消息：0.2 CBT
+- 文本翻译：0.5 CBT
+- 语音翻译：1.0 CBT
+- 每日登录：1.0 CBT
+
+### 🌐 支持语言 | Supported Languages
+- 中文 (Chinese) 🇨🇳
+- English 🇺🇸
+- Español 🇪🇸
+- Français 🇫🇷
+- Deutsch 🇩🇪
+- 日本語 🇯🇵
+- 한국어 🇰🇷
+- Português 🇵🇹
+- Русский 🇷🇺
+- العربية 🇸🇦
+
+## 配置说明 | Configuration
+
+### 环境变量 | Environment Variables
+创建 `.env` 文件并配置以下变量：
 
 ```env
-# 数据库配置
-MONGO_URI=mongodb://localhost:27017/culturebridge
-
-# JWT配置
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRE=30d
-
-# 区块链配置
-BLOCKCHAIN_ENABLED=true
-BSC_RPC_URL=https://bsc-dataseed1.binance.org:443
-PRIVATE_KEY=your_private_key
-CBT_TOKEN_ADDRESS=your_contract_address
-
-# Google Cloud配置（语音翻译）
-GOOGLE_CLOUD_PROJECT_ID=your_project_id
-GOOGLE_CLOUD_KEY_FILE=path/to/service-account-key.json
+REACT_APP_API_URL=http://localhost:5000
+REACT_APP_WS_URL=ws://localhost:5000
+REACT_APP_CHAIN_ID=56
+REACT_APP_CBT_CONTRACT_ADDRESS=0x...
 ```
 
-## 🎯 功能详解
+### 网络配置 | Network Configuration
+- **主网**: BNB Smart Chain (Chain ID: 56)
+- **测试网**: BNB Smart Chain Testnet (Chain ID: 97)
 
-### CBT代币奖励系统
+## 开发指南 | Development Guide
 
-| 活动类型 | 奖励金额 | 每日限制 | 描述 |
-|---------|---------|---------|------|
-| 每日登录 | 1.0 CBT | 1次 | 每天首次登录 |
-| 发送消息 | 0.1 CBT | 50次 | 聊天室发送消息 |
-| 语音翻译 | 0.5 CBT | 30次 | 使用语音翻译功能 |
-| 文化分享 | 3.0 CBT | 无限制 | 分享文化内容 |
-| 语言里程碑 | 20.0 CBT | 无限制 | 达成学习目标 |
+### 代码规范 | Code Standards
+- 使用ES6+语法
+- 组件采用函数式组件和Hooks
+- 遵循React最佳实践
+- 使用TypeScript类型注解（推荐）
 
-### 用户等级系统
+### 组件开发 | Component Development
+- 所有组件都应该是响应式的
+- 使用Lucide React图标库
+- 遵循统一的样式规范
+- 实现无障碍访问支持
 
-| 等级 | 所需CBT | 奖励倍数 | 特权 |
-|-----|--------|---------|------|
-| Bronze | 0 | 1.0x | 基础功能 |
-| Silver | 100 | 1.2x | 20%奖励加成 |
-| Gold | 500 | 1.5x | 50%奖励加成 + 专属徽章 |
-| Platinum | 2000 | 2.0x | 100%奖励加成 + 优先客服 |
-| Diamond | 10000 | 3.0x | 200%奖励加成 + 专属活动 |
+## 部署说明 | Deployment
 
-## 🛠️ 技术栈
+### 构建优化 | Build Optimization
+- 代码分割和懒加载
+- 图片压缩和优化
+- Bundle大小优化
+- 缓存策略配置
 
-### 前端技术
-- **React 18** - 用户界面框架
-- **Tailwind CSS** - 样式框架
-- **Web3.js** - 区块链交互
-- **Socket.IO Client** - 实时通信
-- **Lucide React** - 图标库
+### 生产部署 | Production Deployment
+1. 构建生产版本
+2. 配置Web服务器
+3. 设置HTTPS
+4. 配置CDN（可选）
 
-### 后端技术
-- **Node.js** - 运行时环境
-- **Express.js** - Web框架
-- **MongoDB** - 数据库
-- **Socket.IO** - 实时通信
-- **Web3** - 区块链集成
-- **JWT** - 身份认证
+## 贡献指南 | Contributing
 
-### 区块链技术
-- **BNB Chain** - 区块链网络
-- **Solidity** - 智能合约语言
-- **MetaMask** - 钱包集成
-- **CBT Token** - 平台代币
-
-## 📊 API文档
-
-### 认证相关
-```
-POST /api/v1/auth/register    # 用户注册
-POST /api/v1/auth/login       # 用户登录
-GET  /api/v1/auth/me          # 获取当前用户信息
-```
-
-### 代币相关
-```
-GET  /api/v1/tokens/balance        # 获取代币余额
-GET  /api/v1/tokens/rewards/stats  # 获取奖励统计
-POST /api/v1/tokens/transfer       # 转账代币
-GET  /api/v1/tokens/transactions   # 交易历史
-```
-
-### 聊天相关
-```
-GET  /api/v1/chat/rooms        # 获取聊天室列表
-POST /api/v1/chat/messages     # 发送消息
-GET  /api/v1/chat/history      # 获取聊天历史
-```
-
-### 翻译相关
-```
-POST /api/v1/voice/translate   # 语音翻译
-POST /api/v1/voice/synthesize  # 语音合成
-GET  /api/v1/voice/languages   # 支持的语言
-```
-
-## 🔐 安全特性
-
-- **JWT认证** - 安全的用户身份验证
-- **API限流** - 防止API滥用
-- **数据验证** - 输入数据验证和清理
-- **XSS防护** - 跨站脚本攻击防护
-- **CORS配置** - 跨域资源共享控制
-- **加密存储** - 敏感数据加密存储
-
-## 🌟 路线图
-
-### 已完成 ✅
-- [x] 基础架构搭建
-- [x] 用户认证系统
-- [x] CBT代币奖励机制
-- [x] 实时聊天功能
-- [x] 语音翻译功能
-- [x] 区块链集成
-- [x] 响应式设计
-
-### 开发中 🚧
-- [ ] 移动端APP
-- [ ] 高级AI翻译
-- [ ] NFT文化收藏品
-- [ ] 社区治理功能
-- [ ] 多链支持
-
-### 计划中 📋
-- [ ] VR/AR文化体验
-- [ ] AI文化导师
-- [ ] 去中心化存储
-- [ ] 跨链桥接
-- [ ] 机构合作功能
-
-## 🤝 贡献指南
-
-我们欢迎所有形式的贡献！请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解详细信息。
-
-### 贡献方式
 1. Fork 项目
 2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
 3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
+5. 打开 Pull Request
 
-## 📄 许可证
+## 许可证 | License
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
-## 👥 团队
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-- **Bin Yi** - 项目创始人 & 首席开发者
-- **CultureBridge Team** - 开发团队
+## 联系我们 | Contact
 
-## 📞 联系我们
+- 项目链接: [https://github.com/yb1734492970508/CultureBridge-Frontend1](https://github.com/yb1734492970508/CultureBridge-Frontend1)
+- 后端仓库: [https://github.com/yb1734492970508/CultureBridge-Backend](https://github.com/yb1734492970508/CultureBridge-Backend)
 
-- **项目主页**: https://github.com/yb1734492970508/CultureBridge-Frontend1
-- **问题反馈**: https://github.com/yb1734492970508/CultureBridge-Frontend1/issues
-- **邮箱**: developer@culturebridge.com
+## 更新日志 | Changelog
 
-## 🙏 致谢
+### v2.1.0 (2025-06-16)
+- ✨ 新增增强版聊天室功能
+- ✨ 新增智能语音翻译功能
+- ✨ 新增CBT代币奖励系统
+- ✨ 新增用户等级系统
+- ✨ 新增实时通知系统
+- 🎨 改进用户界面设计
+- 🔧 优化性能和响应速度
+- 🐛 修复已知问题
 
-感谢所有为CultureBridge项目做出贡献的开发者和用户！
-
-特别感谢：
-- React团队提供优秀的前端框架
-- Node.js社区的技术支持
-- BNB Chain提供的区块链基础设施
-- 所有测试用户的宝贵反馈
+### v2.0.0 (2025-06-15)
+- 🎉 项目重构，采用现代化架构
+- ✨ 集成BNB链区块链技术
+- ✨ 实现Web3钱包连接
+- ✨ 添加多语言支持
+- 📱 实现响应式设计
 
 ---
 
-**让我们一起构建一个没有语言障碍的世界！** 🌍✨
+**让我们一起构建连接世界的文化桥梁！**
+
+**Let's build a cultural bridge that connects the world together!**
 

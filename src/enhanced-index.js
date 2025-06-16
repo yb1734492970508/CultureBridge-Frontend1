@@ -1,11 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import SimpleApp from './SimpleApp';
+import EnhancedApp from './EnhancedApp';
 import './index.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <SimpleApp />
+    <EnhancedApp />
   </React.StrictMode>
 );
+
