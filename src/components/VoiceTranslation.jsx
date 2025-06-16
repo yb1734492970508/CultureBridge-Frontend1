@@ -1,319 +1,249 @@
-/**
- * 语音翻译组件 - Voice Translation Component
- * 支持语音识别、文本翻译、语音合成等功能
- */
-
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Mic, 
   MicOff, 
   Volume2, 
-  VolumeX,
-  Languages,
-  ArrowRightLeft,
-  Copy,
-  Download,
-  Play,
-  Pause,
+  VolumeX, 
+  Play, 
+  Pause, 
   RotateCcw,
-  Loader2,
-  CheckCircle,
-  AlertCircle
+  Languages,
+  Download,
+  Upload,
+  Zap,
+  Award,
+  Globe,
+  Headphones,
+  FileAudio,
+  Settings,
+  Star,
+  TrendingUp
 } from 'lucide-react';
 
 const VoiceTranslation = ({ onEarnTokens }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [sourceText, setSourceText] = useState('');
-  const [translatedText, setTranslatedText] = useState('');
-  const [sourceLanguage, setSourceLanguage] = useState('zh');
-  const [targetLanguage, setTargetLanguage] = useState('en');
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [isSynthesizing, setIsSynthesizing] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [audioUrl, setAudioUrl] = useState(null);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [activeTab, setActiveTab] = useState('voice');
+  const [sourceLanguage, setSourceLanguage] = useState('zh');
+  const [targetLanguages, setTargetLanguages] = useState(['en']);
+  const [originalText, setOriginalText] = useState('');
+  const [translations, setTranslations] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [audioUrl, setAudioUrl] = useState('');
+  const [translationHistory, setTranslationHistory] = useState([]);
+  const [selectedMode, setSelectedMode] = useState('voice'); // voice, text, file
+  const [textInput, setTextInput] = useState('');
+  const [confidence, setConfidence] = useState(0);
+  const [processingTime, setProcessingTime] = useState(0);
   
+  const recordingIntervalRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const audioRef = useRef(null);
-  const recordingIntervalRef = useRef(null);
 
-  // 支持的语言列表
+  // 支持的语言
   const languages = [
-    { code: 'zh', name: '中文', flag: '🇨🇳', voice: 'zh-CN' },
-    { code: 'en', name: 'English', flag: '🇺🇸', voice: 'en-US' },
-    { code: 'es', name: 'Español', flag: '🇪🇸', voice: 'es-ES' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷', voice: 'fr-FR' },
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪', voice: 'de-DE' },
-    { code: 'ja', name: '日本語', flag: '🇯🇵', voice: 'ja-JP' },
-    { code: 'ko', name: '한국어', flag: '🇰🇷', voice: 'ko-KR' },
-    { code: 'pt', name: 'Português', flag: '🇵🇹', voice: 'pt-PT' },
-    { code: 'ru', name: 'Русский', flag: '🇷🇺', voice: 'ru-RU' },
-    { code: 'ar', name: 'العربية', flag: '🇸🇦', voice: 'ar-SA' }
+    { code: 'zh', name: '中文', flag: '🇨🇳', voice: 'zh-CN-Wavenet-A' },
+    { code: 'en', name: 'English', flag: '🇺🇸', voice: 'en-US-Wavenet-D' },
+    { code: 'es', name: 'Español', flag: '🇪🇸', voice: 'es-ES-Wavenet-B' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷', voice: 'fr-FR-Wavenet-A' },
+    { code: 'de', name: 'Deutsch', flag: '🇩🇪', voice: 'de-DE-Wavenet-A' },
+    { code: 'ja', name: '日本語', flag: '🇯🇵', voice: 'ja-JP-Wavenet-A' },
+    { code: 'ko', name: '한국어', flag: '🇰🇷', voice: 'ko-KR-Wavenet-A' },
+    { code: 'pt', name: 'Português', flag: '🇵🇹', voice: 'pt-BR-Wavenet-A' },
+    { code: 'ru', name: 'Русский', flag: '🇷🇺', voice: 'ru-RU-Wavenet-A' },
+    { code: 'ar', name: 'العربية', flag: '🇸🇦', voice: 'ar-XA-Wavenet-A' }
+  ];
+
+  // 模拟翻译历史
+  const mockHistory = [
+    {
+      id: 1,
+      originalText: '你好，很高兴认识你！',
+      sourceLanguage: 'zh',
+      translations: [
+        { language: 'en', text: 'Hello, nice to meet you!', confidence: 0.95 },
+        { language: 'es', text: '¡Hola, mucho gusto en conocerte!', confidence: 0.92 }
+      ],
+      timestamp: new Date(Date.now() - 3600000),
+      processingTime: 1.2,
+      earned: 0.5
+    },
+    {
+      id: 2,
+      originalText: 'How are you doing today?',
+      sourceLanguage: 'en',
+      translations: [
+        { language: 'zh', text: '你今天过得怎么样？', confidence: 0.98 },
+        { language: 'fr', text: 'Comment allez-vous aujourd\'hui?', confidence: 0.94 }
+      ],
+      timestamp: new Date(Date.now() - 7200000),
+      processingTime: 0.8,
+      earned: 0.5
+    }
   ];
 
   useEffect(() => {
-    return () => {
-      if (recordingIntervalRef.current) {
-        clearInterval(recordingIntervalRef.current);
-      }
-    };
+    setTranslationHistory(mockHistory);
   }, []);
+
+  useEffect(() => {
+    let interval;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      setRecordingTime(0);
+    }
+    return () => clearInterval(interval);
+  }, [isRecording]);
 
   const startRecording = async () => {
     try {
-      setError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          sampleRate: 44100
-        }
-      });
-      
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
-      
-      mediaRecorderRef.current = mediaRecorder;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
       audioChunksRef.current = [];
-      setRecordingTime(0);
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
       };
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await processAudioRecording(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
+      mediaRecorderRef.current.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        processAudio(audioBlob);
       };
 
-      mediaRecorder.start(1000); // 每秒收集一次数据
+      mediaRecorderRef.current.start();
       setIsRecording(true);
-      
-      // 开始计时
-      recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-
     } catch (error) {
       console.error('录音失败:', error);
-      setError('无法访问麦克风，请检查权限设置');
+      alert('无法访问麦克风，请检查权限设置');
     }
   };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
       setIsRecording(false);
-      
-      if (recordingIntervalRef.current) {
-        clearInterval(recordingIntervalRef.current);
-      }
     }
   };
 
-  const processAudioRecording = async (audioBlob) => {
-    try {
-      setIsTranslating(true);
-      
-      // 模拟语音识别API调用
-      const formData = new FormData();
-      formData.append('audio', audioBlob);
-      formData.append('language', sourceLanguage);
-
-      // 这里应该调用实际的语音识别API
-      const response = await fetch('/api/v2/voice/speech-to-text', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setSourceText(result.text);
-        
-        // 自动翻译识别的文本
-        await translateText(result.text);
-        
-        // 奖励用户CBT代币
-        onEarnTokens && onEarnTokens(10, 'voice_recognition');
-        setSuccess('语音识别成功！');
-      } else {
-        throw new Error('语音识别失败');
-      }
-    } catch (error) {
-      console.error('处理录音失败:', error);
-      setError('语音识别失败，请重试');
-      
-      // 如果API不可用，使用模拟数据
-      const mockText = '这是一段模拟的语音识别结果，用于演示功能。';
-      setSourceText(mockText);
-      await translateText(mockText);
-    } finally {
-      setIsTranslating(false);
-    }
-  };
-
-  const translateText = async (text = sourceText) => {
-    if (!text.trim()) {
-      setError('请输入要翻译的文本');
-      return;
-    }
+  const processAudio = async (audioBlob) => {
+    setIsProcessing(true);
+    const startTime = Date.now();
 
     try {
-      setIsTranslating(true);
-      setError(null);
+      // 模拟语音识别和翻译过程
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // 调用翻译API
-      const response = await fetch('/api/v2/voice/translate-text', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          text: text,
-          sourceLanguage: sourceLanguage,
-          targetLanguage: targetLanguage
-        })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setTranslatedText(result.translatedText);
-        
-        // 奖励用户CBT代币
-        onEarnTokens && onEarnTokens(5, 'text_translation');
-        setSuccess('翻译成功！');
-      } else {
-        throw new Error('翻译失败');
-      }
-    } catch (error) {
-      console.error('翻译失败:', error);
-      
-      // 如果API不可用，使用模拟翻译
-      const mockTranslations = {
-        'zh-en': 'This is a simulated translation result for demonstration purposes.',
-        'en-zh': '这是用于演示目的的模拟翻译结果。',
-        'zh-es': 'Este es un resultado de traducción simulado con fines de demostración.',
-        'en-es': 'Este es un resultado de traducción simulado con fines de demostración.'
+      // 模拟识别结果
+      const mockTexts = {
+        zh: '你好，欢迎使用CultureBridge语音翻译功能！',
+        en: 'Hello, welcome to CultureBridge voice translation feature!',
+        es: '¡Hola, bienvenido a la función de traducción de voz de CultureBridge!',
+        fr: 'Bonjour, bienvenue dans la fonction de traduction vocale de CultureBridge!',
+        de: 'Hallo, willkommen bei der Sprachübersetzungsfunktion von CultureBridge!',
+        ja: 'こんにちは、CultureBridgeの音声翻訳機能へようこそ！',
+        ko: '안녕하세요, CultureBridge 음성 번역 기능에 오신 것을 환영합니다!',
+        pt: 'Olá, bem-vindo ao recurso de tradução de voz do CultureBridge!',
+        ru: 'Привет, добро пожаловать в функцию голосового перевода CultureBridge!',
+        ar: 'مرحبا، مرحبا بكم في ميزة الترجمة الصوتية CultureBridge!'
       };
-      
-      const translationKey = `${sourceLanguage}-${targetLanguage}`;
-      setTranslatedText(mockTranslations[translationKey] || '模拟翻译结果');
-      setSuccess('翻译完成（演示模式）');
+
+      const recognizedText = mockTexts[sourceLanguage];
+      setOriginalText(recognizedText);
+
+      // 生成翻译结果
+      const translationResults = targetLanguages.map(lang => ({
+        language: lang,
+        text: mockTexts[lang],
+        confidence: 0.90 + Math.random() * 0.09,
+        audioUrl: null // 在实际应用中这里会是合成的音频URL
+      }));
+
+      setTranslations(translationResults);
+      setConfidence(0.95);
+      setProcessingTime((Date.now() - startTime) / 1000);
+
+      // 奖励用户
+      onEarnTokens && onEarnTokens(0.5, 'VOICE_TRANSLATION');
+
+      // 添加到历史记录
+      const newRecord = {
+        id: Date.now(),
+        originalText: recognizedText,
+        sourceLanguage,
+        translations: translationResults,
+        timestamp: new Date(),
+        processingTime: (Date.now() - startTime) / 1000,
+        earned: 0.5
+      };
+      setTranslationHistory(prev => [newRecord, ...prev]);
+
+    } catch (error) {
+      console.error('处理音频失败:', error);
+      alert('翻译失败，请重试');
     } finally {
-      setIsTranslating(false);
+      setIsProcessing(false);
     }
   };
 
-  const synthesizeSpeech = async (text = translatedText) => {
-    if (!text.trim()) {
-      setError('没有可合成的文本');
-      return;
-    }
+  const processTextTranslation = async () => {
+    if (!textInput.trim()) return;
+
+    setIsProcessing(true);
+    const startTime = Date.now();
 
     try {
-      setIsSynthesizing(true);
-      setError(null);
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const targetLang = languages.find(lang => lang.code === targetLanguage);
-      
-      // 调用语音合成API
-      const response = await fetch('/api/v2/voice/text-to-speech', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          text: text,
-          language: targetLang?.voice || 'en-US',
-          voice: 'neural'
-        })
-      });
+      const mockTexts = {
+        zh: textInput.includes('hello') ? '你好' : '这是翻译结果',
+        en: textInput.includes('你好') ? 'Hello' : 'This is the translation result',
+        es: textInput.includes('你好') ? 'Hola' : 'Este es el resultado de la traducción',
+        fr: textInput.includes('你好') ? 'Bonjour' : 'Voici le résultat de la traduction'
+      };
 
-      if (response.ok) {
-        const audioBlob = await response.blob();
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
-        
-        // 奖励用户CBT代币
-        onEarnTokens && onEarnTokens(8, 'speech_synthesis');
-        setSuccess('语音合成成功！');
-      } else {
-        throw new Error('语音合成失败');
-      }
+      setOriginalText(textInput);
+
+      const translationResults = targetLanguages.map(lang => ({
+        language: lang,
+        text: mockTexts[lang] || `[${lang.toUpperCase()}] ${textInput}`,
+        confidence: 0.90 + Math.random() * 0.09,
+        audioUrl: null
+      }));
+
+      setTranslations(translationResults);
+      setConfidence(0.98);
+      setProcessingTime((Date.now() - startTime) / 1000);
+
+      onEarnTokens && onEarnTokens(0.3, 'TEXT_TRANSLATION');
+
     } catch (error) {
-      console.error('语音合成失败:', error);
-      setError('语音合成失败，请重试');
-      
-      // 如果API不可用，使用浏览器内置的语音合成
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        const targetLang = languages.find(lang => lang.code === targetLanguage);
-        utterance.lang = targetLang?.voice || 'en-US';
-        utterance.rate = 0.8;
-        utterance.pitch = 1;
-        
-        speechSynthesis.speak(utterance);
-        setSuccess('语音播放成功（浏览器模式）');
-      }
+      console.error('文本翻译失败:', error);
     } finally {
-      setIsSynthesizing(false);
+      setIsProcessing(false);
     }
   };
 
-  const playAudio = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
+  const playAudio = (url) => {
+    if (url) {
+      const audio = new Audio(url);
+      audio.play();
+    }
+  };
+
+  const toggleTargetLanguage = (langCode) => {
+    setTargetLanguages(prev => {
+      if (prev.includes(langCode)) {
+        return prev.filter(code => code !== langCode);
       } else {
-        audioRef.current.play();
-        setIsPlaying(true);
+        return [...prev, langCode];
       }
-    }
-  };
-
-  const swapLanguages = () => {
-    setSourceLanguage(targetLanguage);
-    setTargetLanguage(sourceLanguage);
-    setSourceText(translatedText);
-    setTranslatedText(sourceText);
-  };
-
-  const copyToClipboard = async (text) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setSuccess('已复制到剪贴板');
-    } catch (error) {
-      setError('复制失败');
-    }
-  };
-
-  const downloadAudio = () => {
-    if (audioUrl) {
-      const a = document.createElement('a');
-      a.href = audioUrl;
-      a.download = `translation_${Date.now()}.wav`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-  };
-
-  const clearAll = () => {
-    setSourceText('');
-    setTranslatedText('');
-    setAudioUrl(null);
-    setError(null);
-    setSuccess(null);
-    setRecordingTime(0);
+    });
   };
 
   const formatTime = (seconds) => {
@@ -327,288 +257,309 @@ const VoiceTranslation = ({ onEarnTokens }) => {
   };
 
   const getLanguageFlag = (code) => {
-    return languages.find(lang => lang.code === code)?.flag || '🌐';
+    return languages.find(lang => lang.code === code)?.flag || '🌍';
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
-      {/* 状态提示 */}
-      {error && (
-        <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
-          <AlertCircle className="h-4 w-4" />
-          <span className="text-sm">{error}</span>
-        </div>
-      )}
-      
-      {success && (
-        <div className="flex items-center space-x-2 text-green-600 bg-green-50 p-3 rounded-lg">
-          <CheckCircle className="h-4 w-4" />
-          <span className="text-sm">{success}</span>
-        </div>
-      )}
-
-      {/* 标签页 */}
-      <div className="w-full">
-        <div className="grid grid-cols-2 bg-gray-100 rounded-lg p-1">
-          <button
-            onClick={() => setActiveTab('voice')}
-            className={`py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'voice' 
-                ? 'bg-white text-blue-600 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            语音翻译
-          </button>
-          <button
-            onClick={() => setActiveTab('text')}
-            className={`py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'text' 
-                ? 'bg-white text-blue-600 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            文本翻译
-          </button>
-        </div>
-
-        {activeTab === 'voice' && (
-          <div className="mt-4 space-y-4">
-            {/* 语音录制区域 */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Mic className="h-5 w-5" />
-                <h3 className="text-lg font-semibold">语音录制</h3>
-              </div>
-              
-              <div className="flex items-center justify-center">
-                <div className="relative">
-                  <button
-                    className={`w-24 h-24 rounded-full transition-all ${
-                      isRecording 
-                        ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
-                        : 'bg-blue-600 hover:bg-blue-700'
-                    } text-white flex items-center justify-center`}
-                    onMouseDown={startRecording}
-                    onMouseUp={stopRecording}
-                    onMouseLeave={stopRecording}
-                    disabled={isTranslating}
-                  >
-                    {isRecording ? (
-                      <MicOff className="h-8 w-8" />
-                    ) : (
-                      <Mic className="h-8 w-8" />
-                    )}
-                  </button>
-                  
-                  {isRecording && (
-                    <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-red-600 text-white text-xs px-2 py-1 rounded">
-                        {formatTime(recordingTime)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <p className="text-center text-sm text-gray-600 mt-4">
-                {isRecording ? '正在录音...' : '按住按钮开始录音'}
-              </p>
-              
-              {isTranslating && (
-                <div className="flex items-center justify-center space-x-2 mt-4">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">正在识别语音...</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'text' && (
-          <div className="mt-4 space-y-4">
-            {/* 文本输入区域 */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Languages className="h-5 w-5" />
-                <h3 className="text-lg font-semibold">文本翻译</h3>
-              </div>
-              
-              <textarea
-                value={sourceText}
-                onChange={(e) => setSourceText(e.target.value)}
-                placeholder="请输入要翻译的文本..."
-                className="w-full min-h-[100px] p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-        )}
+    <div className="max-w-6xl mx-auto p-6 space-y-6">
+      {/* 头部标题 */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">智能语音翻译</h1>
+        <p className="text-gray-600">支持16种语言的实时语音翻译，让沟通无国界</p>
       </div>
 
-      {/* 语言选择和控制 */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="text-center">
-              <select
-                value={sourceLanguage}
-                onChange={(e) => setSourceLanguage(e.target.value)}
-                className="border rounded px-3 py-2 text-sm"
-              >
-                {languages.map(lang => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.flag} {lang.name}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500 mt-1">源语言</p>
-            </div>
-            
-            <button
-              onClick={swapLanguages}
-              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+      {/* 模式选择 */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex justify-center space-x-4 mb-6">
+          <button
+            onClick={() => setSelectedMode('voice')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium ${
+              selectedMode === 'voice' 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <Mic className="h-5 w-5" />
+            <span>语音翻译</span>
+          </button>
+          <button
+            onClick={() => setSelectedMode('text')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium ${
+              selectedMode === 'text' 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <Languages className="h-5 w-5" />
+            <span>文本翻译</span>
+          </button>
+          <button
+            onClick={() => setSelectedMode('file')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium ${
+              selectedMode === 'file' 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <FileAudio className="h-5 w-5" />
+            <span>文件翻译</span>
+          </button>
+        </div>
+
+        {/* 语言选择 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* 源语言 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">源语言</label>
+            <select
+              value={sourceLanguage}
+              onChange={(e) => setSourceLanguage(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <ArrowRightLeft className="h-4 w-4" />
-            </button>
-            
-            <div className="text-center">
-              <select
-                value={targetLanguage}
-                onChange={(e) => setTargetLanguage(e.target.value)}
-                className="border rounded px-3 py-2 text-sm"
-              >
-                {languages.map(lang => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.flag} {lang.name}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500 mt-1">目标语言</p>
-            </div>
+              {languages.map(lang => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.flag} {lang.name}
+                </option>
+              ))}
+            </select>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => translateText()}
-              disabled={!sourceText.trim() || isTranslating}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center"
-            >
-              {isTranslating ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  翻译中...
-                </>
-              ) : (
-                <>
-                  <Languages className="h-4 w-4 mr-2" />
-                  翻译
-                </>
-              )}
-            </button>
-            
-            <button
-              onClick={clearAll}
-              className="border border-gray-300 hover:border-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm transition-colors flex items-center"
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              清空
-            </button>
+
+          {/* 目标语言 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">目标语言（可多选）</label>
+            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2">
+              {languages.filter(lang => lang.code !== sourceLanguage).map(lang => (
+                <label key={lang.code} className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={targetLanguages.includes(lang.code)}
+                    onChange={() => toggleTargetLanguage(lang.code)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm">{lang.flag} {lang.name}</span>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* 翻译界面 */}
+        {selectedMode === 'voice' && (
+          <div className="text-center">
+            {/* 录音按钮 */}
+            <div className="mb-6">
+              <button
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={isProcessing}
+                className={`w-24 h-24 rounded-full flex items-center justify-center text-white font-medium transition-all ${
+                  isRecording 
+                    ? 'bg-red-500 hover:bg-red-600 animate-pulse' 
+                    : 'bg-blue-600 hover:bg-blue-700'
+                } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isRecording ? <MicOff className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
+              </button>
+            </div>
+
+            {/* 录音状态 */}
+            {isRecording && (
+              <div className="mb-4">
+                <div className="text-lg font-medium text-red-600">
+                  正在录音... {formatTime(recordingTime)}
+                </div>
+                <div className="flex justify-center mt-2">
+                  <div className="flex space-x-1">
+                    {[...Array(5)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-1 bg-red-500 rounded-full animate-pulse"
+                        style={{
+                          height: `${Math.random() * 20 + 10}px`,
+                          animationDelay: `${i * 0.1}s`
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 处理状态 */}
+            {isProcessing && (
+              <div className="mb-4">
+                <div className="text-lg font-medium text-blue-600 mb-2">正在处理...</div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {selectedMode === 'text' && (
+          <div className="space-y-4">
+            <textarea
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder="请输入要翻译的文本..."
+              className="w-full h-32 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            />
+            <div className="text-center">
+              <button
+                onClick={processTextTranslation}
+                disabled={!textInput.trim() || isProcessing}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium"
+              >
+                {isProcessing ? '翻译中...' : '开始翻译'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {selectedMode === 'file' && (
+          <div className="text-center">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
+              <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 mb-4">拖拽音频文件到此处或点击上传</p>
+              <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                选择文件
+              </button>
+              <p className="text-xs text-gray-500 mt-2">支持 MP3, WAV, M4A 格式</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 翻译结果 */}
-      {(sourceText || translatedText) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* 源文本 */}
-          <div className="bg-white rounded-lg shadow-lg">
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between">
+      {(originalText || translations.length > 0) && (
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">翻译结果</h3>
+          
+          {/* 原文 */}
+          {originalText && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-2">
-                  <span className="text-lg">{getLanguageFlag(sourceLanguage)}</span>
-                  <span className="font-medium">{getLanguageName(sourceLanguage)}</span>
-                </div>
-                <button
-                  onClick={() => copyToClipboard(sourceText)}
-                  className="p-1 hover:bg-gray-100 rounded"
-                >
-                  <Copy className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-            <div className="p-4">
-              <p className="text-gray-900">{sourceText}</p>
-            </div>
-          </div>
-
-          {/* 译文 */}
-          <div className="bg-white rounded-lg shadow-lg">
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg">{getLanguageFlag(targetLanguage)}</span>
-                  <span className="font-medium">{getLanguageName(targetLanguage)}</span>
+                  <span className="text-sm font-medium text-gray-700">原文</span>
+                  <span className="text-sm">{getLanguageFlag(sourceLanguage)} {getLanguageName(sourceLanguage)}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => copyToClipboard(translatedText)}
-                    className="p-1 hover:bg-gray-100 rounded"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => synthesizeSpeech()}
-                    disabled={!translatedText || isSynthesizing}
-                    className="p-1 hover:bg-gray-100 rounded disabled:opacity-50"
-                  >
-                    {isSynthesizing ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
+                  {confidence > 0 && (
+                    <span className="text-xs text-green-600">
+                      置信度: {(confidence * 100).toFixed(1)}%
+                    </span>
+                  )}
+                  {audioUrl && (
+                    <button
+                      onClick={() => playAudio(audioUrl)}
+                      className="p-1 text-blue-600 hover:text-blue-700"
+                    >
                       <Volume2 className="h-4 w-4" />
-                    )}
-                  </button>
+                    </button>
+                  )}
                 </div>
               </div>
+              <p className="text-gray-900">{originalText}</p>
             </div>
-            <div className="p-4">
-              <p className="text-gray-900">{translatedText}</p>
+          )}
+
+          {/* 翻译结果 */}
+          {translations.length > 0 && (
+            <div className="space-y-4">
+              {translations.map((translation, index) => (
+                <div key={index} className="p-4 border border-gray-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm font-medium text-gray-700">翻译</span>
+                      <span className="text-sm">
+                        {getLanguageFlag(translation.language)} {getLanguageName(translation.language)}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-green-600">
+                        置信度: {(translation.confidence * 100).toFixed(1)}%
+                      </span>
+                      <button
+                        onClick={() => playAudio(translation.audioUrl)}
+                        className="p-1 text-blue-600 hover:text-blue-700"
+                        disabled={!translation.audioUrl}
+                      >
+                        <Volume2 className="h-4 w-4" />
+                      </button>
+                      <button className="p-1 text-gray-600 hover:text-gray-700">
+                        <Download className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-gray-900">{translation.text}</p>
+                </div>
+              ))}
             </div>
-          </div>
+          )}
+
+          {/* 处理统计 */}
+          {processingTime > 0 && (
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-blue-700">处理时间: {processingTime.toFixed(1)}秒</span>
+                <span className="text-green-700 flex items-center space-x-1">
+                  <Coins className="h-4 w-4" />
+                  <span>获得 0.5 CBT</span>
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* 音频播放器 */}
-      {audioUrl && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={playAudio}
-                className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full transition-colors"
-              >
-                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-              </button>
-              <span className="text-sm text-gray-600">合成语音</span>
-            </div>
-            
-            <button
-              onClick={downloadAudio}
-              className="border border-gray-300 hover:border-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm transition-colors flex items-center"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              下载
-            </button>
+      {/* 翻译历史 */}
+      {translationHistory.length > 0 && (
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">翻译历史</h3>
+          
+          <div className="space-y-4">
+            {translationHistory.slice(0, 5).map((record) => (
+              <div key={record.id} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">
+                      {record.timestamp.toLocaleString()}
+                    </span>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                      +{record.earned} CBT
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {record.processingTime.toFixed(1)}s
+                  </span>
+                </div>
+                
+                <div className="mb-2">
+                  <div className="text-sm text-gray-600 mb-1">
+                    {getLanguageFlag(record.sourceLanguage)} {getLanguageName(record.sourceLanguage)}
+                  </div>
+                  <p className="text-gray-900">{record.originalText}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  {record.translations.map((translation, index) => (
+                    <div key={index} className="text-sm">
+                      <div className="text-gray-600 mb-1">
+                        {getLanguageFlag(translation.language)} {getLanguageName(translation.language)}
+                      </div>
+                      <p className="text-gray-800">{translation.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
           
-          <audio
-            ref={audioRef}
-            src={audioUrl}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onEnded={() => setIsPlaying(false)}
-            className="w-full mt-4"
-            controls
-          />
+          <div className="mt-4 text-center">
+            <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+              查看全部历史记录
+            </button>
+          </div>
         </div>
       )}
     </div>
