@@ -19,11 +19,6 @@ import {
   Paperclip,
   MoreVertical
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const ChatRoom = ({ user, onEarnTokens }) => {
   const [socket, setSocket] = useState(null);
@@ -265,9 +260,11 @@ const ChatRoom = ({ user, onEarnTokens }) => {
         </div>
         
         <div className="flex items-center space-x-2">
-          <Badge variant={isConnected ? "default" : "secondary"}>
+          <span className={`text-xs px-2 py-1 rounded-full ${
+            isConnected ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+          }`}>
             {isConnected ? '已连接' : '连接中...'}
-          </Badge>
+          </span>
           
           {/* 语言选择 */}
           <select
@@ -282,151 +279,154 @@ const ChatRoom = ({ user, onEarnTokens }) => {
             ))}
           </select>
           
-          <Button variant="ghost" size="sm">
+          <button className="p-1 hover:bg-gray-200 rounded">
             <Settings className="h-4 w-4" />
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* 聊天室选择 */}
-      <Tabs value={currentRoom} onValueChange={setCurrentRoom} className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-5 p-1 m-2">
+      <div className="flex-1 flex flex-col">
+        <div className="grid grid-cols-5 p-1 m-2 bg-gray-100 rounded-lg">
           {chatRooms.map(room => (
-            <TabsTrigger key={room.id} value={room.id} className="text-xs">
+            <button
+              key={room.id}
+              onClick={() => setCurrentRoom(room.id)}
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                currentRoom === room.id 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
               {room.name}
-            </TabsTrigger>
+            </button>
           ))}
-        </TabsList>
+        </div>
 
-        {chatRooms.map(room => (
-          <TabsContent key={room.id} value={room.id} className="flex-1 flex flex-col m-0">
-            {/* 消息列表 */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messages
-                .filter(msg => msg.room === room.id || msg.type === 'system')
-                .map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.userId === user?.id ? 'justify-end' : 'justify-start'
-                  }`}
-                >
-                  <div
-                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                      message.type === 'system'
-                        ? 'bg-gray-100 text-gray-600 text-center text-sm'
-                        : message.userId === user?.id
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-900'
-                    }`}
-                  >
-                    {message.type !== 'system' && (
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs opacity-75">
-                          {message.username}
-                        </span>
-                        <span className="text-xs opacity-75">
-                          {formatTime(message.timestamp)}
-                        </span>
-                      </div>
+        {/* 消息列表 */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {messages
+            .filter(msg => msg.room === currentRoom || msg.type === 'system')
+            .map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${
+                message.userId === user?.id ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              <div
+                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                  message.type === 'system'
+                    ? 'bg-gray-100 text-gray-600 text-center text-sm'
+                    : message.userId === user?.id
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-900'
+                }`}
+              >
+                {message.type !== 'system' && (
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs opacity-75">
+                      {message.username}
+                    </span>
+                    <span className="text-xs opacity-75">
+                      {formatTime(message.timestamp)}
+                    </span>
+                  </div>
+                )}
+                
+                {message.type === 'voice' ? (
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => playAudio(message.content)}
+                      className="p-1 hover:bg-gray-200 rounded"
+                    >
+                      <Volume2 className="h-4 w-4" />
+                    </button>
+                    <span className="text-sm">语音消息</span>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-sm">{message.content}</p>
+                    {message.translation && (
+                      <p className="text-xs opacity-75 mt-1 italic">
+                        翻译: {message.translation}
+                      </p>
                     )}
-                    
-                    {message.type === 'voice' ? (
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => playAudio(message.content)}
-                          className="p-1"
-                        >
-                          <Volume2 className="h-4 w-4" />
-                        </Button>
-                        <span className="text-sm">语音消息</span>
-                      </div>
-                    ) : (
-                      <div>
-                        <p className="text-sm">{message.content}</p>
-                        {message.translation && (
-                          <p className="text-xs opacity-75 mt-1 italic">
-                            翻译: {message.translation}
-                          </p>
-                        )}
-                        {autoTranslate && message.userId !== user?.id && !message.translation && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => requestTranslation(message.id, selectedLanguage)}
-                            className="text-xs mt-1 p-0 h-auto"
-                          >
-                            <Globe className="h-3 w-3 mr-1" />
-                            翻译
-                          </Button>
-                        )}
-                      </div>
+                    {autoTranslate && message.userId !== user?.id && !message.translation && (
+                      <button
+                        onClick={() => requestTranslation(message.id, selectedLanguage)}
+                        className="text-xs mt-1 p-0 h-auto flex items-center hover:underline"
+                      >
+                        <Globe className="h-3 w-3 mr-1" />
+                        翻译
+                      </button>
                     )}
                   </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
+                )}
+              </div>
             </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
 
-            {/* 消息输入区域 */}
-            <div className="p-4 border-t bg-gray-50">
-              <div className="flex items-center space-x-2">
-                <div className="flex-1 flex items-center space-x-2 bg-white rounded-lg border p-2">
-                  <Input
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="输入消息..."
-                    className="border-0 focus:ring-0 flex-1"
-                  />
-                  
-                  <Button variant="ghost" size="sm">
-                    <Smile className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button variant="ghost" size="sm">
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                <Button
-                  variant={isRecording ? "destructive" : "outline"}
-                  size="sm"
-                  onMouseDown={startRecording}
-                  onMouseUp={stopRecording}
-                  onMouseLeave={stopRecording}
-                  disabled={!isConnected}
-                >
-                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
-                
-                <Button 
-                  onClick={sendMessage}
-                  disabled={!inputMessage.trim() || !isConnected}
-                  size="sm"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+        {/* 消息输入区域 */}
+        <div className="p-4 border-t bg-gray-50">
+          <div className="flex items-center space-x-2">
+            <div className="flex-1 flex items-center space-x-2 bg-white rounded-lg border p-2">
+              <input
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="输入消息..."
+                className="border-0 outline-none flex-1 px-2 py-1"
+              />
               
-              <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                <span>按住录音按钮发送语音消息</span>
-                <label className="flex items-center space-x-1">
-                  <input
-                    type="checkbox"
-                    checked={autoTranslate}
-                    onChange={(e) => setAutoTranslate(e.target.checked)}
-                    className="w-3 h-3"
-                  />
-                  <span>自动翻译</span>
-                </label>
-              </div>
+              <button className="p-1 hover:bg-gray-100 rounded">
+                <Smile className="h-4 w-4" />
+              </button>
+              
+              <button className="p-1 hover:bg-gray-100 rounded">
+                <Paperclip className="h-4 w-4" />
+              </button>
             </div>
-          </TabsContent>
-        ))}
-      </Tabs>
+            
+            <button
+              className={`p-2 rounded-lg transition-colors ${
+                isRecording 
+                  ? 'bg-red-600 hover:bg-red-700 text-white' 
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              }`}
+              onMouseDown={startRecording}
+              onMouseUp={stopRecording}
+              onMouseLeave={stopRecording}
+              disabled={!isConnected}
+            >
+              {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </button>
+            
+            <button 
+              onClick={sendMessage}
+              disabled={!inputMessage.trim() || !isConnected}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white p-2 rounded-lg transition-colors"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+            <span>按住录音按钮发送语音消息</span>
+            <label className="flex items-center space-x-1">
+              <input
+                type="checkbox"
+                checked={autoTranslate}
+                onChange={(e) => setAutoTranslate(e.target.checked)}
+                className="w-3 h-3"
+              />
+              <span>自动翻译</span>
+            </label>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

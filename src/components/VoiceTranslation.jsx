@@ -20,11 +20,6 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const VoiceTranslation = ({ onEarnTokens }) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -39,6 +34,7 @@ const VoiceTranslation = ({ onEarnTokens }) => {
   const [success, setSuccess] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [activeTab, setActiveTab] = useState('voice');
   
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -351,28 +347,48 @@ const VoiceTranslation = ({ onEarnTokens }) => {
         </div>
       )}
 
-      <Tabs defaultValue="voice" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="voice">语音翻译</TabsTrigger>
-          <TabsTrigger value="text">文本翻译</TabsTrigger>
-        </TabsList>
+      {/* 标签页 */}
+      <div className="w-full">
+        <div className="grid grid-cols-2 bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => setActiveTab('voice')}
+            className={`py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'voice' 
+                ? 'bg-white text-blue-600 shadow-sm' 
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            语音翻译
+          </button>
+          <button
+            onClick={() => setActiveTab('text')}
+            className={`py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'text' 
+                ? 'bg-white text-blue-600 shadow-sm' 
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            文本翻译
+          </button>
+        </div>
 
-        <TabsContent value="voice" className="space-y-4">
-          {/* 语音录制区域 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+        {activeTab === 'voice' && (
+          <div className="mt-4 space-y-4">
+            {/* 语音录制区域 */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="flex items-center space-x-2 mb-4">
                 <Mic className="h-5 w-5" />
-                <span>语音录制</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+                <h3 className="text-lg font-semibold">语音录制</h3>
+              </div>
+              
               <div className="flex items-center justify-center">
                 <div className="relative">
-                  <Button
-                    size="lg"
-                    variant={isRecording ? "destructive" : "default"}
-                    className={`w-24 h-24 rounded-full ${isRecording ? 'animate-pulse' : ''}`}
+                  <button
+                    className={`w-24 h-24 rounded-full transition-all ${
+                      isRecording 
+                        ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
+                        : 'bg-blue-600 hover:bg-blue-700'
+                    } text-white flex items-center justify-center`}
                     onMouseDown={startRecording}
                     onMouseUp={stopRecording}
                     onMouseLeave={stopRecording}
@@ -383,238 +399,217 @@ const VoiceTranslation = ({ onEarnTokens }) => {
                     ) : (
                       <Mic className="h-8 w-8" />
                     )}
-                  </Button>
+                  </button>
                   
                   {isRecording && (
                     <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
-                      <Badge variant="destructive">
+                      <span className="bg-red-600 text-white text-xs px-2 py-1 rounded">
                         {formatTime(recordingTime)}
-                      </Badge>
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
               
-              <p className="text-center text-sm text-gray-600">
+              <p className="text-center text-sm text-gray-600 mt-4">
                 {isRecording ? '正在录音...' : '按住按钮开始录音'}
               </p>
               
               {isTranslating && (
-                <div className="flex items-center justify-center space-x-2">
+                <div className="flex items-center justify-center space-x-2 mt-4">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span className="text-sm">正在识别语音...</span>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </div>
+        )}
 
-        <TabsContent value="text" className="space-y-4">
-          {/* 文本输入区域 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+        {activeTab === 'text' && (
+          <div className="mt-4 space-y-4">
+            {/* 文本输入区域 */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="flex items-center space-x-2 mb-4">
                 <Languages className="h-5 w-5" />
-                <span>文本翻译</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
+                <h3 className="text-lg font-semibold">文本翻译</h3>
+              </div>
+              
+              <textarea
                 value={sourceText}
                 onChange={(e) => setSourceText(e.target.value)}
                 placeholder="请输入要翻译的文本..."
-                className="min-h-[100px]"
+                className="w-full min-h-[100px] p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* 语言选择和控制 */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="text-center">
-                <select
-                  value={sourceLanguage}
-                  onChange={(e) => setSourceLanguage(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm"
-                >
-                  {languages.map(lang => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.flag} {lang.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">源语言</p>
-              </div>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={swapLanguages}
-                className="mx-2"
-              >
-                <ArrowRightLeft className="h-4 w-4" />
-              </Button>
-              
-              <div className="text-center">
-                <select
-                  value={targetLanguage}
-                  onChange={(e) => setTargetLanguage(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm"
-                >
-                  {languages.map(lang => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.flag} {lang.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">目标语言</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Button
-                onClick={() => translateText()}
-                disabled={!sourceText.trim() || isTranslating}
-                size="sm"
-              >
-                {isTranslating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    翻译中...
-                  </>
-                ) : (
-                  <>
-                    <Languages className="h-4 w-4 mr-2" />
-                    翻译
-                  </>
-                )}
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={clearAll}
-                size="sm"
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                清空
-              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
+
+      {/* 语言选择和控制 */}
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="text-center">
+              <select
+                value={sourceLanguage}
+                onChange={(e) => setSourceLanguage(e.target.value)}
+                className="border rounded px-3 py-2 text-sm"
+              >
+                {languages.map(lang => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.flag} {lang.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">源语言</p>
+            </div>
+            
+            <button
+              onClick={swapLanguages}
+              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <ArrowRightLeft className="h-4 w-4" />
+            </button>
+            
+            <div className="text-center">
+              <select
+                value={targetLanguage}
+                onChange={(e) => setTargetLanguage(e.target.value)}
+                className="border rounded px-3 py-2 text-sm"
+              >
+                {languages.map(lang => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.flag} {lang.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">目标语言</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => translateText()}
+              disabled={!sourceText.trim() || isTranslating}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center"
+            >
+              {isTranslating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  翻译中...
+                </>
+              ) : (
+                <>
+                  <Languages className="h-4 w-4 mr-2" />
+                  翻译
+                </>
+              )}
+            </button>
+            
+            <button
+              onClick={clearAll}
+              className="border border-gray-300 hover:border-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm transition-colors flex items-center"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              清空
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* 翻译结果 */}
       {(sourceText || translatedText) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* 源文本 */}
-          <Card>
-            <CardHeader className="pb-3">
+          <div className="bg-white rounded-lg shadow-lg">
+            <div className="p-4 border-b">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">{getLanguageFlag(sourceLanguage)}</span>
                   <span className="font-medium">{getLanguageName(sourceLanguage)}</span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   onClick={() => copyToClipboard(sourceText)}
-                  disabled={!sourceText}
+                  className="p-1 hover:bg-gray-100 rounded"
                 >
                   <Copy className="h-4 w-4" />
-                </Button>
+                </button>
               </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-900 whitespace-pre-wrap">
-                {sourceText || '等待输入...'}
-              </p>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="p-4">
+              <p className="text-gray-900">{sourceText}</p>
+            </div>
+          </div>
 
-          {/* 翻译结果 */}
-          <Card>
-            <CardHeader className="pb-3">
+          {/* 译文 */}
+          <div className="bg-white rounded-lg shadow-lg">
+            <div className="p-4 border-b">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">{getLanguageFlag(targetLanguage)}</span>
                   <span className="font-medium">{getLanguageName(targetLanguage)}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
                     onClick={() => copyToClipboard(translatedText)}
-                    disabled={!translatedText}
+                    className="p-1 hover:bg-gray-100 rounded"
                   >
                     <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  </button>
+                  <button
                     onClick={() => synthesizeSpeech()}
                     disabled={!translatedText || isSynthesizing}
+                    className="p-1 hover:bg-gray-100 rounded disabled:opacity-50"
                   >
                     {isSynthesizing ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Volume2 className="h-4 w-4" />
                     )}
-                  </Button>
+                  </button>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-900 whitespace-pre-wrap">
-                {translatedText || '等待翻译...'}
-              </p>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="p-4">
+              <p className="text-gray-900">{translatedText}</p>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* 音频播放控制 */}
+      {/* 音频播放器 */}
       {audioUrl && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Button
-                  variant="outline"
-                  onClick={playAudio}
-                  className="flex items-center space-x-2"
-                >
-                  {isPlaying ? (
-                    <Pause className="h-4 w-4" />
-                  ) : (
-                    <Play className="h-4 w-4" />
-                  )}
-                  <span>{isPlaying ? '暂停' : '播放'}</span>
-                </Button>
-                
-                <audio
-                  ref={audioRef}
-                  src={audioUrl}
-                  onEnded={() => setIsPlaying(false)}
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                />
-              </div>
-              
-              <Button
-                variant="outline"
-                onClick={downloadAudio}
-                size="sm"
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={playAudio}
+                className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full transition-colors"
               >
-                <Download className="h-4 w-4 mr-2" />
-                下载音频
-              </Button>
+                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+              </button>
+              <span className="text-sm text-gray-600">合成语音</span>
             </div>
-          </CardContent>
-        </Card>
+            
+            <button
+              onClick={downloadAudio}
+              className="border border-gray-300 hover:border-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm transition-colors flex items-center"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              下载
+            </button>
+          </div>
+          
+          <audio
+            ref={audioRef}
+            src={audioUrl}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onEnded={() => setIsPlaying(false)}
+            className="w-full mt-4"
+            controls
+          />
+        </div>
       )}
     </div>
   );
