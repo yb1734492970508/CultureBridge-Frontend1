@@ -13,10 +13,10 @@ import NFTMinter from './components/blockchain/NFTMinter';
 import NFTGallery from './components/blockchain/NFTGallery';
 import NFTDetail from './components/blockchain/NFTDetail';
 import CopyrightProtection from './components/blockchain/CopyrightProtection';
-import CrossChainBridge from './components/cross-chain/CrossChainBridge'; // Corrected path
+import BridgeInterface from './components/cross-chain/BridgeInterface';
 import TokenEconomyDashboard from './components/token/TokenEconomyDashboard';
 import MultiChainAssetManager from './components/asset/MultiChainAssetManager';
-import BlockchainWallet from './components/blockchain/BlockchainWallet'; // Corrected path
+import MultiChainWallet from './components/blockchain/MultiChainWallet';
 import SwapInterface from './components/defi/dex/SwapInterface';
 import FarmList from './components/defi/farming/FarmList';
 import Register from './pages/auth/Register';
@@ -61,7 +61,7 @@ function App() {
               <nav className="App-nav">
                 <ul className="nav-list">
                   <li className="nav-item"><a href="/" className="nav-link">首页</a></li>
-                  <li className="nav-item"><a href="/wallet" className="nav-link">区块链钱包</a></li>
+                  <li className="nav-item"><a href="/wallet" className="nav-link">多链钱包</a></li>
                   <li className="nav-item"><a href="/gallery" className="nav-link">NFT画廊</a></li>
                   <li className="nav-item"><a href="/mint" className="nav-link">创建NFT</a></li>
                   <li className="nav-item"><a href="/copyright" className="nav-link">版权保护</a></li>
@@ -84,12 +84,12 @@ function App() {
               <main className="App-main">
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/wallet" element={<AuthGuard><BlockchainWallet /></AuthGuard>} />
+                  <Route path="/wallet" element={<AuthGuard><MultiChainWallet /></AuthGuard>} />
                   <Route path="/mint" element={<AuthGuard><NFTMinter /></AuthGuard>} />
                   <Route path="/gallery" element={<NFTGallery />} />
                   <Route path="/nft/:tokenId" element={<NFTDetailWrapper />} />
                   <Route path="/copyright" element={<AuthGuard><CopyrightProtection /></AuthGuard>} />
-                  <Route path="/bridge" element={<AuthGuard><CrossChainBridge /></AuthGuard>} />
+                  <Route path="/bridge" element={<AuthGuard><BridgeInterface /></AuthGuard>} />
                   <Route path="/assets" element={<AuthGuard><MultiChainAssetManager /></AuthGuard>} />
                   <Route path="/token-economy" element={<TokenEconomyDashboard />} />
                   <Route path="/cbt-manager" element={<AuthGuard><CBTTokenManager /></AuthGuard>} />

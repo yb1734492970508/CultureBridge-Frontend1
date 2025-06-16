@@ -3,7 +3,7 @@ import { voiceAPI } from '../../services/api';
 import socketService from '../../services/socketService';
 import { useAuth } from '../../contexts/AuthContext';
 import { errorHandler, useAsyncError } from '../../utils/errorHandler';
-import { Mic, VolumeUp, Languages, History, Trash2 } from 'lucide-react';
+import { Mic, Volume2, Languages, History, Trash2 } from "lucide-react";
 import './VoiceTranslator.css';
 
 function VoiceTranslator() {

@@ -4,7 +4,7 @@ import { chatAPI, voiceAPI } from '../../services/api';
 import socketService from '../../services/socketService';
 import { useAuth } from '../../contexts/AuthContext';
 import { errorHandler, useAsyncError } from '../../utils/errorHandler';
-import { Mic, Send, Smile, VolumeUp, Translate, Trash2 } from 'lucide-react';
+import { Mic, Send, Smile, Volume2, Translate, Trash2 } from 'lucide-react';
 import './ChatWindow.css';
 
 function ChatWindow() {

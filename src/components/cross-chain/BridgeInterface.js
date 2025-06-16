@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useBridgeEstimation } from '../../hooks/useBridgeEstimation';
+import useBridgeEstimation from '../../hooks/useBridgeEstimation';
 import './BridgeInterface.css';
 
 /**
