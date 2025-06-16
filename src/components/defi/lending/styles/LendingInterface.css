@@ -1,0 +1,121 @@
+
+.lending-interface {
+  padding: 20px;
+  background-color: var(--card-background);
+  border-radius: 8px;
+  box-shadow: var(--box-shadow);
+  color: var(--text-color);
+  margin-top: 20px;
+}
+
+.lending-interface h2 {
+  color: var(--heading-color);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.operation-selector {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.operation-selector button {
+  background-color: var(--button-background);
+  color: var(--button-text-color);
+  border: none;
+  padding: 10px 20px;
+  margin: 0 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.operation-selector button:hover {
+  background-color: var(--button-hover-background);
+}
+
+.operation-selector button.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.input-section {
+  margin-bottom: 20px;
+}
+
+.summary-section {
+  background-color: var(--background-color-light);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.summary-section p {
+  margin: 5px 0;
+  color: var(--text-color-secondary);
+}
+
+
+
+.token-selector {
+  margin-bottom: 15px;
+}
+
+.token-selector label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-color-secondary);
+}
+
+.token-selector select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  background-color: var(--input-background);
+  color: var(--text-color);
+}
+
+.amount-input {
+  margin-bottom: 15px;
+}
+
+.amount-input label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-color-secondary);
+}
+
+.amount-input input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  background-color: var(--input-background);
+  color: var(--text-color);
+}
+
+.transaction-button {
+  width: 100%;
+  padding: 15px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.transaction-button:hover:not(:disabled) {
+  background-color: var(--primary-color-dark);
+}
+
+.transaction-button:disabled {
+  background-color: var(--button-disabled-background);
+  cursor: not-allowed;
+}
+

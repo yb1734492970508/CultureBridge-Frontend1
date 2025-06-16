@@ -1,0 +1,17 @@
+
+.interest-rate-chart {
+  padding: 20px;
+  background-color: var(--card-background);
+  border-radius: 8px;
+  box-shadow: var(--box-shadow);
+  color: var(--text-color);
+  margin-top: 20px;
+}
+
+.interest-rate-chart h2 {
+  color: var(--heading-color);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+

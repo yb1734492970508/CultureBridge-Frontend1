@@ -1,0 +1,82 @@
+
+.lending-history {
+  padding: 20px;
+  background-color: var(--card-background);
+  border-radius: 8px;
+  box-shadow: var(--box-shadow);
+  color: var(--text-color);
+  margin-top: 20px;
+}
+
+.lending-history h2 {
+  color: var(--heading-color);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: var(--background-color-light);
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+}
+
+.history-type {
+  font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: white;
+}
+
+.history-type.supply {
+  background-color: var(--success-color);
+}
+
+.history-type.borrow {
+  background-color: var(--warning-color);
+}
+
+.history-type.repay {
+  background-color: var(--primary-color);
+}
+
+.history-type.withdraw {
+  background-color: var(--error-color);
+}
+
+.history-asset {
+  flex-grow: 1;
+  margin-left: 15px;
+}
+
+.history-date {
+  font-size: 0.9em;
+  color: var(--text-color-secondary);
+}
+
+.history-status {
+  font-weight: bold;
+}
+
+.history-status.completed {
+  color: var(--success-color);
+}
+
+.history-status.pending {
+  color: var(--warning-color);
+}
+
+.history-status.failed {
+  color: var(--error-color);
+}
+
+

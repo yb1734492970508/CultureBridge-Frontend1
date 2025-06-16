@@ -1,0 +1,39 @@
+
+.collateral-manager {
+  padding: 20px;
+  background-color: var(--card-background);
+  border-radius: 8px;
+  box-shadow: var(--box-shadow);
+  color: var(--text-color);
+  margin-top: 20px;
+}
+
+.collateral-manager h2 {
+  color: var(--heading-color);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.positions-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.position-card {
+  background-color: var(--background-color-light);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.position-card h3 {
+  color: var(--primary-color);
+  margin-bottom: 10px;
+}
+
+.position-card p {
+  margin-bottom: 5px;
+}
+
+

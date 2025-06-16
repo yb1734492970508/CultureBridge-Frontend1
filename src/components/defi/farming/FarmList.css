@@ -1,0 +1,83 @@
+.farm-list {
+  padding: 20px;
+  background-color: var(--card-background);
+  border-radius: 8px;
+  box-shadow: var(--box-shadow);
+  color: var(--text-color);
+}
+
+.farm-list h2 {
+  color: var(--heading-color);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.farms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.farm-card {
+  background-color: var(--background-color-light);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.farm-card h3 {
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+.farm-stats {
+  margin-bottom: 15px;
+}
+
+.farm-stats p {
+  margin: 5px 0;
+  color: var(--text-color-secondary);
+}
+
+.farm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.farm-actions button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.stake-button {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.stake-button:hover {
+  background-color: var(--success-color-dark);
+}
+
+.unstake-button {
+  background-color: var(--warning-color);
+  color: white;
+}
+
+.unstake-button:hover {
+  background-color: var(--warning-color-dark);
+}
+
+.harvest-button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.harvest-button:hover {
+  background-color: var(--primary-color-dark);
+}
+
