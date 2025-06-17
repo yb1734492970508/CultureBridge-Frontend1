@@ -1,135 +1,86 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { chatAPI, voiceAPI } from '../../services/api';
 import socketService from '../../services/socketService';
 import { useAuth } from '../../contexts/AuthContext';
 import { errorHandler, useAsyncError } from '../../utils/errorHandler';
-import { Mic, Send, Smile, VolumeUp, Translate, Trash2 } from 'lucide-react';
+import { Mic, Send, Smile, Volume2, Translate, Trash2, ChevronLeft } from 'lucide-react';
 import './ChatWindow.css';
 
-function ChatWindow() {
+const ChatWindow = () => {
   const { roomId } = useParams();
-  const { user, isAuthenticated } = useAuth();
+  const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [audioChunks, setAudioChunks] = useState([]);
-  const [typingUsers, setTypingUsers] = useState({});
+  const [roomInfo, setRoomInfo] = useState(null);
+  const { user } = useAuth();
+  const throwAsyncError = useAsyncError();
   const messagesEndRef = useRef(null);
-  const { error, loading, executeAsync, clearError } = useAsyncError();
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const fetchChatHistory = useCallback(async () => {
-    await executeAsync(async () => {
-      const response = await chatAPI.getMessages(roomId);
-      setMessages(response.messages);
-      scrollToBottom();
-    });
-  }, [roomId, executeAsync]);
 
   useEffect(() => {
-    if (!isAuthenticated || !roomId) return;
+    // Fetch chat room info
+    const fetchRoomInfo = async () => {
+      try {
+        const res = await chatAPI.getChatRoomInfo(roomId);
+        setRoomInfo(res.data.data);
+      } catch (err) {
+        throwAsyncError(errorHandler(err));
+      }
+    };
 
-    // Join chat room and fetch history
-    socketService.joinRoom(roomId);
-    fetchChatHistory();
+    // Fetch messages
+    const fetchMessages = async () => {
+      try {
+        const res = await chatAPI.getChatMessages(roomId);
+        setMessages(res.data.data);
+      } catch (err) {
+        throwAsyncError(errorHandler(err));
+      }
+    };
 
-    // Set up socket listeners
-    socketService.on('chat:message', handleNewMessage);
-    socketService.on('chat:message_deleted', handleMessageDeleted);
-    socketService.on('chat:message_reaction', handleMessageReaction);
-    socketService.on('chat:typing', handleTyping);
-    socketService.on('chat:stop_typing', handleStopTyping);
-    socketService.on('voice:translation_complete', handleVoiceTranslationComplete);
+    fetchRoomInfo();
+    fetchMessages();
+
+    // Socket.IO listeners
+    socketService.on('message', (newMessage) => {
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    });
+
+    socketService.on('roomUpdate', (updatedRoom) => {
+      if (updatedRoom._id === roomId) {
+        setRoomInfo(updatedRoom);
+      }
+    });
 
     return () => {
-      // Clean up socket listeners and leave room
-      socketService.off('chat:message', handleNewMessage);
-      socketService.off('chat:message_deleted', handleMessageDeleted);
-      socketService.off('chat:message_reaction', handleMessageReaction);
-      socketService.off('chat:typing', handleTyping);
-      socketService.off('chat:stop_typing', handleStopTyping);
-      socketService.off('voice:translation_complete', handleVoiceTranslationComplete);
-      socketService.leaveRoom(roomId);
+      socketService.off('message');
+      socketService.off('roomUpdate');
     };
-  }, [isAuthenticated, roomId, fetchChatHistory]);
+  }, [roomId, throwAsyncError]);
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleNewMessage = (message) => {
-    setMessages((prevMessages) => [...prevMessages, message]);
-  };
+  const handleSendMessage = async () => {
+    if (message.trim() || audioBlob) {
+      try {
+        const formData = new FormData();
+        formData.append('content', message);
+        formData.append('contentType', audioBlob ? 'audio' : 'text');
+        if (audioBlob) {
+          formData.append('file', audioBlob, 'audio.webm');
+        }
+        formData.append('roomId', roomId);
 
-  const handleMessageDeleted = ({ messageId }) => {
-    setMessages((prevMessages) =>
-      prevMessages.filter((msg) => msg._id !== messageId)
-    );
-  };
-
-  const handleMessageReaction = ({ messageId, reaction, userId }) => {
-    setMessages((prevMessages) =>
-      prevMessages.map((msg) =>
-        msg._id === messageId
-          ? { ...msg, reactions: { ...msg.reactions, [reaction]: (msg.reactions[reaction] || 0) + 1 } }
-          : msg
-      )
-    );
-  };
-
-  const handleTyping = ({ userId, username }) => {
-    if (userId !== user._id) {
-      setTypingUsers((prev) => ({ ...prev, [userId]: username }));
-    }
-  };
-
-  const handleStopTyping = ({ userId }) => {
-    setTypingUsers((prev) => {
-      const newTypingUsers = { ...prev };
-      delete newTypingUsers[userId];
-      return newTypingUsers;
-    });
-  };
-
-  const handleVoiceTranslationComplete = (data) => {
-    // Handle the translated message, e.g., add it to chat or display separately
-    console.log('Voice translation complete:', data);
-    // For now, let's just add it as a regular message from the system or sender
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { 
-        _id: data.messageId || Date.now(), 
-        sender: { _id: data.senderId, username: data.senderUsername || 'System' }, 
-        content: `[语音翻译] ${data.translatedText}`, 
-        timestamp: new Date().toISOString(),
-        isTranslated: true,
-        originalAudioUrl: data.audioUrl,
-      },
-    ]);
-  };
-
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-
-    await executeAsync(async () => {
-      socketService.sendMessage(roomId, newMessage);
-      setNewMessage('');
-      socketService.stopTyping(roomId);
-    });
-  };
-
-  const handleInputChange = (e) => {
-    setNewMessage(e.target.value);
-    if (e.target.value.length > 0) {
-      socketService.startTyping(roomId);
-    } else {
-      socketService.stopTyping(roomId);
+        await chatAPI.sendMessage(roomId, formData);
+        setMessage('');
+        setAudioBlob(null);
+      } catch (err) {
+        throwAsyncError(errorHandler(err));
+      }
     }
   };
 
@@ -137,123 +88,141 @@ function ChatWindow() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
-      recorder.ondataavailable = (event) => {
-        setAudioChunks((prev) => [...prev, event.data]);
-      };
-      recorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        setAudioChunks([]);
-        
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'audio.webm');
-        formData.append('sourceLanguage', 'auto'); // Auto-detect
-        formData.append('targetLanguage', 'en'); // Example target language
-        formData.append('roomId', roomId);
+      const audioChunks = [];
 
-        await executeAsync(async () => {
-          const response = await voiceAPI.translateVoice(formData);
-          console.log('Voice translation initiated:', response);
-          // The actual translated text will come via socket 'voice:translation_complete'
-        });
+      recorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
       };
+
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        setIsRecording(false);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
       recorder.start();
-      setIsRecording(true);
       setMediaRecorder(recorder);
+      setIsRecording(true);
     } catch (err) {
-      errorHandler.handleError(new Error('无法访问麦克风: ' + err.message));
+      console.error('Error accessing microphone:', err);
+      throwAsyncError(new Error('无法访问麦克风，请检查权限。'));
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorder) {
+    if (mediaRecorder && isRecording) {
       mediaRecorder.stop();
-      setIsRecording(false);
     }
   };
 
-  const playAudio = (url) => {
-    const audio = new Audio(url);
-    audio.play();
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
   };
 
-  const deleteMessage = async (messageId) => {
-    await executeAsync(async () => {
-      await chatAPI.deleteMessage(roomId, messageId);
-      // Message will be removed via socket 'chat:message_deleted'
-    });
+  const handleTranslateVoice = async (audioUrl, sourceLang, targetLang) => {
+    try {
+      // In a real app, you'd fetch the audio from audioUrl and send it to the backend
+      // For now, we'll simulate translation.
+      console.log(`Translating audio from ${sourceLang} to ${targetLang}: ${audioUrl}`);
+      const res = await voiceAPI.translateVoice({ audioUrl, sourceLanguage: sourceLang, targetLanguage: targetLang });
+      // You might want to update the message object with the translation or display it elsewhere
+      alert(`Translated: ${res.data.data.translatedText}`);
+    } catch (err) {
+      throwAsyncError(errorHandler(err));
+    }
   };
 
-  const reactToMessage = async (messageId, reaction) => {
-    await executeAsync(async () => {
-      await chatAPI.reactToMessage(roomId, messageId, reaction);
-      // Reaction will be updated via socket 'chat:message_reaction'
-    });
+  const handleDeleteMessage = async (messageId) => {
+    try {
+      await chatAPI.deleteMessage(messageId);
+      setMessages(messages.filter(msg => msg._id !== messageId));
+    } catch (err) {
+      throwAsyncError(errorHandler(err));
+    }
   };
-
-  if (loading) return <div className="loading">加载聊天记录...</div>;
-  if (error) return <div className="error-message">错误: {error.message}</div>;
-  if (!isAuthenticated) return <div className="not-authenticated">请登录以查看聊天。</div>;
 
   return (
     <div className="chat-window-container">
+      {/* Chat Header */}
       <div className="chat-header">
-        <h3>聊天室: {roomId}</h3> {/* Replace with actual room name later */}
+        <button onClick={() => window.history.back()} className="back-button">
+          <ChevronLeft size={24} />
+        </button>
+        <div className="room-info">
+          <h2>{roomInfo ? roomInfo.name : '加载中...'}</h2>
+          <p>{roomInfo ? `${roomInfo.members.length} 成员` : ''}</p>
+        </div>
+        <div className="header-actions">
+          <button className="action-button"><Volume2 size={20} /></button>
+          <button className="action-button"><Mic size={20} /></button>
+        </div>
       </div>
+
+      {/* Messages */}
       <div className="messages-list">
         {messages.map((msg) => (
-          <div
-            key={msg._id}
-            className={`message-item ${msg.sender._id === user._id ? 'my-message' : 'other-message'}`}
-          >
-            <div className="message-bubble">
-              <span className="sender-name">{msg.sender.username || '未知用户'}</span>
-              <p>{msg.content}</p>
-              {msg.isTranslated && msg.originalAudioUrl && (
-                <button onClick={() => playAudio(msg.originalAudioUrl)} className="play-audio-btn">
-                  <VolumeUp size={16} /> 播放原文
-                </button>
+          <div key={msg._id} className={`message-bubble ${msg.sender._id === user.id ? 'own' : ''}`}>
+            <div className="message-content">
+              <div className="message-sender">{msg.sender.username}</div>
+              <p className="message-text">{msg.content}</p>
+              {msg.contentType === 'audio' && msg.fileUrl && (
+                <audio controls src={msg.fileUrl} className="message-audio"></audio>
+              )}
+              {msg.translatedText && (
+                <p className="message-translation">{msg.translatedText}</p>
               )}
               <div className="message-meta">
-                <span className="timestamp">{new Date(msg.timestamp).toLocaleTimeString()}</span>
-                <div className="message-actions">
-                  <button onClick={() => reactToMessage(msg._id, '👍')}><Smile size={16} /> 👍 ({msg.reactions?.['👍'] || 0})</button>
-                  <button onClick={() => reactToMessage(msg._id, '❤️')}><Smile size={16} /> ❤️ ({msg.reactions?.['❤️'] || 0})</button>
-                  {msg.sender._id === user._id && (
-                    <button onClick={() => deleteMessage(msg._id)}><Trash2 size={16} /> 删除</button>
-                  )}
-                </div>
+                <span>{new Date(msg.createdAt).toLocaleTimeString()}</span>
+                {msg.sender._id === user.id && (
+                  <button onClick={() => handleDeleteMessage(msg._id)} className="delete-button">
+                    <Trash2 size={16} />
+                  </button>
+                )}
+                {msg.contentType === 'audio' && (
+                  <button onClick={() => handleTranslateVoice(msg.fileUrl, msg.sourceLanguage, user.profile.learningLanguages[0] || 'en-US')} className="translate-button">
+                    <Translate size={16} />
+                  </button>
+                )}
               </div>
             </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
-      <div className="typing-indicator">
-        {Object.values(typingUsers).length > 0 && (
-          <span>{Object.values(typingUsers).join(', ')} 正在输入...</span>
-        )}
-      </div>
-      <form onSubmit={sendMessage} className="message-input-form">
-        <button
-          type="button"
-          onClick={isRecording ? stopRecording : startRecording}
-          className={`mic-button ${isRecording ? 'recording' : ''}`}
-        >
-          <Mic size={24} />
-        </button>
+
+      {/* Input Area */}
+      <div className="chat-input-area">
         <input
           type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
           placeholder="输入消息..."
-          value={newMessage}
-          onChange={handleInputChange}
+          className="message-input"
+          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
         />
-        <button type="submit" className="send-button">
+        <button onClick={toggleRecording} className={`record-button ${isRecording ? 'recording' : ''}`}>
+          <Mic size={24} />
+        </button>
+        <button onClick={handleSendMessage} className="send-button">
           <Send size={24} />
         </button>
-      </form>
+      </div>
+
+      {isRecording && (
+        <div className="recording-indicator">
+          <div className="recording-icon">🎤</div>
+          <p>正在录音...</p>
+          <p>实时翻译中</p>
+        </div>
+      )}
     </div>
   );
-}
+};
 
 export default ChatWindow;
 

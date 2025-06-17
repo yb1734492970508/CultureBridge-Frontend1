@@ -1,114 +1,88 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { chatAPI } from '../../services/api';
-import socketService from '../../services/socketService';
-import { useAuth } from '../../contexts/AuthContext';
-import { errorHandler, useAsyncError } from '../../utils/errorHandler';
-import './ChatRoomList.css';
+import React from 'react';
 
-function ChatRoomList() {
-  const { user, isAuthenticated } = useAuth();
-  const [chatRooms, setChatRooms] = useState([]);
-  const [newRoomName, setNewRoomName] = useState('');
-  const { error, loading, executeAsync, clearError } = useAsyncError();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchChatRooms();
-
-      // Listen for real-time updates
-      socketService.on('chat:room_updated', handleRoomUpdate);
-      socketService.on('chat:user_joined', handleUserJoined);
-      socketService.on('chat:user_left', handleUserLeft);
-
-      return () => {
-        socketService.off('chat:room_updated', handleRoomUpdate);
-        socketService.off('chat:user_joined', handleUserJoined);
-        socketService.off('chat:user_left', handleUserLeft);
-      };
+const ChatRoomList = () => {
+  const chatRooms = [
+    {
+      id: 1,
+      name: '中英文化交流',
+      lastMessage: '大家好！有人想练习中文吗？',
+      time: '2分钟前',
+      participants: 24,
+      language: '🇨🇳🇺🇸'
+    },
+    {
+      id: 2,
+      name: '日语学习小组',
+      lastMessage: 'こんにちは！今日はどうですか？',
+      time: '5分钟前',
+      participants: 18,
+      language: '🇯🇵'
+    },
+    {
+      id: 3,
+      name: '西班牙语角',
+      lastMessage: '¡Hola! ¿Alguien quiere practicar?',
+      time: '10分钟前',
+      participants: 31,
+      language: '🇪🇸'
+    },
+    {
+      id: 4,
+      name: '法语沙龙',
+      lastMessage: 'Bonjour tout le monde!',
+      time: '15分钟前',
+      participants: 12,
+      language: '🇫🇷'
     }
-  }, [isAuthenticated]);
-
-  const fetchChatRooms = async () => {
-    await executeAsync(async () => {
-      const response = await chatAPI.getRooms();
-      setChatRooms(response.rooms);
-    });
-  };
-
-  const handleRoomUpdate = (updatedRoom) => {
-    setChatRooms(prevRooms =>
-      prevRooms.map(room => (room._id === updatedRoom._id ? updatedRoom : room))
-    );
-  };
-
-  const handleUserJoined = ({ roomId, userId, username }) => {
-    setChatRooms(prevRooms =>
-      prevRooms.map(room =>
-        room._id === roomId
-          ? { ...room, participants: [...room.participants, { _id: userId, username }] }
-          : room
-      )
-    );
-  };
-
-  const handleUserLeft = ({ roomId, userId }) => {
-    setChatRooms(prevRooms =>
-      prevRooms.map(room =>
-        room._id === roomId
-          ? { ...room, participants: room.participants.filter(p => p._id !== userId) }
-          : room
-      )
-    );
-  };
-
-  const handleCreateRoom = async (e) => {
-    e.preventDefault();
-    if (!newRoomName.trim()) return;
-
-    await executeAsync(async () => {
-      const response = await chatAPI.createRoom({ name: newRoomName });
-      setChatRooms(prevRooms => [...prevRooms, response.room]);
-      setNewRoomName('');
-    });
-  };
-
-  if (loading) return <div className="loading">加载聊天室...</div>;
-  if (error) return <div className="error-message">错误: {error.message}</div>;
-  if (!isAuthenticated) return <div className="not-authenticated">请登录以查看聊天室。</div>;
+  ];
 
   return (
-    <div className="chat-room-list-container">
-      <h2>聊天室列表</h2>
+    <div className="cultural-feed">
+      <div className="feed-header">
+        <h1 className="feed-title">聊天室</h1>
+        <p className="feed-subtitle">加入全球文化交流对话</p>
+      </div>
 
-      <form onSubmit={handleCreateRoom} className="create-room-form">
-        <input
-          type="text"
-          placeholder="创建新聊天室..."
-          value={newRoomName}
-          onChange={(e) => setNewRoomName(e.target.value)}
-        />
-        <button type="submit">创建</button>
-      </form>
+      {chatRooms.map((room) => (
+        <div key={room.id} className="cultural-post" style={{ cursor: 'pointer' }}>
+          <div className="post-header">
+            <div className="user-avatar" style={{ background: '#10B981' }}>
+              {room.language}
+            </div>
+            <div className="user-info" style={{ flex: 1 }}>
+              <h4>{room.name}</h4>
+              <p>{room.lastMessage}</p>
+            </div>
+            <div style={{ textAlign: 'right', color: 'rgba(255,255,255,0.6)' }}>
+              <div style={{ fontSize: '0.8rem' }}>{room.time}</div>
+              <div style={{ fontSize: '0.8rem' }}>👥 {room.participants}</div>
+            </div>
+          </div>
+        </div>
+      ))}
 
-      <ul className="room-list">
-        {chatRooms.length === 0 ? (
-          <li className="no-rooms">暂无聊天室，快来创建一个吧！</li>
-        ) : (
-          chatRooms.map((room) => (
-            <li key={room._id} className="room-item">
-              <Link to={`/chat/${room._id}`}>
-                <h3>{room.name}</h3>
-                <p>在线人数: {room.participants.length}</p>
-              </Link>
-            </li>
-          ))
-        )}
-      </ul>
+      <button 
+        style={{
+          position: 'fixed',
+          bottom: '100px',
+          right: '20px',
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          background: 'var(--secondary-orange)',
+          border: 'none',
+          color: 'white',
+          fontSize: '1.5rem',
+          cursor: 'pointer',
+          boxShadow: 'var(--shadow-lg)',
+          zIndex: 50
+        }}
+      >
+        ➕
+      </button>
     </div>
   );
-}
+};
 
 export default ChatRoomList;
-
 

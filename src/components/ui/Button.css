@@ -1,0 +1,542 @@
+/* CultureBridge 按钮组件样式 */
+
+/* 基础按钮样式 */
+.cb-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--easing-out);
+  overflow: hidden;
+  user-select: none;
+  outline: none;
+  background: transparent;
+  
+  /* 防止文本选择 */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 按钮内容 */
+.cb-button__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 按钮图标 */
+.cb-button__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cb-button__icon svg {
+  width: 1em;
+  height: 1em;
+}
+
+/* 加载状态 */
+.cb-button__loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.cb-button__spinner {
+  width: 1em;
+  height: 1em;
+  animation: cb-spin 1s linear infinite;
+}
+
+.cb-button__spinner-circle {
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-dasharray: 31.416;
+  stroke-dashoffset: 31.416;
+  animation: cb-spinner-dash 2s ease-in-out infinite;
+}
+
+/* 涟漪效果 */
+.cb-button__ripple {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cb-button__ripple::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width var(--duration-normal) var(--easing-out),
+              height var(--duration-normal) var(--easing-out);
+}
+
+.cb-button:active .cb-button__ripple::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* 尺寸变体 */
+.cb-button--xs {
+  padding: var(--spacing-1) var(--spacing-2);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  min-height: 1.5rem;
+}
+
+.cb-button--sm {
+  padding: var(--spacing-1-5) var(--spacing-3);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  min-height: 2rem;
+}
+
+.cb-button--md {
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  min-height: 2.5rem;
+}
+
+.cb-button--lg {
+  padding: var(--spacing-2-5) var(--spacing-6);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  min-height: 3rem;
+}
+
+.cb-button--xl {
+  padding: var(--spacing-3) var(--spacing-8);
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  min-height: 3.5rem;
+}
+
+/* 颜色变体 */
+.cb-button--primary {
+  background: var(--color-primary-500);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.cb-button--primary:hover:not(:disabled) {
+  background: var(--color-primary-600);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.cb-button--primary:active:not(:disabled) {
+  background: var(--color-primary-700);
+  transform: translateY(0);
+}
+
+.cb-button--primary:focus-visible {
+  box-shadow: var(--shadow-md), 0 0 0 3px var(--color-primary-200);
+}
+
+.cb-button--secondary {
+  background: var(--color-secondary-500);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.cb-button--secondary:hover:not(:disabled) {
+  background: var(--color-secondary-600);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.cb-button--secondary:active:not(:disabled) {
+  background: var(--color-secondary-700);
+  transform: translateY(0);
+}
+
+.cb-button--secondary:focus-visible {
+  box-shadow: var(--shadow-md), 0 0 0 3px var(--color-secondary-200);
+}
+
+.cb-button--success {
+  background: var(--color-success-500);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.cb-button--success:hover:not(:disabled) {
+  background: var(--color-success-600);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.cb-button--success:active:not(:disabled) {
+  background: var(--color-success-700);
+  transform: translateY(0);
+}
+
+.cb-button--success:focus-visible {
+  box-shadow: var(--shadow-md), 0 0 0 3px var(--color-success-200);
+}
+
+.cb-button--warning {
+  background: var(--color-warning-500);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.cb-button--warning:hover:not(:disabled) {
+  background: var(--color-warning-600);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.cb-button--warning:active:not(:disabled) {
+  background: var(--color-warning-700);
+  transform: translateY(0);
+}
+
+.cb-button--warning:focus-visible {
+  box-shadow: var(--shadow-md), 0 0 0 3px var(--color-warning-200);
+}
+
+.cb-button--error {
+  background: var(--color-error-500);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.cb-button--error:hover:not(:disabled) {
+  background: var(--color-error-600);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.cb-button--error:active:not(:disabled) {
+  background: var(--color-error-700);
+  transform: translateY(0);
+}
+
+.cb-button--error:focus-visible {
+  box-shadow: var(--shadow-md), 0 0 0 3px var(--color-error-200);
+}
+
+.cb-button--ghost {
+  background: transparent;
+  color: var(--color-text);
+}
+
+.cb-button--ghost:hover:not(:disabled) {
+  background: var(--color-gray-100);
+}
+
+.cb-button--ghost:active:not(:disabled) {
+  background: var(--color-gray-200);
+}
+
+.cb-button--ghost:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-gray-200);
+}
+
+.cb-button--outline {
+  background: transparent;
+  color: var(--color-primary-500);
+  border: 1px solid var(--color-primary-500);
+}
+
+.cb-button--outline:hover:not(:disabled) {
+  background: var(--color-primary-50);
+  border-color: var(--color-primary-600);
+  color: var(--color-primary-600);
+}
+
+.cb-button--outline:active:not(:disabled) {
+  background: var(--color-primary-100);
+}
+
+.cb-button--outline:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-primary-200);
+}
+
+.cb-button--link {
+  background: transparent;
+  color: var(--color-primary-500);
+  padding: 0;
+  min-height: auto;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cb-button--link:hover:not(:disabled) {
+  color: var(--color-primary-600);
+  text-decoration-thickness: 2px;
+}
+
+.cb-button--link:active:not(:disabled) {
+  color: var(--color-primary-700);
+}
+
+.cb-button--link:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* 状态变体 */
+.cb-button--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.cb-button--loading {
+  cursor: wait;
+  pointer-events: none;
+}
+
+.cb-button--loading .cb-button__content {
+  opacity: 0;
+}
+
+.cb-button--full-width {
+  width: 100%;
+}
+
+/* 图标按钮 */
+.cb-icon-button {
+  aspect-ratio: 1;
+  padding: var(--spacing-2);
+}
+
+.cb-icon-button.cb-button--xs {
+  padding: var(--spacing-1);
+}
+
+.cb-icon-button.cb-button--sm {
+  padding: var(--spacing-1-5);
+}
+
+.cb-icon-button.cb-button--lg {
+  padding: var(--spacing-2-5);
+}
+
+.cb-icon-button.cb-button--xl {
+  padding: var(--spacing-3);
+}
+
+/* 按钮组 */
+.cb-button-group {
+  display: inline-flex;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.cb-button-group--horizontal {
+  flex-direction: row;
+}
+
+.cb-button-group--vertical {
+  flex-direction: column;
+}
+
+.cb-button-group .cb-button-group__item {
+  border-radius: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cb-button-group--horizontal .cb-button-group__item:first-child {
+  border-top-left-radius: var(--radius-lg);
+  border-bottom-left-radius: var(--radius-lg);
+}
+
+.cb-button-group--horizontal .cb-button-group__item:last-child {
+  border-top-right-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  border-right: none;
+}
+
+.cb-button-group--vertical .cb-button-group__item {
+  border-right: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cb-button-group--vertical .cb-button-group__item:first-child {
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+}
+
+.cb-button-group--vertical .cb-button-group__item:last-child {
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  border-bottom: none;
+}
+
+/* 浮动操作按钮 */
+.cb-fab {
+  position: fixed;
+  z-index: var(--z-docked);
+  border-radius: 50%;
+  box-shadow: var(--shadow-lg);
+  aspect-ratio: 1;
+}
+
+.cb-fab--bottom-right {
+  bottom: var(--spacing-6);
+  right: var(--spacing-6);
+}
+
+.cb-fab--bottom-left {
+  bottom: var(--spacing-6);
+  left: var(--spacing-6);
+}
+
+.cb-fab--top-right {
+  top: var(--spacing-6);
+  right: var(--spacing-6);
+}
+
+.cb-fab--top-left {
+  top: var(--spacing-6);
+  left: var(--spacing-6);
+}
+
+.cb-fab:hover:not(:disabled) {
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* 动画 */
+@keyframes cb-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes cb-spinner-dash {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
+/* 暗黑模式适配 */
+.dark .cb-button--ghost {
+  color: var(--color-text-secondary);
+}
+
+.dark .cb-button--ghost:hover:not(:disabled) {
+  background: var(--color-gray-800);
+}
+
+.dark .cb-button--ghost:active:not(:disabled) {
+  background: var(--color-gray-700);
+}
+
+.dark .cb-button--ghost:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-gray-700);
+}
+
+.dark .cb-button--outline {
+  border-color: var(--color-primary-400);
+  color: var(--color-primary-400);
+}
+
+.dark .cb-button--outline:hover:not(:disabled) {
+  background: var(--color-primary-950);
+  border-color: var(--color-primary-300);
+  color: var(--color-primary-300);
+}
+
+.dark .cb-button--outline:active:not(:disabled) {
+  background: var(--color-primary-900);
+}
+
+.dark .cb-button--outline:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-primary-800);
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .cb-fab {
+    bottom: var(--spacing-4);
+    right: var(--spacing-4);
+  }
+  
+  .cb-fab--bottom-left {
+    left: var(--spacing-4);
+  }
+  
+  .cb-fab--top-right {
+    top: var(--spacing-4);
+  }
+  
+  .cb-fab--top-left {
+    top: var(--spacing-4);
+    left: var(--spacing-4);
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .cb-button {
+    border: 2px solid currentColor;
+  }
+  
+  .cb-button--ghost,
+  .cb-button--outline {
+    border-width: 2px;
+  }
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+  .cb-button,
+  .cb-button__ripple::before,
+  .cb-fab {
+    transition: none;
+  }
+  
+  .cb-button__spinner {
+    animation: none;
+  }
+  
+  .cb-button__spinner-circle {
+    animation: none;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+}
+
