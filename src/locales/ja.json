@@ -1,0 +1,241 @@
+{
+  "common": {
+    "buttons": {
+      "save": "保存",
+      "cancel": "キャンセル",
+      "confirm": "確認",
+      "delete": "削除",
+      "edit": "編集",
+      "create": "作成",
+      "submit": "送信",
+      "back": "戻る",
+      "next": "次へ",
+      "previous": "前へ",
+      "close": "閉じる",
+      "search": "検索",
+      "filter": "フィルター",
+      "sort": "並び替え",
+      "refresh": "更新",
+      "load_more": "もっと読み込む",
+      "view_all": "すべて表示",
+      "show_more": "もっと見る",
+      "show_less": "折りたたむ"
+    },
+    "status": {
+      "loading": "読み込み中...",
+      "error": "エラー",
+      "success": "成功",
+      "failed": "失敗",
+      "pending": "保留中",
+      "completed": "完了",
+      "cancelled": "キャンセル済み",
+      "online": "オンライン",
+      "offline": "オフライン",
+      "active": "アクティブ",
+      "inactive": "非アクティブ"
+    },
+    "time": {
+      "now": "たった今",
+      "minutes_ago": "{{count}}分前",
+      "hours_ago": "{{count}}時間前",
+      "days_ago": "{{count}}日前",
+      "weeks_ago": "{{count}}週間前",
+      "months_ago": "{{count}}ヶ月前",
+      "years_ago": "{{count}}年前"
+    },
+    "units": {
+      "eth": "ETH",
+      "usd": "米ドル",
+      "count": "個",
+      "piece": "点",
+      "item": "項目",
+      "user": "ユーザー",
+      "users": "ユーザー"
+    }
+  },
+  "navigation": {
+    "home": "ホーム",
+    "marketplace": "マーケットプレイス",
+    "governance": "ガバナンス",
+    "profile": "プロフィール",
+    "notifications": "通知",
+    "messages": "メッセージ",
+    "settings": "設定",
+    "help": "ヘルプ",
+    "about": "について"
+  },
+  "nft": {
+    "title": "NFT",
+    "collection": "コレクション",
+    "collections": "コレクション",
+    "owner": "所有者",
+    "creator": "作成者",
+    "price": "価格",
+    "rarity": "レア度",
+    "attributes": "属性",
+    "description": "説明",
+    "history": "履歴",
+    "activity": "アクティビティ",
+    "buy_now": "今すぐ購入",
+    "place_bid": "入札",
+    "make_offer": "オファー",
+    "list_for_sale": "販売リスト",
+    "transfer": "転送",
+    "favorite": "お気に入り",
+    "share": "共有",
+    "report": "報告"
+  },
+  "marketplace": {
+    "title": "NFTマーケットプレイス",
+    "trending": "トレンド",
+    "new": "新着",
+    "top_sales": "トップセールス",
+    "categories": "カテゴリー",
+    "filters": "フィルター",
+    "price_range": "価格帯",
+    "sort_by": "並び替え",
+    "grid_view": "グリッド表示",
+    "list_view": "リスト表示",
+    "search_placeholder": "NFT、コレクション、作成者を検索...",
+    "no_results": "結果が見つかりません",
+    "load_more": "もっとNFTを読み込む"
+  },
+  "governance": {
+    "title": "ガバナンス",
+    "proposals": "提案",
+    "voting": "投票",
+    "delegation": "委任",
+    "create_proposal": "提案を作成",
+    "vote_for": "賛成",
+    "vote_against": "反対",
+    "abstain": "棄権",
+    "voting_power": "投票権",
+    "delegate_to": "委任先",
+    "proposal_status": {
+      "active": "アクティブ",
+      "passed": "可決",
+      "rejected": "否決",
+      "pending": "保留中",
+      "executed": "実行済み"
+    }
+  },
+  "social": {
+    "follow": "フォロー",
+    "unfollow": "フォロー解除",
+    "following": "フォロー中",
+    "followers": "フォロワー",
+    "posts": "投稿",
+    "likes": "いいね",
+    "comments": "コメント",
+    "shares": "シェア",
+    "create_post": "投稿を作成",
+    "post_placeholder": "あなたの考えを共有してください...",
+    "comment_placeholder": "コメントを書いてください...",
+    "no_posts": "投稿がありません",
+    "load_more_posts": "もっと投稿を読み込む"
+  },
+  "notifications": {
+    "title": "通知",
+    "all": "すべて",
+    "unread": "未読",
+    "mentions": "メンション",
+    "likes": "いいね",
+    "follows": "フォロー",
+    "governance": "ガバナンス",
+    "mark_as_read": "既読にする",
+    "mark_all_read": "すべて既読にする",
+    "delete": "削除",
+    "settings": "通知設定",
+    "no_notifications": "通知がありません",
+    "types": {
+      "like": "{{user}}があなたの投稿にいいねしました",
+      "comment": "{{user}}があなたの投稿にコメントしました",
+      "follow": "{{user}}があなたをフォローしました",
+      "mention": "{{user}}が投稿であなたをメンションしました",
+      "governance": "新しいガバナンス提案があなたの投票を必要としています"
+    }
+  },
+  "messages": {
+    "title": "メッセージ",
+    "new_message": "新しいメッセージ",
+    "search_conversations": "会話を検索...",
+    "no_conversations": "会話がありません",
+    "start_conversation": "新しい会話を開始",
+    "type_message": "メッセージを入力...",
+    "send": "送信",
+    "online": "オンライン",
+    "offline": "オフライン",
+    "last_seen": "最終ログイン",
+    "group_chat": "グループチャット",
+    "add_participants": "参加者を追加"
+  },
+  "profile": {
+    "title": "プロフィール",
+    "edit_profile": "プロフィール編集",
+    "display_name": "表示名",
+    "bio": "自己紹介",
+    "website": "ウェブサイト",
+    "twitter": "Twitter",
+    "instagram": "Instagram",
+    "joined": "参加日",
+    "achievements": "実績",
+    "collections": "コレクション",
+    "activity": "アクティビティ",
+    "stats": {
+      "nfts_owned": "所有NFT",
+      "nfts_created": "作成NFT",
+      "followers": "フォロワー",
+      "following": "フォロー中"
+    }
+  },
+  "achievements": {
+    "title": "実績",
+    "categories": {
+      "trading": "取引",
+      "collecting": "コレクション",
+      "social": "ソーシャル",
+      "governance": "ガバナンス",
+      "milestone": "マイルストーン",
+      "special": "特別"
+    },
+    "rarity": {
+      "common": "コモン",
+      "rare": "レア",
+      "epic": "エピック",
+      "legendary": "レジェンダリー"
+    },
+    "progress": "進捗",
+    "completed": "完了",
+    "claim_reward": "報酬を受け取る"
+  },
+  "settings": {
+    "title": "設定",
+    "general": "一般",
+    "privacy": "プライバシー",
+    "notifications": "通知",
+    "language": "言語",
+    "theme": "テーマ",
+    "account": "アカウント",
+    "security": "セキュリティ",
+    "preferences": "設定"
+  },
+  "errors": {
+    "network_error": "ネットワーク接続エラー",
+    "server_error": "サーバーエラー",
+    "not_found": "ページが見つかりません",
+    "unauthorized": "認証されていません",
+    "forbidden": "アクセスが禁止されています",
+    "validation_error": "入力検証に失敗しました",
+    "unknown_error": "不明なエラー",
+    "try_again": "もう一度お試しください"
+  },
+  "success": {
+    "saved": "保存されました",
+    "created": "作成されました",
+    "updated": "更新されました",
+    "deleted": "削除されました",
+    "sent": "送信されました",
+    "uploaded": "アップロードされました"
+  }
+}
+
