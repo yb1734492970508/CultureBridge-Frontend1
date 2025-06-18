@@ -1,0 +1,309 @@
+/* ModernDashboard.css */
+
+.modern-dashboard {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.modern-dashboard .ant-layout-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* 渐变卡片样式 */
+.gradient-card {
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  border: none !important;
+  overflow: hidden;
+  position: relative;
+}
+
+.gradient-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  pointer-events: none;
+}
+
+/* 用户状态卡片 */
+.user-status-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+}
+
+.user-status-card .ant-progress-bg {
+  background: linear-gradient(90deg, #ffd700, #ffed4e) !important;
+}
+
+/* 快捷功能卡片 */
+.quick-actions-card {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.action-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.action-card:hover::before {
+  left: 100%;
+}
+
+.action-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 学习进度卡片 */
+.learning-progress-card {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.learning-progress-card .ant-progress-bg {
+  background: linear-gradient(90deg, #108ee9, #87d068) !important;
+  border-radius: 4px !important;
+}
+
+/* 文化动态卡片 */
+.cultural-feed-card {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.post-item {
+  transition: all 0.3s ease !important;
+}
+
+.post-item:hover {
+  transform: translateY(-2px) !important;
+}
+
+.post-item .ant-card {
+  transition: all 0.3s ease !important;
+  border: 1px solid #f0f0f0 !important;
+}
+
+.post-item:hover .ant-card {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+  border-color: #d9d9d9 !important;
+}
+
+/* 成就徽章卡片 */
+.achievements-card {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.achievements-card .ant-card-small {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.achievements-card .ant-card-small::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  transition: all 0.3s ease;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.achievements-card .ant-card-small:hover::before {
+  width: 100px;
+  height: 100px;
+}
+
+/* 统计卡片 */
+.stats-card {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.stats-card .ant-statistic {
+  text-align: center;
+}
+
+.stats-card .ant-statistic-title {
+  font-size: 12px !important;
+  color: #666 !important;
+  margin-bottom: 4px !important;
+}
+
+.stats-card .ant-statistic-content {
+  font-size: 18px !important;
+  font-weight: bold !important;
+}
+
+/* 浮动按钮样式 */
+.ant-float-btn-group .ant-float-btn {
+  box-shadow: 0 4px 16px rgba(24, 144, 255, 0.3) !important;
+}
+
+.ant-float-btn-group .ant-float-btn:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 6px 20px rgba(24, 144, 255, 0.4) !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .modern-dashboard .ant-layout-content {
+    padding: 16px !important;
+  }
+  
+  .action-card {
+    margin-bottom: 12px;
+  }
+  
+  .gradient-card {
+    border-radius: 12px !important;
+  }
+  
+  .user-status-card .ant-row {
+    text-align: center;
+  }
+  
+  .user-status-card .ant-col:first-child {
+    margin-bottom: 16px;
+  }
+}
+
+/* 动画效果 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.floating-element {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(24, 144, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0);
+  }
+}
+
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+/* 滚动条样式 */
+.modern-dashboard ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modern-dashboard ::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.modern-dashboard ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 3px;
+}
+
+.modern-dashboard ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a6fd8, #6a4190);
+}
+
+/* 卡片标题样式 */
+.ant-card-head-title {
+  font-weight: 600 !important;
+  color: #262626 !important;
+}
+
+/* 进度条样式增强 */
+.ant-progress-line {
+  position: relative;
+}
+
+.ant-progress-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+  animation: shimmer 2s infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* 标签样式增强 */
+.ant-tag {
+  border-radius: 12px !important;
+  border: none !important;
+  font-weight: 500 !important;
+  padding: 2px 8px !important;
+}
+
+/* 按钮悬停效果 */
+.ant-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-btn:hover {
+  transform: translateY(-1px) !important;
+}
+
+.ant-btn-primary {
+  background: linear-gradient(135deg, #1890ff, #096dd9) !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3) !important;
+}
+
+.ant-btn-primary:hover {
+  background: linear-gradient(135deg, #40a9ff, #1890ff) !important;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4) !important;
+}
+

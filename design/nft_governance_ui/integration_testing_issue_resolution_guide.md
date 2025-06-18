@@ -1,23 +1,35 @@
+# NFT and Governance System Integration Testing Issue Resolution Guide (CB-DESIGN for CB-FEATURES - Day 18)
 # NFT与治理系统集成测试问题解决指南 (CB-DESIGN for CB-FEATURES - Day 18)
 
+## 1. Overview
 ## 1. 概述
 
+This document provides detailed solutions and implementation guidelines for key issues identified during the integration testing on Day 17. These solutions are based on the CB-DESIGN team's deep understanding of the system architecture, aiming to assist the CB-FEATURES team in quickly resolving issues and ensuring smooth integration testing.
 本文档针对第17天集成测试中发现的关键问题，提供详细的解决方案和实施指南。这些解决方案基于CB-DESIGN团队对系统架构的深入理解，旨在协助CB-FEATURES团队快速解决问题，确保集成测试顺利进行。
 
+## 2. Issue UE-003-P1: Contract Gas Insufficient Error Handling
 ## 2. 问题UE-003-P1：合约Gas不足错误处理
 
+### 2.1 Problem Description
 ### 2.1 问题描述
 
+When a contract call fails due to insufficient Gas, the achievement service layer fails to correctly capture and display user-friendly error messages, instead returning a generic server error.
 当合约调用因Gas不足失败时，成就服务层未能正确捕获并向用户展示友好的错误提示，而是返回了通用服务器错误。
 
+### 2.2 Root Cause Analysis
 ### 2.2 根本原因分析
 
+1. The achievement service layer does not handle contract call errors by specific types.
+2. Error messages are not passed from the contract layer to the frontend layer.
+3. Lack of user-friendly prompts for different error types.
 1. 成就服务层未对合约调用错误进行细分类型处理
 2. 错误信息未从合约层传递到前端层
 3. 缺少针对不同错误类型的用户友好提示
 
+### 2.3 Solution
 ### 2.3 解决方案
 
+#### 2.3.1 Service Layer Error Handling Enhancement
 #### 2.3.1 服务层错误处理增强
 
 ```javascript
@@ -148,6 +160,7 @@ async function unlockAchievement(userId, achievementId) {
 }
 ```
 
+#### 2.3.2 API Response Format Standardization
 #### 2.3.2 API响应格式标准化
 
 ```javascript
@@ -196,6 +209,7 @@ router.post('/achievements/:id/unlock', async (req, res) => {
 });
 ```
 
+#### 2.3.3 Frontend Error Handling and User Prompts
 #### 2.3.3 前端错误处理与用户提示
 
 ```javascript
@@ -257,34 +271,53 @@ async function handleUnlockAchievement(achievementId) {
 }
 ```
 
+### 2.4 Implementation Steps
 ### 2.4 实施步骤
 
+1. The CB-FEATURES team updates the error handling logic of the achievement service layer.
+2. Standardize the API error response format.
+3. The frontend team enhances error handling and user prompts.
+4. Add an automatic retry mechanism (optional).
+5. Conduct integration testing and verification.
 1. CB-FEATURES团队更新成就服务层的错误处理逻辑
 2. 标准化API错误响应格式
 3. 前端团队增强错误处理和用户提示
 4. 添加自动重试机制（可选）
 5. 进行集成测试验证
 
+### 2.5 Test Verification Method
 ### 2.5 测试验证方法
 
+1. Simulate insufficient Gas scenario: This error can be triggered by setting an extremely low Gas limit.
+2. Verify that error messages are correctly passed to the frontend.
+3. Verify that users receive friendly error prompts.
+4. Verify that the automatic retry mechanism works correctly (if implemented).
 1. 模拟Gas不足场景：可以通过设置极低的Gas限制来触发此错误
 2. 验证错误信息是否正确传递到前端
 3. 验证用户是否收到友好的错误提示
 4. 验证自动重试机制是否正常工作（如果实施）
 
+## 3. Issue VM-002-P1: NFT Weight Accumulation Logic
 ## 3. 问题VM-002-P1：NFT权重累加逻辑
 
+### 3.1 Problem Description
 ### 3.1 问题描述
 
+In the NFT weight calculation logic, when holding multiple NFTs of the same type but different IDs (e.g., multiple "Early Contributor" NFTs), the weight is not correctly accumulated.
 NFT权重计算逻辑中，对于持有多个同类型但不同ID的NFT（例如多个"早期贡献者"NFT），权重未能正确叠加。
 
+### 3.2 Root Cause Analysis
 ### 3.2 根本原因分析
 
+1. The `getVotes` function in the contract only considers the NFT type when calculating NFT weight, and does not correctly accumulate the weight of multiple NFTs of the same type.
+2. The service layer does not perform additional verification and processing when calling the contract to get voting weight.
 1. 合约中的`getVotes`函数在计算NFT权重时，只考虑了NFT类型，而没有正确累加同类型多个NFT的权重
 2. 服务层在调用合约获取投票权重时，没有进行额外的验证和处理
 
+### 3.3 Solution
 ### 3.3 解决方案
 
+#### 3.3.1 Smart Contract Fix (CB-BACKEND Responsible)
 #### 3.3.1 智能合约修复（CB-BACKEND负责）
 
 ```solidity
@@ -324,6 +357,7 @@ function getVotes(address account) public view override returns (uint256) {
 }
 ```
 
+#### 3.3.2 Service Layer Adaptation (CB-FEATURES Responsible)
 #### 3.3.2 服务层适配（CB-FEATURES负责）
 
 ```javascript
@@ -418,6 +452,7 @@ function calculateNFTWeight(rarity) {
 }
 ```
 
+#### 3.3.3 Frontend Display Optimization
 #### 3.3.3 前端展示优化
 
 ```jsx
@@ -479,58 +514,84 @@ function getRarityLabel(rarity) {
 }
 ```
 
+### 3.4 Implementation Steps
 ### 3.4 实施步骤
 
+1. The CB-BACKEND team fixes the `getVotes` function in the contract.
+2. The CB-FEATURES team adapts the service layer logic.
+3. The CB-FRONTEND team optimizes the frontend display.
+4. Conduct integration testing and verification.
 1. CB-BACKEND团队修复合约中的`getVotes`函数
 2. CB-FEATURES团队适配服务层逻辑
 3. CB-FRONTEND团队优化前端展示
 4. 进行集成测试验证
 
+### 3.5 Test Verification Method
 ### 3.5 测试验证方法
 
+1. Create test accounts holding multiple NFTs of the same type but different IDs.
+2. Verify that voting weights are correctly accumulated.
+3. Verify that the frontend display correctly shows the weight contribution of each NFT.
+4. Test weight calculation for different rarity combinations.
 1. 创建测试账户，持有多个同类型但不同ID的NFT
 2. 验证投票权重是否正确累加
 3. 验证前端展示是否正确显示每个NFT的权重贡献
 4. 测试不同稀有度组合的权重计算
 
+## 4. Integration Test Progress Tracking
 ## 4. 集成测试进度跟踪
 
+### 4.1 Today's Test Plan
 ### 4.1 今日测试计划
 
-| 测试ID | 测试场景 | 优先级 | 负责人 | 计划时间 | 依赖项 |
+| Test ID | Test Scenario | Priority | Responsible | Planned Time | Dependencies |
 |---|---|---|---|---|---|
-| VM-005 | 投票权委托流程 | 高 | CB-FEATURES | 上午 | 无 |
-| VM-006 | 快照机制测试 | 高 | CB-FEATURES | 上午 | 无 |
-| NG-002 | NFT影响治理权重 | 高 | CB-FEATURES | 下午 | VM-002-P1修复 |
-| NG-003 | 治理活跃度影响NFT属性 | 中 | CB-FEATURES | 下午 | 无 |
-| NG-005 | 治理贡献提升NFT等级 | 中 | CB-FEATURES | 下午 | 无 |
-| DF-002 | 应用层到链上数据流 | 高 | CB-FEATURES | 上午 | 无 |
-| DF-003 | 缓存一致性测试 | 高 | CB-FEATURES | 下午 | 无 |
-| EH-002 | 网络中断处理 | 中 | CB-FEATURES | 下午 | 无 |
-| EH-003 | 事件监听中断处理 | 中 | CB-FEATURES | 下午 | 无 |
-| PT-001 | 高频事件性能探测 | 低 | CB-FEATURES | 待定 | 其他测试完成 |
+| VM-005 | Voting power delegation process | High | CB-FEATURES | Morning | None |
+| VM-006 | Snapshot mechanism test | High | CB-FEATURES | Morning | None |
+| NG-002 | NFT affects governance weight | High | CB-FEATURES | Afternoon | VM-002-P1 fix |
+| NG-003 | Governance activity affects NFT attributes | Medium | CB-FEATURES | Afternoon | None |
+| NG-005 | Governance contribution enhances NFT level | Medium | CB-FEATURES | Afternoon | None |
+| DF-002 | Application layer to on-chain data flow | High | CB-FEATURES | Morning | None |
+| DF-003 | Cache consistency test | High | CB-FEATURES | Afternoon | None |
+| EH-002 | Network interruption handling | Medium | CB-FEATURES | Afternoon | None |
+| EH-003 | Event listening interruption handling | Medium | CB-FEATURES | Afternoon | None |
+| PT-001 | High-frequency event performance detection | Low | CB-FEATURES | To be determined | Other tests completed |
 
+### 4.2 Issue Fix Tracking
 ### 4.2 问题修复跟踪
 
-| 问题ID | 描述 | 负责人 | 计划完成时间 | 状态 | 验证方法 |
+| Issue ID | Description | Responsible | Planned Completion Time | Status | Verification Method |
 |---|---|---|---|---|---|
-| UE-003-P1 | 合约Gas不足错误处理 | CB-FEATURES | Day 18 上午 | 进行中 | 模拟Gas不足场景测试 |
-| VM-002-P1 | NFT权重累加逻辑 | CB-BACKEND, CB-FEATURES | Day 18 上午 | 进行中 | 多NFT持有测试 |
+| UE-003-P1 | Contract Gas insufficient error handling | CB-FEATURES | Day 18 Morning | In progress | Simulate insufficient Gas scenario test |
+| VM-002-P1 | NFT weight accumulation logic | CB-BACKEND, CB-FEATURES | Day 18 Morning | In progress | Multi-NFT holding test |
 
+## 5. Collaboration Suggestions
 ## 5. 协作建议
 
+### 5.1 CB-FEATURES and CB-BACKEND Collaboration
 ### 5.1 CB-FEATURES与CB-BACKEND协作
 
+1. **Real-time Communication**: It is recommended that the CB-FEATURES and CB-BACKEND teams establish real-time communication channels to synchronize the progress of VM-002-P1 issue fixes in a timely manner.
+2. **Joint Testing**: After the contract fix, the two teams should conduct joint testing to ensure the fix is effective.
+3. **Document Sharing**: CB-BACKEND should provide detailed documentation of contract modifications, including changes in function signatures, parameters, and return values.
 1. **实时沟通**：建议CB-FEATURES与CB-BACKEND团队建立实时沟通渠道，及时同步VM-002-P1问题的修复进展
 2. **联合测试**：合约修复后，两个团队应进行联合测试，确保修复有效
 3. **文档共享**：CB-BACKEND应提供合约修改的详细文档，包括函数签名、参数和返回值的变化
 
+### 5.2 CB-FEATURES and CB-FRONTEND Collaboration
 ### 5.2 CB-FEATURES与CB-FRONTEND协作
 
+1. **Error Handling Standard**: Establish a unified error handling standard to ensure that the frontend can correctly parse and display errors returned by the service layer.
+2. **User Experience Coordination**: When resolving issue UE-003-P1, CB-FEATURES and CB-FRONTEND should coordinate the user experience of error prompts.
+3. **Data Format Consistency**: Ensure consistency of NFT weight data format and units between the service layer and the frontend.
 1. **错误处理标准**：建立统一的错误处理标准，确保前端能正确解析和展示服务层返回的错误
 2. **用户体验协调**：在解决UE-003-P1问题时，CB-FEATURES和CB-FRONTEND应协调错误提示的用户体验
 3. **数据格式一致**：确保NFT权重数据的格式和单位在服务层和前端之间保持一致
 
+## 6. Conclusion
 ## 6. 结论
 
+Through the solutions provided in this document, the CB-FEATURES team should be able to effectively resolve key issues found during integration testing. These solutions not only fix current problems but also enhance the system's error handling capabilities and user experience. The CB-DESIGN team will continue to track the progress of issue resolution and provide necessary support and guidance.
 通过本文档提供的解决方案，CB-FEATURES团队应能够有效解决集成测试中发现的关键问题。这些解决方案不仅修复了当前的问题，还增强了系统的错误处理能力和用户体验。CB-DESIGN团队将继续跟进问题解决进展，并提供必要的支持和指导。
+
+
