@@ -16,6 +16,7 @@ import BlockchainWallet from './components/BlockchainWallet';
 import SwapInterface from './components/defi/dex/SwapInterface';
 import FarmList from './components/defi/farming/FarmList';
 import LendingDashboard from './components/defi/lending/LendingDashboard';
+import NFTLendingDashboard from './components/defi/nftfi/NFTLendingDashboard';
 import Register from './pages/auth/Register';
 import Login from './pages/auth/Login';
 import Profile from './pages/auth/Profile';
@@ -53,6 +54,7 @@ function App() {
                     <li><a href="/swap" className="dropdown-link">代币交换</a></li>
                     <li><a href="/farming" className="dropdown-link">流动性挖矿</a></li>
                     <li><a href="/lending" className="dropdown-link">借贷协议</a></li>
+                    <li><a href="/nftfi" className="dropdown-link">NFT金融</a></li>
                   </ul>
                 </li>
               </ul>
@@ -73,6 +75,7 @@ function App() {
                 <Route path="/swap" element={<SwapInterface />} />
                 <Route path="/farming" element={<FarmList />} />
                 <Route path="/lending" element={<LendingDashboard />} />
+                <Route path="/nftfi" element={<NFTLendingDashboard />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/profile" element={<Profile />} />
@@ -183,6 +186,12 @@ function Home() {
           <h3>借贷协议</h3>
           <p>去中心化借贷平台，存款获得收益或抵押借款</p>
           <a href="/lending" className="feature-link">开始借贷</a>
+        </div>
+        
+        <div className="feature-card highlight-card">
+          <h3>NFT金融 (NFTFi)</h3>
+          <p>将NFT作为抵押品获得流动性，解锁NFT的金融价值</p>
+          <a href="/nftfi" className="feature-link">NFT借贷</a>
         </div>
       </div>
     </div>

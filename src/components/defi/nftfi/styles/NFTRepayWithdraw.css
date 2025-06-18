@@ -1,0 +1,393 @@
+.nft-repay-withdraw {
+  padding: 20px;
+}
+
+.nft-repay-withdraw h2 {
+  color: var(--heading-color);
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: 1.8em;
+}
+
+.section-description {
+  text-align: center;
+  color: var(--text-color-secondary);
+  margin-bottom: 30px;
+  font-size: 1.1em;
+}
+
+.repay-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.loans-section,
+.repay-config-section {
+  background-color: var(--card-background);
+  border-radius: 15px;
+  padding: 25px;
+  border: 1px solid var(--border-color);
+}
+
+.loans-section h3,
+.repay-config-section h3 {
+  color: var(--heading-color);
+  margin-bottom: 20px;
+  font-size: 1.3em;
+}
+
+.no-loans {
+  text-align: center;
+  padding: 40px 20px;
+  border: 2px dashed var(--border-color);
+  border-radius: 10px;
+}
+
+.no-loans-icon {
+  font-size: 3em;
+  margin-bottom: 15px;
+  opacity: 0.6;
+}
+
+.no-loans h4 {
+  margin: 0 0 10px 0;
+  color: var(--heading-color);
+}
+
+.no-loans p {
+  color: var(--text-color-secondary);
+  margin-bottom: 20px;
+}
+
+.start-borrow-btn {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.start-borrow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.loans-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.loan-card {
+  position: relative;
+  background-color: var(--background-color-light);
+  border-radius: 12px;
+  padding: 20px;
+  border: 2px solid var(--border-color-light);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.loan-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.loan-card.selected {
+  border-color: var(--primary-color);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+}
+
+.loan-nft {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.loan-nft-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--border-color-light);
+}
+
+.loan-nft-info h4 {
+  margin: 0 0 5px 0;
+  color: var(--heading-color);
+  font-size: 1.1em;
+}
+
+.loan-nft-info p {
+  margin: 0;
+  color: var(--text-color-secondary);
+  font-size: 0.9em;
+}
+
+.loan-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.loan-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+}
+
+.stat-label {
+  color: var(--text-color-secondary);
+  font-size: 0.85em;
+}
+
+.stat-value {
+  font-weight: bold;
+  color: var(--text-color);
+  font-size: 0.9em;
+}
+
+.stat-value.interest {
+  color: var(--warning-color);
+}
+
+.stat-value.total-owed {
+  color: var(--error-color);
+}
+
+.health-factor.healthy {
+  color: var(--success-color);
+}
+
+.health-factor.warning {
+  color: var(--warning-color);
+}
+
+.health-factor.danger {
+  color: var(--error-color);
+}
+
+.selected-indicator {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: var(--primary-color);
+  color: white;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.repay-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.repay-type-selector {
+  display: flex;
+  gap: 10px;
+  background-color: var(--background-color-light);
+  border-radius: 8px;
+  padding: 5px;
+}
+
+.type-btn {
+  flex: 1;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  background: transparent;
+  color: var(--text-color-secondary);
+}
+
+.type-btn.active {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  color: var(--text-color);
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.amount-info {
+  font-size: 0.85em;
+  color: var(--text-color-secondary);
+  text-align: right;
+}
+
+.repay-preview {
+  background-color: var(--background-color-light);
+  border-radius: 10px;
+  padding: 20px;
+  border: 1px solid var(--border-color-light);
+}
+
+.repay-preview h4 {
+  margin: 0 0 15px 0;
+  color: var(--heading-color);
+  font-size: 1.1em;
+}
+
+.preview-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.preview-row:last-child {
+  border-bottom: none;
+}
+
+.preview-row span:first-child {
+  color: var(--text-color-secondary);
+  font-size: 0.9em;
+}
+
+.preview-row span:last-child {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.nft-released {
+  color: var(--success-color);
+}
+
+.nft-locked {
+  color: var(--warning-color);
+}
+
+.full-repay-notice {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  border-radius: 10px;
+  padding: 15px;
+  color: white;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.notice-icon {
+  font-size: 1.5em;
+  flex-shrink: 0;
+}
+
+.notice-content strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.notice-content p {
+  margin: 0;
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+.repay-info {
+  background-color: var(--background-color-light);
+  border-radius: 15px;
+  padding: 25px;
+  border: 1px solid var(--border-color);
+}
+
+.repay-info h3 {
+  color: var(--heading-color);
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1.5em;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.info-item {
+  text-align: center;
+  padding: 20px;
+  background-color: var(--card-background);
+  border-radius: 12px;
+  border: 1px solid var(--border-color-light);
+}
+
+.info-icon {
+  font-size: 2.5em;
+  margin-bottom: 15px;
+}
+
+.info-item h4 {
+  margin: 0 0 10px 0;
+  color: var(--heading-color);
+  font-size: 1.1em;
+}
+
+.info-item p {
+  margin: 0;
+  color: var(--text-color-secondary);
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .repay-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .loan-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .loans-section,
+  .repay-config-section {
+    padding: 20px;
+  }
+  
+  .repay-info {
+    padding: 20px;
+  }
+  
+  .repay-type-selector {
+    flex-direction: column;
+  }
+}
+
