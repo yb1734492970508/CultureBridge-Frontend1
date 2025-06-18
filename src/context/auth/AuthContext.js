@@ -1,303 +1,124 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// 初始状态
-const initialState = {
-  isAuthenticated: false,
-  user: null,
-  loading: true,
-  error: null
-};
+const AuthContext = createContext();
 
-// 创建认证上下文
-const AuthContext = createContext(initialState);
-
-// 认证状态管理器
-const authReducer = (state, action) => {
-  switch (action.type) {
-    case 'LOGIN_START':
-      return {
-        ...state,
-        loading: true,
-        error: null
-      };
-    case 'LOGIN_SUCCESS':
-      return {
-        ...state,
-        isAuthenticated: true,
-        user: action.payload,
-        loading: false,
-        error: null
-      };
-    case 'LOGIN_FAILURE':
-      return {
-        ...state,
-        isAuthenticated: false,
-        user: null,
-        loading: false,
-        error: action.payload
-      };
-    case 'REGISTER_START':
-      return {
-        ...state,
-        loading: true,
-        error: null
-      };
-    case 'REGISTER_SUCCESS':
-      return {
-        ...state,
-        isAuthenticated: true,
-        user: action.payload,
-        loading: false,
-        error: null
-      };
-    case 'REGISTER_FAILURE':
-      return {
-        ...state,
-        loading: false,
-        error: action.payload
-      };
-    case 'LOGOUT':
-      return {
-        ...state,
-        isAuthenticated: false,
-        user: null,
-        loading: false,
-        error: null
-      };
-    case 'UPDATE_USER':
-      return {
-        ...state,
-        user: { ...state.user, ...action.payload },
-        loading: false
-      };
-    case 'CLEAR_ERROR':
-      return {
-        ...state,
-        error: null
-      };
-    default:
-      return state;
-  }
-};
-
-// 认证提供者组件
-export const AuthProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, initialState);
-
-  // 从本地存储加载用户状态
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const token = localStorage.getItem('auth_token');
-        const userData = localStorage.getItem('user_data');
-        
-        if (token && userData) {
-          dispatch({
-            type: 'LOGIN_SUCCESS',
-            payload: JSON.parse(userData)
-          });
-        } else {
-          dispatch({
-            type: 'LOGOUT'
-          });
-        }
-      } catch (error) {
-        console.error('加载用户数据失败:', error);
-        dispatch({
-          type: 'LOGOUT'
-        });
-      }
-    };
-
-    loadUser();
-  }, []);
-
-  // 注册函数
-  const register = async (userData) => {
-    dispatch({ type: 'REGISTER_START' });
-
-    try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // 检查邮箱是否已存在
-      const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
-      const emailExists = existingUsers.some(user => user.email === userData.email);
-      
-      if (emailExists) {
-        throw new Error('该邮箱已被注册');
-      }
-      
-      // 创建新用户
-      const newUser = {
-        id: Date.now().toString(),
-        email: userData.email,
-        name: userData.name,
-        createdAt: new Date().toISOString(),
-        avatar: null,
-        bio: '',
-        walletAddress: null
-      };
-      
-      // 保存用户数据（实际应用中应由后端处理）
-      existingUsers.push({
-        ...newUser,
-        password: userData.password // 注意：实际应用中密码应在后端加密存储
-      });
-      localStorage.setItem('users', JSON.stringify(existingUsers));
-      
-      // 保存认证状态
-      localStorage.setItem('auth_token', 'mock_token_' + newUser.id);
-      localStorage.setItem('user_data', JSON.stringify(newUser));
-      
-      dispatch({
-        type: 'REGISTER_SUCCESS',
-        payload: newUser
-      });
-      
-      return newUser;
-    } catch (error) {
-      dispatch({
-        type: 'REGISTER_FAILURE',
-        payload: error.message
-      });
-      throw error;
-    }
-  };
-
-  // 登录函数
-  const login = async (email, password, remember = false) => {
-    dispatch({ type: 'LOGIN_START' });
-
-    try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // 验证用户凭据
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const user = users.find(u => u.email === email && u.password === password);
-      
-      if (!user) {
-        throw new Error('邮箱或密码不正确');
-      }
-      
-      // 移除密码字段
-      const { password: _, ...userWithoutPassword } = user;
-      
-      // 保存认证状态
-      localStorage.setItem('auth_token', 'mock_token_' + user.id);
-      localStorage.setItem('user_data', JSON.stringify(userWithoutPassword));
-      
-      // 如果选择"记住我"，设置更长的过期时间
-      if (remember) {
-        // 实际应用中，这里应该设置cookie或其他机制
-        localStorage.setItem('remember_me', 'true');
-      }
-      
-      dispatch({
-        type: 'LOGIN_SUCCESS',
-        payload: userWithoutPassword
-      });
-      
-      return userWithoutPassword;
-    } catch (error) {
-      dispatch({
-        type: 'LOGIN_FAILURE',
-        payload: error.message
-      });
-      throw error;
-    }
-  };
-
-  // 登出函数
-  const logout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_data');
-    localStorage.removeItem('remember_me');
-    
-    dispatch({ type: 'LOGOUT' });
-  };
-
-  // 更新用户资料
-  const updateProfile = async (profileData) => {
-    try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (!state.user) {
-        throw new Error('用户未登录');
-      }
-      
-      // 更新本地存储中的用户数据
-      const updatedUser = { ...state.user, ...profileData };
-      localStorage.setItem('user_data', JSON.stringify(updatedUser));
-      
-      // 更新用户列表中的数据
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const updatedUsers = users.map(user => 
-        user.id === state.user.id ? { ...user, ...profileData } : user
-      );
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-      
-      dispatch({
-        type: 'UPDATE_USER',
-        payload: profileData
-      });
-      
-      return updatedUser;
-    } catch (error) {
-      console.error('更新用户资料失败:', error);
-      throw error;
-    }
-  };
-
-  // 绑定钱包地址
-  const linkWallet = async (walletAddress) => {
-    try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (!state.user) {
-        throw new Error('用户未登录');
-      }
-      
-      // 更新钱包地址
-      return await updateProfile({ walletAddress });
-    } catch (error) {
-      console.error('绑定钱包失败:', error);
-      throw error;
-    }
-  };
-
-  // 清除错误
-  const clearError = () => {
-    dispatch({ type: 'CLEAR_ERROR' });
-  };
-
-  return (
-    <AuthContext.Provider
-      value={{
-        ...state,
-        register,
-        login,
-        logout,
-        updateProfile,
-        linkWallet,
-        clearError
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-// 自定义钩子，方便使用认证上下文
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
-export default AuthContext;
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    // 检查本地存储中的用户信息
+    const savedUser = localStorage.getItem('culturebridge_user');
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('解析用户数据失败:', error);
+        localStorage.removeItem('culturebridge_user');
+      }
+    }
+    setIsLoading(false);
+  }, []);
+
+  const login = async (credentials) => {
+    try {
+      setIsLoading(true);
+      // 这里应该调用实际的登录API
+      // const response = await api.login(credentials);
+      
+      // 模拟登录成功
+      const userData = {
+        id: 'user_' + Date.now(),
+        username: credentials.username,
+        email: credentials.email || `${credentials.username}@example.com`,
+        avatar: '/api/placeholder/40/40',
+        level: 1,
+        points: 0,
+        joinDate: new Date().toISOString()
+      };
+
+      setUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem('culturebridge_user', JSON.stringify(userData));
+      
+      return { success: true, user: userData };
+    } catch (error) {
+      console.error('登录失败:', error);
+      return { success: false, error: error.message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      setIsLoading(true);
+      // 这里应该调用实际的注册API
+      // const response = await api.register(userData);
+      
+      // 模拟注册成功
+      const newUser = {
+        id: 'user_' + Date.now(),
+        username: userData.username,
+        email: userData.email,
+        avatar: '/api/placeholder/40/40',
+        level: 1,
+        points: 100, // 新用户奖励
+        joinDate: new Date().toISOString()
+      };
+
+      setUser(newUser);
+      setIsAuthenticated(true);
+      localStorage.setItem('culturebridge_user', JSON.stringify(newUser));
+      
+      return { success: true, user: newUser };
+    } catch (error) {
+      console.error('注册失败:', error);
+      return { success: false, error: error.message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('culturebridge_user');
+  };
+
+  const updateUser = (updates) => {
+    if (user) {
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
+      localStorage.setItem('culturebridge_user', JSON.stringify(updatedUser));
+    }
+  };
+
+  const value = {
+    user,
+    isAuthenticated,
+    isLoading,
+    login,
+    register,
+    logout,
+    updateUser
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
