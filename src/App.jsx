@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Button, Avatar, Badge, Dropdown, Space } from 'antd';
+import { Layout, Menu, Button, Avatar, Badge, Dropdown, Space, notification } from 'antd';
 import {
   HomeOutlined,
   MessageOutlined,
@@ -12,9 +12,9 @@ import {
   LogoutOutlined
 } from '@ant-design/icons';
 
-// 导入组件
-import ModernDashboard from './components/ModernDashboard';
-import ChatRoom from './components/ChatRoom';
+// 导入增强组件
+import EnhancedDashboard from './components/EnhancedDashboard';
+import EnhancedChatRoom from './components/EnhancedChatRoom';
 import LanguageLearning from './components/LanguageLearning';
 import WalletConnect, { WalletProvider } from './components/WalletConnect';
 
@@ -27,13 +27,40 @@ const mockUser = {
   id: 'user123',
   username: '文化探索者',
   avatar: '/api/placeholder/32/32',
-  notifications: 3
+  notifications: 5,
+  level: 18,
+  cbtBalance: 2847.5
 };
 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [user, setUser] = useState(mockUser);
+  const [notifications, setNotifications] = useState([]);
+
+  // 初始化通知
+  useEffect(() => {
+    // 模拟实时通知
+    const notificationInterval = setInterval(() => {
+      const randomNotifications = [
+        { type: 'message', title: '新消息', description: '来自东京茶道师的消息' },
+        { type: 'earning', title: 'CBT收益', description: '您获得了 +15.2 CBT' },
+        { type: 'achievement', title: '成就解锁', description: '恭喜解锁"翻译达人"徽章' },
+        { type: 'event', title: '文化活动', description: '日本茶道体验即将开始' }
+      ];
+      
+      const randomNotification = randomNotifications[Math.floor(Math.random() * randomNotifications.length)];
+      
+      notification.open({
+        message: randomNotification.title,
+        description: randomNotification.description,
+        placement: 'topRight',
+        duration: 4,
+      });
+    }, 30000); // 每30秒一个通知
+
+    return () => clearInterval(notificationInterval);
+  }, []);
 
   // 菜单项
   const menuItems = [
@@ -90,10 +117,10 @@ function App() {
   const renderContent = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <ModernDashboard />;
+        return <EnhancedDashboard />;
       case 'chat':
         return (
-          <ChatRoom
+          <EnhancedChatRoom
             roomId="general"
             userInfo={user}
             onLeaveRoom={() => setCurrentPage('dashboard')}
@@ -115,7 +142,7 @@ function App() {
           </div>
         );
       default:
-        return <ModernDashboard />;
+        return <EnhancedDashboard />;
     }
   };
 
@@ -129,19 +156,22 @@ function App() {
           onCollapse={setCollapsed}
           style={{
             background: 'linear-gradient(180deg, #667eea 0%, #764ba2 100%)',
+            boxShadow: '2px 0 8px rgba(0,0,0,0.1)'
           }}
         >
           <div style={{ 
             height: 64, 
             margin: 16, 
-            background: 'rgba(255, 255, 255, 0.1)', 
-            borderRadius: 8,
+            background: 'rgba(255, 255, 255, 0.15)', 
+            borderRadius: 12,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: 'white',
             fontWeight: 'bold',
-            fontSize: collapsed ? 14 : 16
+            fontSize: collapsed ? 14 : 16,
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
           }}>
             {collapsed ? 'CB' : 'CultureBridge'}
           </div>
@@ -164,14 +194,21 @@ function App() {
           {/* 顶部导航 */}
           <Header style={{ 
             padding: '0 24px', 
-            background: '#fff',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            background: 'linear-gradient(90deg, #ffffff 0%, #f8f9fa 100%)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
+            borderBottom: '1px solid #f0f0f0'
           }}>
             <div>
-              <h2 style={{ margin: 0, color: '#1890ff' }}>
+              <h2 style={{ 
+                margin: 0, 
+                background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>
                 {menuItems.find(item => item.key === currentPage)?.label || '首页'}
               </h2>
             </div>
@@ -183,6 +220,10 @@ function App() {
                   type="text" 
                   icon={<BellOutlined />} 
                   size="large"
+                  style={{ 
+                    borderRadius: 8,
+                    transition: 'all 0.3s ease'
+                  }}
                 />
               </Badge>
 
@@ -194,14 +235,37 @@ function App() {
                     if (key === 'logout') {
                       // 处理退出登录
                       console.log('退出登录');
+                      notification.info({
+                        message: '退出登录',
+                        description: '您已安全退出系统',
+                        placement: 'topRight',
+                      });
                     }
                   }
                 }}
                 placement="bottomRight"
               >
-                <Space style={{ cursor: 'pointer' }}>
-                  <Avatar src={user.avatar} icon={<UserOutlined />} />
-                  <span style={{ fontWeight: 500 }}>{user.username}</span>
+                <Space style={{ 
+                  cursor: 'pointer',
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  transition: 'all 0.3s ease',
+                  background: 'rgba(102, 126, 234, 0.05)'
+                }}>
+                  <Avatar 
+                    src={user.avatar} 
+                    icon={<UserOutlined />}
+                    style={{ 
+                      border: '2px solid rgba(102, 126, 234, 0.2)',
+                      transition: 'all 0.3s ease'
+                    }}
+                  />
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{user.username}</div>
+                    <div style={{ fontSize: 12, color: '#666' }}>
+                      Lv.{user.level} • {user.cbtBalance} CBT
+                    </div>
+                  </div>
                 </Space>
               </Dropdown>
             </Space>
