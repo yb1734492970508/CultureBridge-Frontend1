@@ -11,6 +11,12 @@ import LearningPage from './components/modern/LearningPage';
 import CommunityPage from './components/modern/CommunityPage';
 import ProfilePage from './components/modern/ProfilePage';
 
+// 导入高级组件
+import AIContentAssistant from './components/advanced/AIContentAssistant';
+import EnhancedCommunity from './components/advanced/EnhancedCommunity';
+import PersonalizedRecommendation from './components/advanced/PersonalizedRecommendation';
+import RealTimeInteraction from './components/advanced/RealTimeInteraction';
+
 // 导入API服务
 import apiService from './services/apiService';
 
@@ -88,7 +94,11 @@ const ModernApp = () => {
     chat: ChatPage,
     learning: LearningPage,
     community: CommunityPage,
-    profile: ProfilePage
+    profile: ProfilePage,
+    'ai-assistant': AIContentAssistant,
+    'enhanced-community': EnhancedCommunity,
+    'recommendations': PersonalizedRecommendation,
+    'real-time': RealTimeInteraction
   };
 
   const CurrentPageComponent = pageComponents[currentPage] || HomePage;

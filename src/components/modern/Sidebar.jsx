@@ -13,7 +13,11 @@ const Sidebar = ({
     { key: 'chat', icon: '💬', label: '实时聊天', description: '与全球朋友交流' },
     { key: 'learning', icon: '📚', label: '语言学习', description: '提升语言技能' },
     { key: 'community', icon: '🌍', label: '文化社区', description: '加入文化圈子' },
-    { key: 'profile', icon: '👤', label: '个人中心', description: '管理个人信息' }
+    { key: 'profile', icon: '👤', label: '个人中心', description: '管理个人信息' },
+    { key: 'ai-assistant', icon: '🤖', label: 'AI助手', description: '智能内容创作' },
+    { key: 'enhanced-community', icon: '🚀', label: '增强社区', description: '高级社交功能' },
+    { key: 'recommendations', icon: '🎯', label: '个性推荐', description: '专属内容推荐' },
+    { key: 'real-time', icon: '⚡', label: '实时互动', description: '即时通讯交流' }
   ];
 
   const handleNavClick = (key) => {
