@@ -1,638 +1,325 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  Tabs,
-  Progress,
-  Button,
-  Row,
-  Col,
-  Typography,
-  Space,
-  Avatar,
-  Badge,
-  Statistic,
-  List,
-  Tag,
-  Modal,
-  Input,
-  Select,
-  Rate,
-  Tooltip,
-  Divider,
-  Alert
-} from 'antd';
-import {
-  BookOutlined,
-  SoundOutlined,
-  TrophyOutlined,
-  FireOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  PlayCircleOutlined,
-  PauseCircleOutlined,
-  ReloadOutlined,
-  StarOutlined,
-  HeartOutlined,
-  MessageOutlined
-} from '@ant-design/icons';
-import { motion, AnimatePresence } from 'framer-motion';
+import './LanguageLearning.css';
 
-const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
-const { Option } = Select;
+const LanguageLearning = ({ user, onProgressUpdate }) => {
+  const [currentLesson, setCurrentLesson] = useState(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('japanese');
+  const [learningMode, setLearningMode] = useState('lesson'); // lesson, practice, quiz
+  
+  const languages = [
+    { id: 'japanese', name: '日语', flag: '🇯🇵', level: 'Intermediate', progress: 65 },
+    { id: 'french', name: '法语', flag: '🇫🇷', level: 'Beginner', progress: 30 },
+    { id: 'spanish', name: '西班牙语', flag: '🇪🇸', level: 'Advanced', progress: 85 },
+    { id: 'korean', name: '韩语', flag: '🇰🇷', level: 'Beginner', progress: 15 }
+  ];
 
-// 模拟学习数据
-const mockLearningData = {
-  currentStreak: 15,
-  totalXP: 2850,
-  level: 12,
-  nextLevelXP: 3000,
-  completedLessons: 45,
-  totalLessons: 120,
-  languages: [
+  const lessons = {
+    japanese: [
+      {
+        id: 1,
+        title: '基础问候语',
+        description: '学习日常问候用语',
+        content: [
+          { japanese: 'こんにちは', romaji: 'konnichiwa', chinese: '你好', audio: '🔊' },
+          { japanese: 'おはよう', romaji: 'ohayou', chinese: '早上好', audio: '🔊' },
+          { japanese: 'こんばんは', romaji: 'konbanwa', chinese: '晚上好', audio: '🔊' },
+          { japanese: 'ありがとう', romaji: 'arigatou', chinese: '谢谢', audio: '🔊' }
+        ],
+        completed: true
+      },
+      {
+        id: 2,
+        title: '数字和时间',
+        description: '学习数字表达和时间概念',
+        content: [
+          { japanese: 'いち', romaji: 'ichi', chinese: '一', audio: '🔊' },
+          { japanese: 'に', romaji: 'ni', chinese: '二', audio: '🔊' },
+          { japanese: 'さん', romaji: 'san', chinese: '三', audio: '🔊' },
+          { japanese: '今何時ですか', romaji: 'ima nanji desu ka', chinese: '现在几点了？', audio: '🔊' }
+        ],
+        completed: false
+      }
+    ],
+    french: [
+      {
+        id: 1,
+        title: 'Salutations de base',
+        description: 'Apprendre les salutations quotidiennes',
+        content: [
+          { french: 'Bonjour', chinese: '你好', audio: '🔊' },
+          { french: 'Bonsoir', chinese: '晚上好', audio: '🔊' },
+          { french: 'Merci', chinese: '谢谢', audio: '🔊' },
+          { french: 'Au revoir', chinese: '再见', audio: '🔊' }
+        ],
+        completed: false
+      }
+    ]
+  };
+
+  const quizQuestions = [
     {
-      code: 'ja',
-      name: '日语',
-      flag: '🇯🇵',
-      level: 'N3',
-      progress: 75,
-      xp: 1200,
-      streak: 15,
-      lessons: [
-        { id: 1, title: '基础问候语', type: 'vocabulary', completed: true, xp: 50 },
-        { id: 2, title: '数字与时间', type: 'grammar', completed: true, xp: 75 },
-        { id: 3, title: '日常对话', type: 'conversation', completed: false, xp: 100 },
-        { id: 4, title: '发音练习', type: 'pronunciation', completed: false, xp: 60 }
-      ]
+      id: 1,
+      question: '如何用日语说"谢谢"？',
+      options: ['こんにちは', 'ありがとう', 'すみません', 'さようなら'],
+      correct: 1,
+      explanation: 'ありがとう (arigatou) 是日语中"谢谢"的表达方式'
     },
     {
-      code: 'fr',
-      name: '法语',
-      flag: '🇫🇷',
-      level: 'A2',
-      progress: 45,
-      xp: 800,
-      streak: 8,
-      lessons: [
-        { id: 5, title: '法语字母', type: 'vocabulary', completed: true, xp: 40 },
-        { id: 6, title: '动词变位', type: 'grammar', completed: false, xp: 80 },
-        { id: 7, title: '购物对话', type: 'conversation', completed: false, xp: 90 }
-      ]
+      id: 2,
+      question: '"Bonjour"在法语中是什么意思？',
+      options: ['晚安', '你好', '再见', '谢谢'],
+      correct: 1,
+      explanation: 'Bonjour 是法语中"你好"的意思，通常在白天使用'
     }
-  ]
-};
+  ];
 
-const mockVocabulary = [
-  { word: 'こんにちは', pronunciation: 'konnichiwa', meaning: '你好', language: 'ja', mastery: 90 },
-  { word: 'ありがとう', pronunciation: 'arigatou', meaning: '谢谢', language: 'ja', mastery: 85 },
-  { word: 'すみません', pronunciation: 'sumimasen', meaning: '对不起', language: 'ja', mastery: 70 },
-  { word: 'bonjour', pronunciation: 'bon-ZHOOR', meaning: '你好', language: 'fr', mastery: 80 },
-  { word: 'merci', pronunciation: 'mer-SEE', meaning: '谢谢', language: 'fr', mastery: 95 }
-];
+  const [currentQuiz, setCurrentQuiz] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [quizScore, setQuizScore] = useState(0);
 
-const mockCulturalContent = [
-  {
-    id: 1,
-    title: '日本茶道文化体验',
-    author: '文化导师小田',
-    avatar: '/api/placeholder/40/40',
-    type: 'experience',
-    difficulty: '中级',
-    duration: '45分钟',
-    participants: 128,
-    rating: 4.8,
-    description: '深入了解日本茶道的历史、哲学和实践，体验正宗的茶道仪式...',
-    tags: ['日本文化', '茶道', '传统艺术'],
-    image: '/api/placeholder/300/200',
-    price: 50, // CBT
-    enrolled: false
-  },
-  {
-    id: 2,
-    title: '法国料理制作工坊',
-    author: '巴黎主厨Pierre',
-    avatar: '/api/placeholder/40/40',
-    type: 'workshop',
-    difficulty: '初级',
-    duration: '90分钟',
-    participants: 89,
-    rating: 4.9,
-    description: '学习制作经典法式甜点，了解法国饮食文化的精髓...',
-    tags: ['法国文化', '料理', '美食'],
-    image: '/api/placeholder/300/200',
-    price: 75, // CBT
-    enrolled: true
-  }
-];
+  const [practiceWords, setPracticeWords] = useState([
+    { word: 'こんにちは', translation: '你好', learned: false },
+    { word: 'ありがとう', translation: '谢谢', learned: false },
+    { word: 'すみません', translation: '对不起', learned: false }
+  ]);
 
-const LanguageLearning = () => {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [selectedLanguage, setSelectedLanguage] = useState('ja');
-  const [currentLesson, setCurrentLesson] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showVocabularyModal, setShowVocabularyModal] = useState(false);
-  const [selectedWord, setSelectedWord] = useState(null);
+  const getCurrentLanguage = () => {
+    return languages.find(lang => lang.id === selectedLanguage);
+  };
 
-  // 动画变体
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
+  const startLesson = (lesson) => {
+    setCurrentLesson(lesson);
+    setLearningMode('lesson');
+  };
+
+  const completeLesson = () => {
+    if (currentLesson) {
+      // 标记课程为已完成
+      const updatedLessons = { ...lessons };
+      updatedLessons[selectedLanguage] = updatedLessons[selectedLanguage].map(lesson =>
+        lesson.id === currentLesson.id ? { ...lesson, completed: true } : lesson
+      );
+      
+      // 更新进度
+      if (onProgressUpdate) {
+        onProgressUpdate(50); // 完成课程获得50积分
+      }
+      
+      setCurrentLesson(null);
+      alert('恭喜完成课程！获得50积分！');
     }
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
-
-  // 渲染学习概览
-  const renderOverview = () => (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible">
-      <Row gutter={[24, 24]}>
-        {/* 学习统计 */}
-        <Col xs={24} lg={8}>
-          <motion.div variants={itemVariants}>
-            <Card className="stats-card">
-              <Space direction="vertical" style={{ width: '100%' }} size="large">
-                <div style={{ textAlign: 'center' }}>
-                  <Avatar size={64} style={{ backgroundColor: '#1890ff' }}>
-                    <FireOutlined style={{ fontSize: 32 }} />
-                  </Avatar>
-                  <Title level={4} style={{ margin: '12px 0 0' }}>
-                    连续学习 {mockLearningData.currentStreak} 天
-                  </Title>
-                  <Text type="secondary">保持学习热情！</Text>
-                </div>
-                
-                <Divider />
-                
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Statistic
-                      title="总经验值"
-                      value={mockLearningData.totalXP}
-                      prefix={<StarOutlined />}
-                      valueStyle={{ color: '#faad14' }}
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <Statistic
-                      title="当前等级"
-                      value={mockLearningData.level}
-                      prefix={<TrophyOutlined />}
-                      valueStyle={{ color: '#52c41a' }}
-                    />
-                  </Col>
-                </Row>
-                
-                <div>
-                  <Text strong>升级进度</Text>
-                  <Progress
-                    percent={(mockLearningData.totalXP / mockLearningData.nextLevelXP) * 100}
-                    strokeColor={{
-                      '0%': '#108ee9',
-                      '100%': '#87d068',
-                    }}
-                    style={{ marginTop: 8 }}
-                  />
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {mockLearningData.totalXP}/{mockLearningData.nextLevelXP} XP
-                  </Text>
-                </div>
-              </Space>
-            </Card>
-          </motion.div>
-        </Col>
-
-        {/* 语言进度 */}
-        <Col xs={24} lg={16}>
-          <motion.div variants={itemVariants}>
-            <Card title="学习进度" className="language-progress-card">
-              <Space direction="vertical" style={{ width: '100%' }} size="large">
-                {mockLearningData.languages.map((lang, index) => (
-                  <motion.div
-                    key={lang.code}
-                    whileHover={{ scale: 1.02 }}
-                    style={{
-                      padding: 16,
-                      border: '1px solid #f0f0f0',
-                      borderRadius: 12,
-                      background: selectedLanguage === lang.code ? '#f6ffed' : 'white',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => setSelectedLanguage(lang.code)}
-                  >
-                    <Row align="middle" gutter={16}>
-                      <Col>
-                        <div style={{ fontSize: 32 }}>{lang.flag}</div>
-                      </Col>
-                      <Col flex={1}>
-                        <Row justify="space-between" align="middle">
-                          <Col>
-                            <Title level={5} style={{ margin: 0 }}>
-                              {lang.name}
-                            </Title>
-                            <Space>
-                              <Tag color="blue">{lang.level}</Tag>
-                              <Text type="secondary">
-                                <FireOutlined /> {lang.streak} 天连续
-                              </Text>
-                            </Space>
-                          </Col>
-                          <Col>
-                            <Text strong style={{ fontSize: 16, color: '#faad14' }}>
-                              {lang.xp} XP
-                            </Text>
-                          </Col>
-                        </Row>
-                        <Progress
-                          percent={lang.progress}
-                          strokeColor="#52c41a"
-                          style={{ marginTop: 8 }}
-                        />
-                      </Col>
-                    </Row>
-                  </motion.div>
-                ))}
-              </Space>
-            </Card>
-          </motion.div>
-        </Col>
-      </Row>
-    </motion.div>
-  );
-
-  // 渲染课程列表
-  const renderLessons = () => {
-    const currentLang = mockLearningData.languages.find(lang => lang.code === selectedLanguage);
+  const handleQuizAnswer = (answerIndex) => {
+    setSelectedAnswer(answerIndex);
+    setShowExplanation(true);
     
-    return (
-      <motion.div variants={containerVariants} initial="hidden" animate="visible">
-        <Row gutter={[24, 24]}>
-          <Col xs={24} lg={16}>
-            <motion.div variants={itemVariants}>
-              <Card 
-                title={`${currentLang?.name} 课程`}
-                extra={
-                  <Select value={selectedLanguage} onChange={setSelectedLanguage} style={{ width: 120 }}>
-                    {mockLearningData.languages.map(lang => (
-                      <Option key={lang.code} value={lang.code}>
-                        {lang.flag} {lang.name}
-                      </Option>
-                    ))}
-                  </Select>
-                }
-              >
-                <List
-                  dataSource={currentLang?.lessons || []}
-                  renderItem={(lesson) => (
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <List.Item
-                        style={{
-                          padding: 16,
-                          margin: '8px 0',
-                          border: '1px solid #f0f0f0',
-                          borderRadius: 12,
-                          background: lesson.completed ? '#f6ffed' : 'white',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => setCurrentLesson(lesson)}
-                      >
-                        <List.Item.Meta
-                          avatar={
-                            <Avatar
-                              style={{
-                                backgroundColor: lesson.completed ? '#52c41a' : '#1890ff'
-                              }}
-                              icon={
-                                lesson.completed ? <CheckCircleOutlined /> : 
-                                lesson.type === 'vocabulary' ? <BookOutlined /> :
-                                lesson.type === 'grammar' ? <BookOutlined /> :
-                                lesson.type === 'conversation' ? <MessageOutlined /> :
-                                <SoundOutlined />
-                              }
-                            />
-                          }
-                          title={
-                            <Space>
-                              <Text strong>{lesson.title}</Text>
-                              {lesson.completed && <CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                            </Space>
-                          }
-                          description={
-                            <Space>
-                              <Tag color={
-                                lesson.type === 'vocabulary' ? 'blue' :
-                                lesson.type === 'grammar' ? 'green' :
-                                lesson.type === 'conversation' ? 'orange' : 'purple'
-                              }>
-                                {lesson.type === 'vocabulary' ? '词汇' :
-                                 lesson.type === 'grammar' ? '语法' :
-                                 lesson.type === 'conversation' ? '对话' : '发音'}
-                              </Tag>
-                              <Text type="secondary">+{lesson.xp} XP</Text>
-                            </Space>
-                          }
-                        />
-                        <Button
-                          type={lesson.completed ? "default" : "primary"}
-                          icon={lesson.completed ? <ReloadOutlined /> : <PlayCircleOutlined />}
-                        >
-                          {lesson.completed ? '复习' : '开始'}
-                        </Button>
-                      </List.Item>
-                    </motion.div>
-                  )}
-                />
-              </Card>
-            </motion.div>
-          </Col>
+    if (answerIndex === quizQuestions[currentQuiz].correct) {
+      setQuizScore(quizScore + 1);
+    }
+    
+    setTimeout(() => {
+      if (currentQuiz < quizQuestions.length - 1) {
+        setCurrentQuiz(currentQuiz + 1);
+        setSelectedAnswer(null);
+        setShowExplanation(false);
+      } else {
+        // 测验完成
+        alert(`测验完成！得分：${quizScore + (answerIndex === quizQuestions[currentQuiz].correct ? 1 : 0)}/${quizQuestions.length}`);
+        setCurrentQuiz(0);
+        setQuizScore(0);
+        setSelectedAnswer(null);
+        setShowExplanation(false);
+      }
+    }, 2000);
+  };
 
-          <Col xs={24} lg={8}>
-            <motion.div variants={itemVariants}>
-              <Card title="今日目标" className="daily-goals-card">
-                <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                  <div>
-                    <Row justify="space-between">
-                      <Text>完成 2 个课程</Text>
-                      <Text strong>1/2</Text>
-                    </Row>
-                    <Progress percent={50} strokeColor="#1890ff" />
-                  </div>
-                  
-                  <div>
-                    <Row justify="space-between">
-                      <Text>学习 20 个新单词</Text>
-                      <Text strong>15/20</Text>
-                    </Row>
-                    <Progress percent={75} strokeColor="#52c41a" />
-                  </div>
-                  
-                  <div>
-                    <Row justify="space-between">
-                      <Text>练习口语 10 分钟</Text>
-                      <Text strong>6/10</Text>
-                    </Row>
-                    <Progress percent={60} strokeColor="#faad14" />
-                  </div>
-                </Space>
-              </Card>
-            </motion.div>
-
-            <motion.div variants={itemVariants} style={{ marginTop: 24 }}>
-              <Card title="词汇复习" extra={
-                <Button size="small" onClick={() => setShowVocabularyModal(true)}>
-                  查看全部
-                </Button>
-              }>
-                <List
-                  size="small"
-                  dataSource={mockVocabulary.slice(0, 3)}
-                  renderItem={(word) => (
-                    <List.Item>
-                      <List.Item.Meta
-                        title={<Text strong>{word.word}</Text>}
-                        description={
-                          <div>
-                            <Text type="secondary">{word.pronunciation}</Text>
-                            <br />
-                            <Text>{word.meaning}</Text>
-                          </div>
-                        }
-                      />
-                      <Progress
-                        type="circle"
-                        size={40}
-                        percent={word.mastery}
-                        strokeColor="#52c41a"
-                        format={() => `${word.mastery}%`}
-                      />
-                    </List.Item>
-                  )}
-                />
-              </Card>
-            </motion.div>
-          </Col>
-        </Row>
-      </motion.div>
+  const toggleWordLearned = (index) => {
+    setPracticeWords(words =>
+      words.map((word, i) =>
+        i === index ? { ...word, learned: !word.learned } : word
+      )
     );
   };
 
-  // 渲染文化交流
-  const renderCulturalExchange = () => (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible">
-      <Row gutter={[24, 24]}>
-        <Col span={24}>
-          <motion.div variants={itemVariants}>
-            <Alert
-              message="文化交流活动"
-              description="参与文化交流活动，不仅能学习语言，还能深入了解不同文化的精髓，获得CBT奖励！"
-              type="info"
-              showIcon
-              style={{ marginBottom: 24 }}
-            />
-          </motion.div>
-        </Col>
-
-        {mockCulturalContent.map((content, index) => (
-          <Col xs={24} lg={12} key={content.id}>
-            <motion.div variants={itemVariants}>
-              <Card
-                hoverable
-                cover={
-                  <div style={{ position: 'relative' }}>
-                    <img
-                      alt={content.title}
-                      src={content.image}
-                      style={{ height: 200, objectFit: 'cover', width: '100%' }}
-                    />
-                    <div style={{
-                      position: 'absolute',
-                      top: 12,
-                      right: 12,
-                      background: 'rgba(0,0,0,0.7)',
-                      color: 'white',
-                      padding: '4px 8px',
-                      borderRadius: 4,
-                      fontSize: 12
-                    }}>
-                      <ClockCircleOutlined /> {content.duration}
-                    </div>
-                  </div>
-                }
-                actions={[
-                  <Tooltip title="点赞">
-                    <HeartOutlined key="like" />
-                  </Tooltip>,
-                  <Tooltip title="评论">
-                    <MessageOutlined key="comment" />
-                  </Tooltip>,
-                  <Tooltip title="收藏">
-                    <StarOutlined key="star" />
-                  </Tooltip>
-                ]}
-              >
-                <Card.Meta
-                  avatar={<Avatar src={content.avatar} />}
-                  title={
-                    <Space>
-                      <Text strong>{content.title}</Text>
-                      {content.enrolled && <Badge status="success" text="已报名" />}
-                    </Space>
-                  }
-                  description={
-                    <Space direction="vertical" style={{ width: '100%' }}>
-                      <Text type="secondary">by {content.author}</Text>
-                      <Paragraph ellipsis={{ rows: 2 }}>
-                        {content.description}
-                      </Paragraph>
-                      <div>
-                        {content.tags.map(tag => (
-                          <Tag key={tag} color="blue" size="small">
-                            {tag}
-                          </Tag>
-                        ))}
-                      </div>
-                      <Row justify="space-between" align="middle">
-                        <Col>
-                          <Space>
-                            <Rate disabled defaultValue={content.rating} allowHalf />
-                            <Text type="secondary">({content.participants})</Text>
-                          </Space>
-                        </Col>
-                        <Col>
-                          <Space>
-                            <Text strong style={{ color: '#faad14' }}>
-                              {content.price} CBT
-                            </Text>
-                            <Button
-                              type={content.enrolled ? "default" : "primary"}
-                              size="small"
-                            >
-                              {content.enrolled ? '已报名' : '立即报名'}
-                            </Button>
-                          </Space>
-                        </Col>
-                      </Row>
-                    </Space>
-                  }
-                />
-              </Card>
-            </motion.div>
-          </Col>
+  const renderLanguageSelector = () => (
+    <div className="language-selector">
+      <h3>选择学习语言</h3>
+      <div className="languages-grid">
+        {languages.map(language => (
+          <div
+            key={language.id}
+            className={`language-card ${selectedLanguage === language.id ? 'selected' : ''}`}
+            onClick={() => setSelectedLanguage(language.id)}
+          >
+            <span className="language-flag">{language.flag}</span>
+            <h4>{language.name}</h4>
+            <span className="language-level">{language.level}</span>
+            <div className="progress-bar">
+              <div 
+                className="progress-fill"
+                style={{ width: `${language.progress}%` }}
+              ></div>
+            </div>
+            <span className="progress-text">{language.progress}%</span>
+          </div>
         ))}
-      </Row>
-    </motion.div>
+      </div>
+    </div>
+  );
+
+  const renderModeSelector = () => (
+    <div className="mode-selector">
+      <button
+        className={`mode-btn ${learningMode === 'lesson' ? 'active' : ''}`}
+        onClick={() => setLearningMode('lesson')}
+      >
+        📚 课程学习
+      </button>
+      <button
+        className={`mode-btn ${learningMode === 'practice' ? 'active' : ''}`}
+        onClick={() => setLearningMode('practice')}
+      >
+        ✍️ 单词练习
+      </button>
+      <button
+        className={`mode-btn ${learningMode === 'quiz' ? 'active' : ''}`}
+        onClick={() => setLearningMode('quiz')}
+      >
+        🧠 知识测验
+      </button>
+    </div>
+  );
+
+  const renderLessons = () => (
+    <div className="lessons-container">
+      <h3>{getCurrentLanguage()?.name} 课程</h3>
+      <div className="lessons-list">
+        {lessons[selectedLanguage]?.map(lesson => (
+          <div key={lesson.id} className={`lesson-card ${lesson.completed ? 'completed' : ''}`}>
+            <div className="lesson-info">
+              <h4>{lesson.title}</h4>
+              <p>{lesson.description}</p>
+              {lesson.completed && <span className="completed-badge">✅ 已完成</span>}
+            </div>
+            <button
+              className="start-lesson-btn"
+              onClick={() => startLesson(lesson)}
+            >
+              {lesson.completed ? '复习' : '开始'}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderCurrentLesson = () => (
+    <div className="current-lesson">
+      <div className="lesson-header">
+        <button className="back-btn" onClick={() => setCurrentLesson(null)}>← 返回</button>
+        <h3>{currentLesson.title}</h3>
+      </div>
+      
+      <div className="lesson-content">
+        {currentLesson.content.map((item, index) => (
+          <div key={index} className="word-card">
+            <div className="word-main">
+              {item.japanese && <span className="japanese">{item.japanese}</span>}
+              {item.french && <span className="french">{item.french}</span>}
+              {item.romaji && <span className="romaji">{item.romaji}</span>}
+            </div>
+            <div className="word-translation">{item.chinese}</div>
+            <button className="audio-btn">{item.audio}</button>
+          </div>
+        ))}
+      </div>
+      
+      <button className="complete-lesson-btn" onClick={completeLesson}>
+        完成课程
+      </button>
+    </div>
+  );
+
+  const renderPractice = () => (
+    <div className="practice-container">
+      <h3>单词练习</h3>
+      <div className="practice-words">
+        {practiceWords.map((word, index) => (
+          <div key={index} className={`practice-word ${word.learned ? 'learned' : ''}`}>
+            <div className="word-content">
+              <span className="word">{word.word}</span>
+              <span className="translation">{word.translation}</span>
+            </div>
+            <button
+              className="learn-btn"
+              onClick={() => toggleWordLearned(index)}
+            >
+              {word.learned ? '✅' : '📝'}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderQuiz = () => (
+    <div className="quiz-container">
+      <div className="quiz-header">
+        <h3>知识测验</h3>
+        <span className="quiz-progress">{currentQuiz + 1}/{quizQuestions.length}</span>
+      </div>
+      
+      <div className="quiz-question">
+        <h4>{quizQuestions[currentQuiz].question}</h4>
+        <div className="quiz-options">
+          {quizQuestions[currentQuiz].options.map((option, index) => (
+            <button
+              key={index}
+              className={`quiz-option ${
+                selectedAnswer === index
+                  ? index === quizQuestions[currentQuiz].correct
+                    ? 'correct'
+                    : 'incorrect'
+                  : ''
+              }`}
+              onClick={() => handleQuizAnswer(index)}
+              disabled={selectedAnswer !== null}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+        
+        {showExplanation && (
+          <div className="quiz-explanation">
+            <p>{quizQuestions[currentQuiz].explanation}</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 
   return (
-    <div className="language-learning-container">
-      <Card style={{ margin: 24 }}>
-        <Tabs activeKey={activeTab} onChange={setActiveTab} size="large">
-          <TabPane
-            tab={
-              <span>
-                <TrophyOutlined />
-                学习概览
-              </span>
-            }
-            key="overview"
-          >
-            {renderOverview()}
-          </TabPane>
-          
-          <TabPane
-            tab={
-              <span>
-                <BookOutlined />
-                课程学习
-              </span>
-            }
-            key="lessons"
-          >
-            {renderLessons()}
-          </TabPane>
-          
-          <TabPane
-            tab={
-              <span>
-                <SoundOutlined />
-                口语练习
-              </span>
-            }
-            key="speaking"
-          >
-            <div style={{ textAlign: 'center', padding: 40 }}>
-              <SoundOutlined style={{ fontSize: 64, color: '#1890ff' }} />
-              <Title level={3}>口语练习</Title>
-              <Paragraph>
-                通过AI语音识别技术，练习发音和口语表达能力
-              </Paragraph>
-              <Button type="primary" size="large">
-                开始练习
-              </Button>
-            </div>
-          </TabPane>
-          
-          <TabPane
-            tab={
-              <span>
-                <FireOutlined />
-                文化交流
-              </span>
-            }
-            key="cultural"
-          >
-            {renderCulturalExchange()}
-          </TabPane>
-        </Tabs>
-      </Card>
+    <div className="language-learning">
+      <div className="learning-header">
+        <h2>语言学习中心</h2>
+        <div className="user-progress">
+          <span>总进度: {getCurrentLanguage()?.progress}%</span>
+        </div>
+      </div>
 
-      {/* 词汇复习模态框 */}
-      <Modal
-        title="词汇复习"
-        open={showVocabularyModal}
-        onCancel={() => setShowVocabularyModal(false)}
-        footer={null}
-        width={800}
-      >
-        <List
-          dataSource={mockVocabulary}
-          renderItem={(word) => (
-            <List.Item
-              actions={[
-                <Button size="small" icon={<SoundOutlined />}>
-                  发音
-                </Button>,
-                <Progress
-                  type="circle"
-                  size={40}
-                  percent={word.mastery}
-                  strokeColor="#52c41a"
-                />
-              ]}
-            >
-              <List.Item.Meta
-                title={<Text strong style={{ fontSize: 18 }}>{word.word}</Text>}
-                description={
-                  <div>
-                    <Text type="secondary" style={{ fontSize: 14 }}>
-                      {word.pronunciation}
-                    </Text>
-                    <br />
-                    <Text style={{ fontSize: 16 }}>{word.meaning}</Text>
-                  </div>
-                }
-              />
-            </List.Item>
-          )}
-        />
-      </Modal>
+      {!currentLesson && renderLanguageSelector()}
+      {!currentLesson && renderModeSelector()}
+
+      {currentLesson ? renderCurrentLesson() : (
+        <div className="learning-content">
+          {learningMode === 'lesson' && renderLessons()}
+          {learningMode === 'practice' && renderPractice()}
+          {learningMode === 'quiz' && renderQuiz()}
+        </div>
+      )}
     </div>
   );
 };
