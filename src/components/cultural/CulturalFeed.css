@@ -1,0 +1,367 @@
+/* 文化动态组件样式 */
+.cultural-feed-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
+
+.feed-controls {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.feed-tabs {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.feed-tabs .ant-tabs-nav {
+  margin: 0;
+  padding: 0 20px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.feed-tabs .ant-tabs-tab {
+  color: rgba(255, 255, 255, 0.8);
+  border: none;
+}
+
+.feed-tabs .ant-tabs-tab-active {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px 8px 0 0;
+}
+
+.feed-tabs .ant-tabs-ink-bar {
+  background: white;
+  height: 3px;
+}
+
+.posts-grid {
+  padding: 20px;
+  background: white;
+}
+
+.cultural-post-card {
+  height: 100%;
+}
+
+.enhanced-cultural-card {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: none;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.enhanced-cultural-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.enhanced-cultural-card .ant-card-body {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-media-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.post-cover-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.enhanced-cultural-card:hover .post-cover-image {
+  transform: scale(1.05);
+}
+
+.featured-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(250, 173, 20, 0.9);
+  backdrop-filter: blur(10px);
+  padding: 4px 8px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(250, 173, 20, 0.3);
+}
+
+.trending-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 77, 79, 0.9);
+  backdrop-filter: blur(10px);
+  padding: 4px 8px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.3);
+}
+
+.post-author-info {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.post-content-info {
+  flex: 1;
+  margin-bottom: 12px;
+}
+
+.post-header {
+  margin-bottom: 8px;
+}
+
+.post-tags-section {
+  margin-bottom: 12px;
+}
+
+.cultural-tags {
+  margin-bottom: 8px;
+}
+
+.language-tags {
+  margin-bottom: 8px;
+}
+
+.ai-insights-section {
+  margin-top: auto;
+}
+
+.ai-insights {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+  padding: 12px;
+  border-radius: 8px;
+  color: white;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.content-interaction-bar {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.interaction-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.interaction-button:hover {
+  background: rgba(24, 144, 255, 0.1);
+  color: #1890ff;
+}
+
+.comments-section {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.loading-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .cultural-feed-container {
+    padding: 12px;
+  }
+  
+  .posts-grid {
+    padding: 12px;
+  }
+  
+  .enhanced-cultural-card .ant-card-body {
+    padding: 12px;
+  }
+  
+  .post-cover-image {
+    height: 160px;
+  }
+  
+  .feed-controls .ant-card-body {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 576px) {
+  .cultural-feed-container {
+    padding: 8px;
+  }
+  
+  .posts-grid {
+    padding: 8px;
+  }
+  
+  .post-cover-image {
+    height: 140px;
+  }
+  
+  .interaction-button {
+    padding: 2px 6px;
+    font-size: 12px;
+  }
+}
+
+/* 暗色主题支持 */
+@media (prefers-color-scheme: dark) {
+  .cultural-feed-container {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  }
+  
+  .enhanced-cultural-card {
+    background: #1f1f1f;
+    color: #ffffff;
+  }
+  
+  .feed-controls .ant-card {
+    background: #1f1f1f;
+    border-color: #434343;
+  }
+  
+  .posts-grid {
+    background: #1f1f1f;
+  }
+  
+  .comments-section {
+    background: #2a2a2a;
+  }
+}
+
+/* 动画效果 */
+.cultural-post-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 自定义滚动条 */
+.cultural-feed-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cultural-feed-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.cultural-feed-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px;
+}
+
+.cultural-feed-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+/* 特殊效果 */
+.enhanced-cultural-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.enhanced-cultural-card:hover::before {
+  opacity: 1;
+}
+
+/* 标签样式增强 */
+.ant-tag {
+  border-radius: 12px;
+  border: none;
+  font-size: 11px;
+  padding: 2px 8px;
+  margin: 2px;
+}
+
+/* 进度条样式 */
+.ant-progress-line {
+  border-radius: 4px;
+}
+
+.ant-progress-bg {
+  border-radius: 4px;
+}
+
+/* 头像样式 */
+.ant-avatar {
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 按钮悬停效果 */
+.ant-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 卡片阴影层次 */
+.enhanced-cultural-card {
+  position: relative;
+}
+
+.enhanced-cultural-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
