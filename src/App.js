@@ -1,11 +1,11 @@
 import React from 'react';
-import ModernCultureBridge from './ModernCultureBridge';
+import AllbirdsInspiredCultureBridge from './AllbirdsInspiredCultureBridge';
 import './App.css';
 
 function App() {
   return (
     <div className="App">
-      <ModernCultureBridge />
+      <AllbirdsInspiredCultureBridge />
     </div>
   );
 }
