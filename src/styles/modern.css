@@ -1,0 +1,126 @@
+/* Tailwind CSS imports */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom Allbirds-inspired styles */
+@import './allbirds-inspired.css';
+
+/* Additional modern styles for enhanced UI */
+.modern-homepage {
+  font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 0 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 3rem;
+  }
+}
+
+/* Enhanced button styles */
+.btn {
+  @apply inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-lg transition-all duration-300 ease-in-out;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-1;
+}
+
+.btn-secondary {
+  @apply bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-600 hover:text-white;
+}
+
+.btn-lg {
+  @apply px-8 py-4 text-lg;
+}
+
+/* Navigation enhancements */
+.navbar {
+  @apply bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50;
+}
+
+.nav-link {
+  @apply text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200;
+}
+
+/* Hero section enhancements */
+.hero {
+  @apply min-h-screen flex items-center justify-center relative overflow-hidden;
+}
+
+/* Feature cards */
+.feature-card {
+  @apply bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2;
+}
+
+.feature-icon {
+  @apply w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl mb-6 mx-auto;
+}
+
+/* Responsive grid */
+.features-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-8;
+}
+
+/* Animation utilities */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+}
+
+/* Glass morphism effect */
+.glass {
+  @apply bg-white/10 backdrop-blur-md border border-white/20;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-600;
+}
+
