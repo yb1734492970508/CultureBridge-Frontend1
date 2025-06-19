@@ -1,12 +1,15 @@
 import React from 'react';
-import ModernHomePage from './pages/ModernHome';
-import './styles/modern.css';
+import { BrowserRouter as Router } from 'react-router-dom';
+import PremiumHomePage from './pages/PremiumHome';
+import './styles/premium.css';
 
 function App() {
   return (
-    <div className="App">
-      <ModernHomePage />
-    </div>
+    <Router>
+      <div className="App">
+        <PremiumHomePage />
+      </div>
+    </Router>
   );
 }
 
