@@ -1,5 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import { Wallet, Shield, Zap, Globe, ChevronRight } from 'lucide-react';
+
+// 创建钱包上下文
+const WalletContext = createContext();
+
+// 钱包提供者组件
+export const WalletProvider = ({ children }) => {
+  const [wallet, setWallet] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+
+  const connectWallet = (walletData) => {
+    setWallet(walletData);
+    setIsConnected(true);
+  };
+
+  const disconnectWallet = () => {
+    setWallet(null);
+    setIsConnected(false);
+  };
+
+  const value = {
+    wallet,
+    isConnected,
+    connectWallet,
+    disconnectWallet,
+  };
+
+  return (
+    <WalletContext.Provider value={value}>
+      {children}
+    </WalletContext.Provider>
+  );
+};
+
+// 使用钱包的Hook
+export const useWallet = () => {
+  const context = useContext(WalletContext);
+  if (!context) {
+    throw new Error('useWallet must be used within a WalletProvider');
+  }
+  return context;
+};
 
 const WalletConnect = ({ onConnect }) => {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -44,7 +85,9 @@ const WalletConnect = ({ onConnect }) => {
         network: 'BNB Smart Chain'
       };
       
-      onConnect(mockWalletData);
+      if (onConnect) {
+        onConnect(mockWalletData);
+      }
     } catch (error) {
       console.error('钱包连接失败:', error);
     } finally {

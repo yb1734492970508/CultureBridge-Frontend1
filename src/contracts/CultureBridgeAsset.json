@@ -1,0 +1,10 @@
+{
+  "contractName": "CultureBridgeAsset",
+  "abi": [],
+  "networks": {
+    "1": {
+      "address": "0x0000000000000000000000000000000000000000"
+    }
+  }
+}
+

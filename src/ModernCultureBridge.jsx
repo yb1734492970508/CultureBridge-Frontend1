@@ -1,301 +1,277 @@
 import React, { useState, useEffect } from 'react';
-import './ModernCultureBridge.css';
+import { Layout, Menu, Button, Avatar, Badge, Dropdown, Space, notification, Select } from 'antd';
+import {
+  HomeOutlined,
+  MessageOutlined,
+  BookOutlined,
+  WalletOutlined,
+  GlobalOutlined,
+  UserOutlined,
+  BellOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  TranslationOutlined
+} from '@ant-design/icons';
 
-// 现代化CultureBridge应用组件
-const ModernCultureBridge = () => {
-  const [currentView, setCurrentView] = useState('profile');
-  const [user, setUser] = useState({
-    name: 'Sarah',
-    username: '@sarah_s',
-    avatar: '/api/placeholder/150/150',
-    learningProgress: 'Intermediate',
-    culturalExchangeAchievements: 12,
-    points: 2300,
-    level: 5,
-    experience: 2550,
-    nextLevelExp: 3000
-  });
+// 导入增强组件
+import EnhancedDashboard from './components/EnhancedDashboard';
+import EnhancedChatRoom from './components/EnhancedChatRoom';
+import LanguageLearning from './components/LanguageLearning';
+import WalletConnect, { WalletProvider } from './components/WalletConnect';
 
-  // 导航项
-  const navigationItems = [
-    { id: 'profile', icon: '👤', label: 'Profile' },
-    { id: 'feed', icon: '🌍', label: 'Feed' },
-    { id: 'learning', icon: '📚', label: 'Learning' },
-    { id: 'chat', icon: '💬', label: 'Chat' }
+// 导入国际化服务
+import { I18nProvider, useI18n } from './services/I18nService';
+
+import './App.css';
+import './styles/Global.css'; // 引入新的全局样式
+import './ModernCultureBridge.css'; // 引入ModernCultureBridge的特定样式
+
+const { Header, Sider, Content } = Layout;
+const { Option } = Select;
+
+// 模拟用户数据
+const mockUser = {
+  id: 'user123',
+  username: '文化探索者',
+  avatar: '/api/placeholder/32/32',
+  notifications: 5,
+  level: 18,
+  cbtBalance: 2847.5
+};
+
+function ModernCultureBridgeContent() {
+  const { t, currentLanguage, changeLanguage, getAvailableLanguages } = useI18n();
+  const [collapsed, setCollapsed] = useState(false);
+  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [user, setUser] = useState(mockUser);
+  const [notifications, setNotifications] = useState([]);
+
+  // 初始化通知
+  useEffect(() => {
+    // 模拟实时通知
+    const notificationInterval = setInterval(() => {
+      const randomNotifications = [
+        { type: 'message', title: t('common.newMessage'), description: t('notifications.messageFromTokyo') },
+        { type: 'earning', title: t('wallet.cbtEarning'), description: t('notifications.earnedCBT', { amount: '15.2' }) },
+        { type: 'achievement', title: t('notifications.achievementUnlocked'), description: t('notifications.translatorBadge') },
+        { type: 'event', title: t('notifications.culturalEvent'), description: t('notifications.teaCeremonyStarting') }
+      ];
+      
+      const randomNotification = randomNotifications[Math.floor(Math.random() * randomNotifications.length)];
+      
+      notification.open({
+        message: randomNotification.title,
+        description: randomNotification.description,
+        placement: 'topRight',
+        duration: 4,
+      });
+    }, 30000); // 每30秒一个通知
+
+    return () => clearInterval(notificationInterval);
+  }, [t]);
+
+  // 菜单项
+  const menuItems = [
+    {
+      key: 'dashboard',
+      icon: <HomeOutlined />,
+      label: t('navigation.home'),
+    },
+    {
+      key: 'chat',
+      icon: <MessageOutlined />,
+      label: t('navigation.chat'),
+    },
+    {
+      key: 'learning',
+      icon: <BookOutlined />,
+      label: t('navigation.learning'),
+    },
+    {
+      key: 'wallet',
+      icon: <WalletOutlined />,
+      label: t('navigation.wallet'),
+    },
+    {
+      key: 'culture',
+      icon: <GlobalOutlined />,
+      label: t('navigation.community'),
+    },
   ];
 
-  // 文化内容数据
-  const culturalContent = [
+  // 用户菜单
+  const userMenuItems = [
     {
-      id: 1,
-      title: 'Exploring Balinese Dance',
-      image: '/api/placeholder/400/300',
-      author: 'Kapri Tanaka',
-      country: 'Indonesia',
-      duration: '2:06',
-      type: 'video'
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: t('user.profile'),
     },
     {
-      id: 2,
-      title: 'Traditional Tea Ceremony',
-      image: '/api/placeholder/200/200',
-      author: 'esrrucbo',
-      country: 'Japan',
-      duration: '41:05',
-      type: 'video'
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: t('user.settings'),
     },
     {
-      id: 3,
-      title: 'African Storytelling',
-      image: '/api/placeholder/200/200',
-      author: 'Etrakatia bmos',
-      country: 'Ghana',
-      duration: '12:09',
-      type: 'audio'
-    }
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: t('user.logout'),
+    },
   ];
 
-  // 学习内容
-  const learningContent = [
-    {
-      id: 1,
-      type: 'culture',
-      title: 'Exploring Balinese Dance',
-      image: '/api/placeholder/400/200',
-      description: 'Learn about traditional Indonesian dance forms'
-    },
-    {
-      id: 2,
-      type: 'translation',
-      title: 'Translate the following',
-      question: "'a pomme",
-      options: ['apple', 'pear', 'graps'],
-      correct: 0
-    },
-    {
-      id: 3,
-      type: 'chat',
-      title: 'Language Exchange Chat',
-      partner: 'Santiago',
-      age: 21,
-      message: "Hello! Would you like to practice Spanish?",
-      response: "Sure! Let's get started."
-    }
-  ];
-
-  // 渲染用户个人资料页面
-  const renderProfileView = () => (
-    <div className="profile-view">
-      <div className="profile-header">
-        <div className="app-logo">
-          <span className="logo-icon">🌈</span>
-          <span className="logo-text">CultureBridge</span>
-        </div>
-      </div>
-      
-      <div className="profile-content">
-        <div className="user-avatar">
-          <img src={user.avatar} alt={user.name} />
-        </div>
-        
-        <h1 className="user-name">{user.name}</h1>
-        <p className="user-username">{user.username}</p>
-        
-        <div className="stats-grid">
-          <div className="stat-card learning-progress">
-            <div className="stat-icon">⭐</div>
-            <div className="stat-content">
-              <h3>Learning Progress</h3>
-              <p className="stat-value">{user.learningProgress}</p>
-            </div>
-          </div>
-          
-          <div className="stat-card cultural-exchange">
-            <div className="stat-icon">🤝</div>
-            <div className="stat-content">
-              <h3>Cultural Exchange</h3>
-              <p className="stat-value">{user.culturalExchangeAchievements} achievements</p>
-            </div>
-          </div>
-          
-          <div className="stat-card points-earnings">
-            <div className="stat-icon">⭐</div>
-            <div className="stat-content">
-              <h3>积分收益</h3>
-              <p className="stat-value">{user.points} 积分</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  // 语言选择器
+  const LanguageSelector = () => (
+    <Select
+      value={currentLanguage}
+      onChange={changeLanguage}
+      style={{ width: 120 }}
+      size="small"
+      suffixIcon={<TranslationOutlined />}
+    >
+      {getAvailableLanguages().map(lang => (
+        <Option key={lang.code} value={lang.code}>
+          <Space>
+            <span>{lang.flag}</span>
+            <span>{lang.name}</span>
+          </Space>
+        </Option>
+      ))}
+    </Select>
   );
 
-  // 渲染内容信息流页面
-  const renderFeedView = () => (
-    <div className="feed-view">
-      <div className="feed-header">
-        <div className="app-logo">
-          <span className="logo-icon">🌉</span>
-          <span className="logo-text">CultureBridge</span>
-        </div>
-        <button className="book-button">9BOOK</button>
-      </div>
-      
-      <h1 className="feed-title">Cultural Content Feed</h1>
-      
-      <div className="content-grid">
-        <div className="featured-content">
-          <img src={culturalContent[0].image} alt={culturalContent[0].title} />
-          <div className="content-overlay">
-            <div className="author-info">
-              <div className="author-avatar"></div>
-              <span className="author-name">{culturalContent[0].author}</span>
-              <span className="content-duration">⏱️ {culturalContent[0].duration}</span>
-            </div>
-            <h3 className="content-title">{culturalContent[0].title}</h3>
-          </div>
-        </div>
-        
-        <div className="content-row">
-          {culturalContent.slice(1).map(content => (
-            <div key={content.id} className="content-card">
-              <img src={content.image} alt={content.title} />
-              <div className="content-info">
-                <div className="author-info">
-                  <div className="author-avatar"></div>
-                  <span className="author-name">{content.author}</span>
-                </div>
-                <span className="content-duration">{content.duration}</span>
-              </div>
-              {content.type === 'video' && <div className="play-button">▶️</div>}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  // 渲染学习页面
-  const renderLearningView = () => (
-    <div className="learning-view">
-      <div className="learning-header">
-        <h1 className="app-title">CultureBridge</h1>
-        <button className="chat-button">💬</button>
-      </div>
-      
-      <div className="learning-tabs">
-        <button className="tab active">Culture</button>
-        <button className="tab">Language</button>
-        <button className="tab">Chat</button>
-      </div>
-      
-      <div className="learning-content">
-        <div className="culture-section">
-          <div className="culture-card">
-            <img src={learningContent[0].image} alt={learningContent[0].title} />
-            <h3>{learningContent[0].title}</h3>
-          </div>
-        </div>
-        
-        <div className="translation-section">
-          <div className="translation-card">
-            <h3>{learningContent[1].title}</h3>
-            <p className="question">Q. {learningContent[1].question}</p>
-            <div className="options">
-              {learningContent[1].options.map((option, index) => (
-                <button key={index} className="option-button">{option}</button>
-              ))}
-            </div>
-          </div>
-        </div>
-        
-        <div className="chat-section">
-          <div className="chat-card">
-            <div className="chat-partner">
-              <img src="/api/placeholder/80/80" alt="Chat partner" />
-              <h3>Chat</h3>
-            </div>
-            <div className="chat-info">
-              <h4>{learningContent[2].partner}</h4>
-              <p>{learningContent[2].message}</p>
-              <span className="age">{learningContent[2].age} age</span>
-            </div>
-            <div className="chat-response">
-              <p>{learningContent[2].response}</p>
-              <span className="age">{learningContent[2].age} age</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="media-controls">
-        <button className="control-button">🏠</button>
-        <button className="control-button">⏸️</button>
-        <button className="control-button">▶️</button>
-      </div>
-    </div>
-  );
-
-  // 渲染聊天页面
-  const renderChatView = () => (
-    <div className="chat-view">
-      <div className="chat-header">
-        <h1>Global Chat Rooms</h1>
-      </div>
-      <div className="chat-rooms">
-        <div className="room-card">
-          <h3>🇯🇵 Japanese Culture</h3>
-          <p>24 members online</p>
-        </div>
-        <div className="room-card">
-          <h3>🇫🇷 French Learning</h3>
-          <p>18 members online</p>
-        </div>
-        <div className="room-card">
-          <h3>🇪🇸 Spanish Exchange</h3>
-          <p>31 members online</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  // 渲染当前视图
-  const renderCurrentView = () => {
-    switch (currentView) {
-      case 'profile':
-        return renderProfileView();
-      case 'feed':
-        return renderFeedView();
-      case 'learning':
-        return renderLearningView();
+  // 渲染页面内容
+  const renderContent = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <EnhancedDashboard />;
       case 'chat':
-        return renderChatView();
+        return (
+          <EnhancedChatRoom
+            roomId="general"
+            userInfo={user}
+            onLeaveRoom={() => setCurrentPage('dashboard')}
+          />
+        );
+      case 'learning':
+        return <LanguageLearning />;
+      case 'wallet':
+        return (
+          <div style={{ padding: 24 }}>
+            <WalletConnect />
+          </div>
+        );
+      case 'culture':
+        return (
+          <div style={{ padding: 24, textAlign: 'center' }}>
+            <h2>{t('navigation.community')}</h2>
+            <p>{t('common.comingSoon')}</p>
+          </div>
+        );
       default:
-        return renderProfileView();
+        return <EnhancedDashboard />;
     }
   };
 
   return (
-    <div className="modern-culture-bridge">
-      <div className="app-container">
-        {renderCurrentView()}
-        
-        <nav className="bottom-navigation">
-          {navigationItems.map(item => (
-            <button
-              key={item.id}
-              className={`nav-item ${currentView === item.id ? 'active' : ''}`}
-              onClick={() => setCurrentView(item.id)}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
-            </button>
-          ))}
-        </nav>
-      </div>
-    </div>
+    <WalletProvider>
+      <Layout style={{ minHeight: '100vh' }}>
+        {/* 侧边栏 */}
+        <Sider 
+          collapsible 
+          collapsed={collapsed} 
+          onCollapse={setCollapsed}
+          className="cb-sider"
+        >
+          <div className="cb-logo-container">
+            {collapsed ? 'CB' : 'CultureBridge'}
+          </div>
+          
+          <Menu
+            theme="dark"
+            defaultSelectedKeys={['dashboard']}
+            selectedKeys={[currentPage]}
+            mode="inline"
+            items={menuItems}
+            onClick={({ key }) => setCurrentPage(key)}
+            className="cb-menu"
+          />
+        </Sider>
+
+        <Layout>
+          {/* 顶部导航 */}
+          <Header className="cb-header">
+            <div>
+              <h2 className="cb-header-title">
+                {menuItems.find(item => item.key === currentPage)?.label || t('navigation.home')}
+              </h2>
+            </div>
+            
+            <Space size="large">
+              {/* 语言选择器 */}
+              <LanguageSelector />
+
+              {/* 通知 */}
+              <Badge count={user.notifications} size="small">
+                <Button 
+                  type="text" 
+                  icon={<BellOutlined />} 
+                  size="large"
+                  className="cb-header-button"
+                />
+              </Badge>
+
+              {/* 用户菜单 */}
+              <Dropdown
+                menu={{
+                  items: userMenuItems,
+                  onClick: ({ key }) => {
+                    if (key === 'logout') {
+                      // 处理退出登录
+                      console.log('退出登录');
+                      notification.info({
+                        message: t('user.logout'),
+                        description: t('notifications.logoutSuccess'),
+                        placement: 'topRight',
+                      });
+                    }
+                  }
+                }}
+                placement="bottomRight"
+              >
+                <Space className="cb-user-menu-trigger">
+                  <Avatar 
+                    src={user.avatar} 
+                    icon={<UserOutlined />}
+                    className="cb-user-avatar"
+                  />
+                  <div className="cb-user-info">
+                    <div className="cb-username">{user.username}</div>
+                    <div className="cb-user-level">Lv.{user.level} • {user.cbtBalance} CBT</div>
+                  </div>
+                </Space>
+              </Dropdown>
+            </Space>
+          </Header>
+
+          {/* 主要内容区域 */}
+          <Content className="cb-content">
+            {renderContent()}
+          </Content>
+        </Layout>
+      </Layout>
+    </WalletProvider>
   );
-};
+}
+
+function ModernCultureBridge() {
+  return (
+    <I18nProvider>
+      <ModernCultureBridgeContent />
+    </I18nProvider>
+  );
+}
 
 export default ModernCultureBridge;
 

@@ -1,14 +1,14 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import AllbirdsInspiredCultureBridge from './AllbirdsInspiredCultureBridge';
+import ModernCultureBridge from './ModernCultureBridge';
 import './index.css';
 
 const root = createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <AllbirdsInspiredCultureBridge />
+      <ModernCultureBridge />
     </BrowserRouter>
   </React.StrictMode>
 );
