@@ -17,7 +17,7 @@ import {
 import EnhancedDashboard from './components/EnhancedDashboard';
 import EnhancedChatRoom from './components/EnhancedChatRoom';
 import LanguageLearning from './components/LanguageLearning';
-import WalletConnect, { WalletProvider } from './components/WalletConnect';
+import WalletConnect from './components/WalletConnect';
 
 // 导入国际化服务
 import { I18nProvider, useI18n } from './services/I18nService';
@@ -175,93 +175,91 @@ function ModernCultureBridgeContent() {
   };
 
   return (
-    <WalletProvider>
-      <Layout style={{ minHeight: '100vh' }}>
-        {/* 侧边栏 */}
-        <Sider 
-          collapsible 
-          collapsed={collapsed} 
-          onCollapse={setCollapsed}
-          className="cb-sider"
-        >
-          <div className="cb-logo-container">
-            {collapsed ? 'CB' : 'CultureBridge'}
+    <Layout style={{ minHeight: '100vh' }}>
+      {/* 侧边栏 */}
+      <Sider 
+        collapsible 
+        collapsed={collapsed} 
+        onCollapse={setCollapsed}
+        className="cb-sider"
+      >
+        <div className="cb-logo-container">
+          {collapsed ? 'CB' : 'CultureBridge'}
+        </div>
+        
+        <Menu
+          theme="dark"
+          defaultSelectedKeys={['dashboard']}
+          selectedKeys={[currentPage]}
+          mode="inline"
+          items={menuItems}
+          onClick={({ key }) => setCurrentPage(key)}
+          className="cb-menu"
+        />
+      </Sider>
+
+      <Layout>
+        {/* 顶部导航 */}
+        <Header className="cb-header">
+          <div>
+            <h2 className="cb-header-title">
+              {menuItems.find(item => item.key === currentPage)?.label || t('navigation.home')}
+            </h2>
           </div>
           
-          <Menu
-            theme="dark"
-            defaultSelectedKeys={['dashboard']}
-            selectedKeys={[currentPage]}
-            mode="inline"
-            items={menuItems}
-            onClick={({ key }) => setCurrentPage(key)}
-            className="cb-menu"
-          />
-        </Sider>
+          <Space size="large">
+            {/* 语言选择器 */}
+            <LanguageSelector />
 
-        <Layout>
-          {/* 顶部导航 */}
-          <Header className="cb-header">
-            <div>
-              <h2 className="cb-header-title">
-                {menuItems.find(item => item.key === currentPage)?.label || t('navigation.home')}
-              </h2>
-            </div>
-            
-            <Space size="large">
-              {/* 语言选择器 */}
-              <LanguageSelector />
+            {/* 通知 */}
+            <Badge count={user.notifications} size="small">
+              <Button 
+                type="text" 
+                icon={<BellOutlined />} 
+                size="large"
+                className="cb-header-button"
+              />
+            </Badge>
 
-              {/* 通知 */}
-              <Badge count={user.notifications} size="small">
-                <Button 
-                  type="text" 
-                  icon={<BellOutlined />} 
-                  size="large"
-                  className="cb-header-button"
-                />
-              </Badge>
-
-              {/* 用户菜单 */}
-              <Dropdown
-                menu={{
-                  items: userMenuItems,
-                  onClick: ({ key }) => {
-                    if (key === 'logout') {
-                      // 处理退出登录
-                      console.log('退出登录');
-                      notification.info({
-                        message: t('user.logout'),
-                        description: t('notifications.logoutSuccess'),
-                        placement: 'topRight',
-                      });
-                    }
+            {/* 用户菜单 */}
+            <Dropdown
+              menu={{
+                items: userMenuItems,
+                onClick: ({ key }) => {
+                  if (key === 'logout') {
+                    // 处理退出登录
+                    console.log('退出登录');
+                    notification.info({
+                      message: t('user.logout'),
+                      description: t('notifications.logoutSuccess'),
+                      placement: 'topRight',
+                    });
                   }
-                }}
-                placement="bottomRight"
-              >
-                <Space className="cb-user-menu-trigger">
-                  <Avatar 
-                    src={user.avatar} 
-                    icon={<UserOutlined />}
-                    className="cb-user-avatar"
-                  />
-                  <div className="cb-user-info">
-                    <div className="cb-username">{user.username}</div>
-                    <div className="cb-user-level">Lv.{user.level} • {user.cbtBalance} CBT</div>
-                  </div>
-                </Space>
-              </Dropdown>
-            </Space>
-          </Header>
+                }
+              }}
+              placement="bottomRight"
+            >
+              <Space className="cb-user-menu-trigger">
+                <Avatar 
+                  src={user.avatar} 
+                  icon={<UserOutlined />}
+                  className="cb-user-avatar"
+                />
+                <div className="cb-user-info">
+                  <div className="cb-username">{user.username}</div>
+                  <div className="cb-user-level">Lv.{user.level} • {user.cbtBalance} CBT</div>
+                </div>
+              </Space>
+            </Dropdown>
+          </Space>
+        </Header>
 
-          {/* 主要内容区域 */}
-          <Content className="cb-content">
-            {renderContent()}
-          </Content>
-        </Layout>
+        {/* 主要内容区域 */}
+        <Content className="cb-content">
+          {renderContent()}
+        </Content>
       </Layout>
-    </WalletProvider>
+    </Layout>
   );
 }
 
