@@ -1,13 +1,15 @@
 import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import ModernHomePage from './pages/ModernHome';
-import './styles/modern.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import CultureBridgeApp from './CultureBridgeApp';
+import './styles/culturebridge.css';
 
 function App() {
   return (
     <Router>
       <div className="App">
-        <ModernHomePage />
+        <Routes>
+          <Route path="/" element={<CultureBridgeApp />} />
+        </Routes>
       </div>
     </Router>
   );
