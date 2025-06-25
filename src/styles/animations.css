@@ -1,40 +1,65 @@
-/* Advanced Animations and Interactions */
+/**
+ * 动画样式文件
+ * 包含各种动画效果和过渡动画
+ */
 
-/* Global Animation Variables */
-:root {
-  --animation-duration-fast: 0.15s;
-  --animation-duration-normal: 0.3s;
-  --animation-duration-slow: 0.5s;
-  --animation-easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  --animation-easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  --animation-easing-elastic: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+/* 基础动画 */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* Page Transition Animations */
-.page-transition-enter {
-  opacity: 0;
-  transform: translateY(20px) scale(0.95);
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
 }
 
-.page-transition-enter-active {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  transition: all var(--animation-duration-normal) var(--animation-easing-smooth);
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
-.page-transition-exit {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
 }
 
-.page-transition-exit-active {
-  opacity: 0;
-  transform: translateY(-20px) scale(1.05);
-  transition: all var(--animation-duration-normal) var(--animation-easing-smooth);
+/* 淡入淡出动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-/* Fade Slide Animations */
-@keyframes fadeSlideIn {
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
   from {
     opacity: 0;
     transform: translateY(30px);
@@ -45,18 +70,18 @@
   }
 }
 
-@keyframes fadeSlideOut {
+@keyframes fadeInDown {
   from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
     opacity: 0;
     transform: translateY(-30px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes fadeSlideInLeft {
+@keyframes fadeInLeft {
   from {
     opacity: 0;
     transform: translateX(-30px);
@@ -67,7 +92,7 @@
   }
 }
 
-@keyframes fadeSlideInRight {
+@keyframes fadeInRight {
   from {
     opacity: 0;
     transform: translateX(30px);
@@ -78,11 +103,11 @@
   }
 }
 
-/* Scale Animations */
+/* 缩放动画 */
 @keyframes scaleIn {
   from {
     opacity: 0;
-    transform: scale(0.8);
+    transform: scale(0.9);
   }
   to {
     opacity: 1;
@@ -97,89 +122,183 @@
   }
   to {
     opacity: 0;
-    transform: scale(0.8);
+    transform: scale(0.9);
   }
 }
 
-@keyframes bounceIn {
-  0% {
+@keyframes zoomIn {
+  from {
     opacity: 0;
     transform: scale(0.3);
   }
   50% {
     opacity: 1;
-    transform: scale(1.05);
   }
-  70% {
-    transform: scale(0.9);
-  }
-  100% {
-    opacity: 1;
+  to {
     transform: scale(1);
   }
 }
 
-/* Rotation Animations */
+@keyframes zoomOut {
+  from {
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* 滑动动画 */
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutUp {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes slideOutLeft {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* 旋转动画 */
 @keyframes rotateIn {
   from {
     opacity: 0;
-    transform: rotate(-180deg) scale(0.5);
+    transform: rotate(-200deg);
   }
   to {
     opacity: 1;
-    transform: rotate(0deg) scale(1);
+    transform: rotate(0);
   }
 }
 
-@keyframes spin {
+@keyframes rotateOut {
   from {
-    transform: rotate(0deg);
+    opacity: 1;
+    transform: rotate(0);
   }
   to {
-    transform: rotate(360deg);
+    opacity: 0;
+    transform: rotate(200deg);
   }
 }
 
-/* Pulse Animations */
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
+/* 翻转动画 */
+@keyframes flipInX {
+  from {
+    opacity: 0;
+    transform: perspective(400px) rotateX(90deg);
+  }
+  40% {
+    transform: perspective(400px) rotateX(-20deg);
+  }
+  60% {
+    transform: perspective(400px) rotateX(10deg);
+  }
+  80% {
+    transform: perspective(400px) rotateX(-5deg);
+  }
+  to {
     opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.8;
+    transform: perspective(400px) rotateX(0);
   }
 }
 
-@keyframes heartbeat {
-  0%, 100% {
-    transform: scale(1);
+@keyframes flipInY {
+  from {
+    opacity: 0;
+    transform: perspective(400px) rotateY(90deg);
   }
-  14% {
-    transform: scale(1.1);
+  40% {
+    transform: perspective(400px) rotateY(-20deg);
   }
-  28% {
-    transform: scale(1);
+  60% {
+    transform: perspective(400px) rotateY(10deg);
   }
-  42% {
-    transform: scale(1.1);
+  80% {
+    transform: perspective(400px) rotateY(-5deg);
   }
-  70% {
-    transform: scale(1);
+  to {
+    opacity: 1;
+    transform: perspective(400px) rotateY(0);
   }
 }
 
-/* Shake Animations */
+/* 摇摆动画 */
 @keyframes shake {
   0%, 100% {
     transform: translateX(0);
   }
   10%, 30%, 50%, 70%, 90% {
-    transform: translateX(-5px);
+    transform: translateX(-10px);
   }
   20%, 40%, 60%, 80% {
-    transform: translateX(5px);
+    transform: translateX(10px);
   }
 }
 
@@ -207,35 +326,128 @@
   }
 }
 
-/* Glow Effects */
-@keyframes glow {
-  0%, 100% {
-    box-shadow: 0 0 5px var(--color-primary-300);
+/* 心跳动画 */
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
   }
-  50% {
-    box-shadow: 0 0 20px var(--color-primary-400), 0 0 30px var(--color-primary-300);
+  14% {
+    transform: scale(1.3);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.3);
+  }
+  70% {
+    transform: scale(1);
   }
 }
 
-@keyframes colorGlow {
-  0% {
-    box-shadow: 0 0 5px var(--color-primary-300);
+/* 闪烁动画 */
+@keyframes flash {
+  0%, 50%, 100% {
+    opacity: 1;
   }
-  25% {
-    box-shadow: 0 0 15px var(--color-secondary-300);
+  25%, 75% {
+    opacity: 0;
+  }
+}
+
+/* 橡皮筋动画 */
+@keyframes rubberBand {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scaleX(1.25) scaleY(0.75);
+  }
+  40% {
+    transform: scaleX(0.75) scaleY(1.25);
   }
   50% {
-    box-shadow: 0 0 20px var(--color-success-300);
+    transform: scaleX(1.15) scaleY(0.85);
+  }
+  65% {
+    transform: scaleX(0.95) scaleY(1.05);
   }
   75% {
-    box-shadow: 0 0 15px var(--color-warning-300);
+    transform: scaleX(1.05) scaleY(0.95);
   }
   100% {
-    box-shadow: 0 0 5px var(--color-primary-300);
+    transform: scale(1);
   }
 }
 
-/* Gradient Animations */
+/* 果冻动画 */
+@keyframes jello {
+  0%, 11.1%, 100% {
+    transform: translateX(0);
+  }
+  22.2% {
+    transform: skewX(-12.5deg) skewY(-12.5deg);
+  }
+  33.3% {
+    transform: skewX(6.25deg) skewY(6.25deg);
+  }
+  44.4% {
+    transform: skewX(-3.125deg) skewY(-3.125deg);
+  }
+  55.5% {
+    transform: skewX(1.5625deg) skewY(1.5625deg);
+  }
+  66.6% {
+    transform: skewX(-0.78125deg) skewY(-0.78125deg);
+  }
+  77.7% {
+    transform: skewX(0.390625deg) skewY(0.390625deg);
+  }
+  88.8% {
+    transform: skewX(-0.1953125deg) skewY(-0.1953125deg);
+  }
+}
+
+/* 打字机效果 */
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink {
+  0%, 50% {
+    border-color: transparent;
+  }
+  51%, 100% {
+    border-color: currentColor;
+  }
+}
+
+/* 波浪动画 */
+@keyframes wave {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* 呼吸动画 */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* 渐变动画 */
 @keyframes gradientShift {
   0% {
     background-position: 0% 50%;
@@ -248,489 +460,328 @@
   }
 }
 
-@keyframes rainbowGradient {
-  0% {
-    background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
-  }
-  14% {
-    background: linear-gradient(45deg, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000);
-  }
-  28% {
-    background: linear-gradient(45deg, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000, #ff7f00);
-  }
-  42% {
-    background: linear-gradient(45deg, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000, #ff7f00, #ffff00);
-  }
-  57% {
-    background: linear-gradient(45deg, #0000ff, #4b0082, #9400d3, #ff0000, #ff7f00, #ffff00, #00ff00);
-  }
-  71% {
-    background: linear-gradient(45deg, #4b0082, #9400d3, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff);
-  }
-  85% {
-    background: linear-gradient(45deg, #9400d3, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082);
-  }
-  100% {
-    background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
-  }
-}
-
-/* Floating Animations */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes floatReverse {
-  0%, 100% {
-    transform: translateY(-10px);
-  }
-  50% {
-    transform: translateY(0px);
-  }
-}
-
-/* Typing Animation */
-@keyframes typing {
-  from {
-    width: 0;
-  }
-  to {
-    width: 100%;
-  }
-}
-
-@keyframes blinkCursor {
-  from, to {
-    border-color: transparent;
-  }
-  50% {
-    border-color: var(--color-primary-500);
-  }
-}
-
-/* Ripple Effect */
-@keyframes ripple {
-  0% {
-    transform: scale(0);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-
-/* Morphing Animations */
-@keyframes morphCircleToSquare {
-  0% {
-    border-radius: 50%;
-  }
-  100% {
-    border-radius: 0%;
-  }
-}
-
-@keyframes morphSquareToCircle {
-  0% {
-    border-radius: 0%;
-  }
-  100% {
-    border-radius: 50%;
-  }
-}
-
-/* Particle Animations */
-@keyframes particle1 {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(100px, -100px) rotate(360deg);
-    opacity: 0;
-  }
-}
-
-@keyframes particle2 {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-100px, -100px) rotate(-360deg);
-    opacity: 0;
-  }
-}
-
-@keyframes particle3 {
-  0% {
-    transform: translate(0, 0) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(50px, -150px) rotate(180deg);
-    opacity: 0;
-  }
-}
-
-/* Animation Classes */
-.animate-fade-in {
-  animation: fadeSlideIn var(--animation-duration-normal) var(--animation-easing-smooth) forwards;
-}
-
-.animate-fade-out {
-  animation: fadeSlideOut var(--animation-duration-normal) var(--animation-easing-smooth) forwards;
-}
-
-.animate-fade-in-left {
-  animation: fadeSlideInLeft var(--animation-duration-normal) var(--animation-easing-smooth) forwards;
-}
-
-.animate-fade-in-right {
-  animation: fadeSlideInRight var(--animation-duration-normal) var(--animation-easing-smooth) forwards;
-}
-
-.animate-scale-in {
-  animation: scaleIn var(--animation-duration-normal) var(--animation-easing-smooth) forwards;
-}
-
-.animate-scale-out {
-  animation: scaleOut var(--animation-duration-normal) var(--animation-easing-smooth) forwards;
-}
-
-.animate-bounce-in {
-  animation: bounceIn var(--animation-duration-slow) var(--animation-easing-bounce) forwards;
-}
-
-.animate-rotate-in {
-  animation: rotateIn var(--animation-duration-slow) var(--animation-easing-elastic) forwards;
-}
-
-.animate-pulse {
-  animation: pulse 2s infinite;
-}
-
-.animate-heartbeat {
-  animation: heartbeat 1.5s infinite;
-}
-
-.animate-shake {
-  animation: shake 0.5s;
-}
-
-.animate-wobble {
-  animation: wobble 1s;
-}
-
-.animate-glow {
-  animation: glow 2s infinite;
-}
-
-.animate-color-glow {
-  animation: colorGlow 3s infinite;
-}
-
-.animate-gradient-shift {
-  background-size: 200% 200%;
-  animation: gradientShift 3s ease infinite;
-}
-
-.animate-rainbow {
-  animation: rainbowGradient 5s linear infinite;
-  background-size: 200% 200%;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-float-reverse {
-  animation: floatReverse 3s ease-in-out infinite;
-}
-
+/* 动画类 */
 .animate-spin {
   animation: spin 1s linear infinite;
 }
 
-.animate-typing {
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+/* 淡入淡出 */
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-fadeOut {
+  animation: fadeOut 0.5s ease-in-out;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-fadeInDown {
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.animate-fadeInLeft {
+  animation: fadeInLeft 0.6s ease-out;
+}
+
+.animate-fadeInRight {
+  animation: fadeInRight 0.6s ease-out;
+}
+
+/* 缩放 */
+.animate-scaleIn {
+  animation: scaleIn 0.3s ease-out;
+}
+
+.animate-scaleOut {
+  animation: scaleOut 0.3s ease-in;
+}
+
+.animate-zoomIn {
+  animation: zoomIn 0.5s ease-out;
+}
+
+.animate-zoomOut {
+  animation: zoomOut 0.5s ease-in;
+}
+
+/* 滑动 */
+.animate-slideInUp {
+  animation: slideInUp 0.5s ease-out;
+}
+
+.animate-slideInDown {
+  animation: slideInDown 0.5s ease-out;
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.5s ease-out;
+}
+
+.animate-slideOutUp {
+  animation: slideOutUp 0.5s ease-in;
+}
+
+.animate-slideOutDown {
+  animation: slideOutDown 0.5s ease-in;
+}
+
+.animate-slideOutLeft {
+  animation: slideOutLeft 0.5s ease-in;
+}
+
+.animate-slideOutRight {
+  animation: slideOutRight 0.5s ease-in;
+}
+
+/* 旋转 */
+.animate-rotateIn {
+  animation: rotateIn 0.6s ease-out;
+}
+
+.animate-rotateOut {
+  animation: rotateOut 0.6s ease-in;
+}
+
+/* 翻转 */
+.animate-flipInX {
+  animation: flipInX 0.75s ease-out;
+}
+
+.animate-flipInY {
+  animation: flipInY 0.75s ease-out;
+}
+
+/* 摇摆 */
+.animate-shake {
+  animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+.animate-wobble {
+  animation: wobble 1s ease-in-out;
+}
+
+/* 心跳 */
+.animate-heartBeat {
+  animation: heartBeat 1.3s ease-in-out infinite;
+}
+
+/* 闪烁 */
+.animate-flash {
+  animation: flash 2s infinite;
+}
+
+/* 橡皮筋 */
+.animate-rubberBand {
+  animation: rubberBand 1s ease-in-out;
+}
+
+/* 果冻 */
+.animate-jello {
+  animation: jello 1s ease-in-out;
+}
+
+/* 打字机 */
+.animate-typewriter {
+  animation: typewriter 3s steps(40, end), blink 0.75s step-end infinite;
   overflow: hidden;
-  border-right: 2px solid var(--color-primary-500);
   white-space: nowrap;
-  animation: typing 3s steps(40, end), blinkCursor 0.75s step-end infinite;
+  border-right: 3px solid;
 }
 
-/* Hover Animations */
-.hover-lift {
-  transition: transform var(--animation-duration-fast) var(--animation-easing-smooth);
+/* 波浪 */
+.animate-wave {
+  animation: wave 2s ease-in-out infinite;
 }
 
+/* 呼吸 */
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* 渐变 */
+.animate-gradient {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+/* 延迟动画 */
+.animate-delay-75 {
+  animation-delay: 75ms;
+}
+
+.animate-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animate-delay-150 {
+  animation-delay: 150ms;
+}
+
+.animate-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animate-delay-500 {
+  animation-delay: 500ms;
+}
+
+.animate-delay-700 {
+  animation-delay: 700ms;
+}
+
+.animate-delay-1000 {
+  animation-delay: 1000ms;
+}
+
+/* 动画持续时间 */
+.animate-duration-75 {
+  animation-duration: 75ms;
+}
+
+.animate-duration-100 {
+  animation-duration: 100ms;
+}
+
+.animate-duration-150 {
+  animation-duration: 150ms;
+}
+
+.animate-duration-200 {
+  animation-duration: 200ms;
+}
+
+.animate-duration-300 {
+  animation-duration: 300ms;
+}
+
+.animate-duration-500 {
+  animation-duration: 500ms;
+}
+
+.animate-duration-700 {
+  animation-duration: 700ms;
+}
+
+.animate-duration-1000 {
+  animation-duration: 1000ms;
+}
+
+/* 动画次数 */
+.animate-once {
+  animation-iteration-count: 1;
+}
+
+.animate-twice {
+  animation-iteration-count: 2;
+}
+
+.animate-infinite {
+  animation-iteration-count: infinite;
+}
+
+/* 动画方向 */
+.animate-reverse {
+  animation-direction: reverse;
+}
+
+.animate-alternate {
+  animation-direction: alternate;
+}
+
+.animate-alternate-reverse {
+  animation-direction: alternate-reverse;
+}
+
+/* 动画填充模式 */
+.animate-fill-none {
+  animation-fill-mode: none;
+}
+
+.animate-fill-forwards {
+  animation-fill-mode: forwards;
+}
+
+.animate-fill-backwards {
+  animation-fill-mode: backwards;
+}
+
+.animate-fill-both {
+  animation-fill-mode: both;
+}
+
+/* 动画播放状态 */
+.animate-paused {
+  animation-play-state: paused;
+}
+
+.animate-running {
+  animation-play-state: running;
+}
+
+/* 过渡效果 */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.transition-colors {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.transition-opacity {
+  transition: opacity 0.3s ease;
+}
+
+.transition-transform {
+  transition: transform 0.3s ease;
+}
+
+.transition-shadow {
+  transition: box-shadow 0.3s ease;
+}
+
+/* 悬停效果 */
 .hover-lift:hover {
-  transform: translateY(-5px);
-}
-
-.hover-scale {
-  transition: transform var(--animation-duration-fast) var(--animation-easing-smooth);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .hover-scale:hover {
   transform: scale(1.05);
 }
 
-.hover-rotate {
-  transition: transform var(--animation-duration-fast) var(--animation-easing-smooth);
-}
-
 .hover-rotate:hover {
   transform: rotate(5deg);
 }
 
-.hover-glow {
-  transition: box-shadow var(--animation-duration-fast) var(--animation-easing-smooth);
-}
-
 .hover-glow:hover {
-  box-shadow: 0 0 20px var(--color-primary-300);
+  box-shadow: 0 0 20px rgba(var(--primary), 0.5);
 }
 
-.hover-gradient {
-  background: linear-gradient(45deg, var(--color-primary-500), var(--color-secondary-500));
-  background-size: 200% 200%;
-  transition: background-position var(--animation-duration-normal) var(--animation-easing-smooth);
-}
-
-.hover-gradient:hover {
-  background-position: 100% 100%;
-}
-
-/* Click Animations */
-.click-ripple {
-  position: relative;
-  overflow: hidden;
-}
-
-.click-ripple::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
-}
-
-.click-ripple:active::before {
-  width: 300px;
-  height: 300px;
-}
-
-.click-bounce {
-  transition: transform var(--animation-duration-fast) var(--animation-easing-bounce);
-}
-
-.click-bounce:active {
-  transform: scale(0.95);
-}
-
-/* Loading Animations */
-.loading-dots {
-  display: inline-flex;
-  gap: 4px;
-}
-
-.loading-dots::after {
-  content: '';
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: pulse 1.5s infinite;
-}
-
-.loading-dots::before {
-  content: '';
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: pulse 1.5s infinite 0.5s;
-}
-
-.loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--color-neutral-300);
-  border-top: 2px solid var(--color-primary-500);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.loading-wave {
-  display: inline-flex;
-  gap: 2px;
-}
-
-.loading-wave span {
-  width: 4px;
-  height: 20px;
-  background: var(--color-primary-500);
-  animation: wave 1.2s infinite ease-in-out;
-}
-
-.loading-wave span:nth-child(2) { animation-delay: 0.1s; }
-.loading-wave span:nth-child(3) { animation-delay: 0.2s; }
-.loading-wave span:nth-child(4) { animation-delay: 0.3s; }
-.loading-wave span:nth-child(5) { animation-delay: 0.4s; }
-
-@keyframes wave {
-  0%, 40%, 100% {
-    transform: scaleY(0.4);
-  }
-  20% {
-    transform: scaleY(1);
-  }
-}
-
-/* Stagger Animations */
-.stagger-children > * {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: fadeSlideIn var(--animation-duration-normal) var(--animation-easing-smooth) forwards;
-}
-
-.stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
-.stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
-.stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
-.stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
-.stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
-.stagger-children > *:nth-child(6) { animation-delay: 0.6s; }
-.stagger-children > *:nth-child(7) { animation-delay: 0.7s; }
-.stagger-children > *:nth-child(8) { animation-delay: 0.8s; }
-
-/* Parallax Effects */
-.parallax-slow {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-.parallax-medium {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-.parallax-fast {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-/* Scroll Animations */
-.scroll-reveal {
-  opacity: 0;
-  transform: translateY(50px);
-  transition: all var(--animation-duration-slow) var(--animation-easing-smooth);
-}
-
-.scroll-reveal.revealed {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.scroll-reveal-left {
-  opacity: 0;
-  transform: translateX(-50px);
-  transition: all var(--animation-duration-slow) var(--animation-easing-smooth);
-}
-
-.scroll-reveal-left.revealed {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.scroll-reveal-right {
-  opacity: 0;
-  transform: translateX(50px);
-  transition: all var(--animation-duration-slow) var(--animation-easing-smooth);
-}
-
-.scroll-reveal-right.revealed {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* Micro Interactions */
-.micro-bounce {
-  transition: transform var(--animation-duration-fast) var(--animation-easing-bounce);
-}
-
-.micro-bounce:hover {
-  transform: translateY(-2px);
-}
-
-.micro-scale {
-  transition: transform var(--animation-duration-fast) var(--animation-easing-smooth);
-}
-
-.micro-scale:hover {
-  transform: scale(1.02);
-}
-
-.micro-glow {
-  transition: box-shadow var(--animation-duration-fast) var(--animation-easing-smooth);
-}
-
-.micro-glow:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Focus Animations */
-.focus-ring {
-  transition: box-shadow var(--animation-duration-fast) var(--animation-easing-smooth);
-}
-
-.focus-ring:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--color-primary-200);
-}
-
-.focus-scale {
-  transition: transform var(--animation-duration-fast) var(--animation-easing-smooth);
-}
-
-.focus-scale:focus {
-  transform: scale(1.02);
-}
-
-/* Success/Error Animations */
-.success-bounce {
-  animation: bounceIn var(--animation-duration-slow) var(--animation-easing-bounce);
-}
-
-.error-shake {
-  animation: shake 0.5s;
-}
-
-.warning-pulse {
-  animation: pulse 1s infinite;
-}
-
-/* Performance Optimizations */
-.gpu-accelerated {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-.smooth-scroll {
-  scroll-behavior: smooth;
-}
-
-/* Reduced Motion Support */
+/* 响应式动画 */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -738,34 +789,65 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-  
-  .animate-pulse,
-  .animate-heartbeat,
-  .animate-glow,
-  .animate-color-glow,
-  .animate-gradient-shift,
-  .animate-rainbow,
-  .animate-float,
-  .animate-float-reverse,
-  .animate-spin {
-    animation: none !important;
   }
 }
 
-/* Dark Mode Adjustments */
-@media (prefers-color-scheme: dark) {
-  .animate-glow {
-    animation: glow 2s infinite;
+/* 滚动动画 */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease;
+}
+
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 加载动画 */
+.loading-dots::after {
+  content: '';
+  animation: loadingDots 1.5s infinite;
+}
+
+@keyframes loadingDots {
+  0%, 20% {
+    content: '';
   }
-  
-  .hover-glow:hover {
-    box-shadow: 0 0 20px var(--color-primary-400);
+  40% {
+    content: '.';
   }
-  
-  .focus-ring:focus {
-    box-shadow: 0 0 0 3px var(--color-primary-300);
+  60% {
+    content: '..';
+  }
+  80%, 100% {
+    content: '...';
+  }
+}
+
+/* 进度条动画 */
+.progress-bar {
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: progressShine 2s infinite;
+}
+
+@keyframes progressShine {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
   }
 }
 
