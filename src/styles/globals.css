@@ -3,9 +3,9 @@
  * 包含应用的基础样式和Tailwind CSS配置
  */
 
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* 基础样式重置 */
 @layer base {

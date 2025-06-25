@@ -216,6 +216,14 @@ const uiSlice = createSlice({
       state.notifications = state.notifications.filter(n => n.id !== id);
     },
     
+    markAsRead: (state, action) => {
+      const id = action.payload;
+      const notification = state.notifications.find(n => n.id === id);
+      if (notification) {
+        notification.read = true;
+      }
+    },
+    
     clearNotifications: (state) => {
       state.notifications = [];
     },
@@ -357,6 +365,7 @@ export const {
   setComponentLoading,
   addNotification,
   removeNotification,
+  markAsRead,
   clearNotifications,
   addError,
   removeError,

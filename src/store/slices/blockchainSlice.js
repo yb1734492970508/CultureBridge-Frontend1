@@ -1,251 +1,128 @@
 /**
  * 区块链状态管理
- * 处理钱包连接、代币交易、智能合约交互等
+ * 处理钱包、代币、质押等区块链相关状态
  */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { blockchainAPI } from '../services/api';
 
 // 异步action：连接钱包
 export const connectWallet = createAsyncThunk(
   'blockchain/connectWallet',
-  async (walletType, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await blockchainAPI.connectWallet(walletType);
-      return response.data;
+      // 模拟钱包连接
+      const response = await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            address: '0x1234567890abcdef1234567890abcdef12345678',
+            balance: 2850,
+            network: 'BSC Testnet'
+          });
+        }, 1000);
+      });
+      return response;
     } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      return rejectWithValue(error.message);
     }
   }
 );
 
-// 异步action：获取钱包余额
-export const fetchWalletBalance = createAsyncThunk(
-  'blockchain/fetchWalletBalance',
+// 异步action：获取代币余额
+export const getTokenBalance = createAsyncThunk(
+  'blockchain/getTokenBalance',
   async (address, { rejectWithValue }) => {
     try {
-      const response = await blockchainAPI.getBalance(address);
-      return response.data;
+      // 模拟API调用
+      const response = await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            balance: 2850,
+            usdValue: 142.50,
+            stakingRewards: 125,
+            totalEarned: 3200
+          });
+        }, 500);
+      });
+      return response;
     } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-// 异步action：发送代币
-export const sendTokens = createAsyncThunk(
-  'blockchain/sendTokens',
-  async ({ to, amount, memo }, { rejectWithValue }) => {
-    try {
-      const response = await blockchainAPI.sendTokens(to, amount, memo);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-// 异步action：获取交易历史
-export const fetchTransactionHistory = createAsyncThunk(
-  'blockchain/fetchTransactionHistory',
-  async ({ address, page = 1, limit = 20 }, { rejectWithValue }) => {
-    try {
-      const response = await blockchainAPI.getTransactionHistory(address, { page, limit });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-// 异步action：质押代币
-export const stakeTokens = createAsyncThunk(
-  'blockchain/stakeTokens',
-  async ({ amount, duration }, { rejectWithValue }) => {
-    try {
-      const response = await blockchainAPI.stakeTokens(amount, duration);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-// 异步action：取消质押
-export const unstakeTokens = createAsyncThunk(
-  'blockchain/unstakeTokens',
-  async (stakeId, { rejectWithValue }) => {
-    try {
-      const response = await blockchainAPI.unstakeTokens(stakeId);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      return rejectWithValue(error.message);
     }
   }
 );
 
 // 初始状态
 const initialState = {
-  // 钱包连接状态
-  wallet: {
-    isConnected: false,
-    address: null,
-    type: null, // 'metamask', 'walletconnect', 'coinbase'
-    chainId: null,
-    isConnecting: false,
-  },
-  
-  // 网络信息
-  network: {
-    chainId: 56, // BSC主网
-    name: 'Binance Smart Chain',
-    rpcUrl: 'https://bsc-dataseed1.binance.org/',
-    blockExplorer: 'https://bscscan.com',
-    nativeCurrency: {
-      name: 'BNB',
-      symbol: 'BNB',
-      decimals: 18,
-    },
-  },
+  // 钱包状态
+  isConnected: false,
+  walletAddress: null,
+  network: null,
+  isConnecting: false,
   
   // 代币信息
-  tokens: {
-    CBT: {
-      address: '0x742d35Cc6634C0532925a3b8D4C2F8b4C4b4b4b4',
-      symbol: 'CBT',
-      name: 'CultureBridge Token',
-      decimals: 18,
-      balance: '0',
-      price: 0,
-      priceChange24h: 0,
-    },
-    BNB: {
-      symbol: 'BNB',
-      name: 'Binance Coin',
-      decimals: 18,
-      balance: '0',
-      price: 0,
-      priceChange24h: 0,
-    },
-  },
+  balance: 0,
+  usdValue: 0,
+  stakingRewards: 0,
+  totalEarned: 0,
   
   // 交易历史
-  transactions: {
-    list: [],
-    pending: [],
-    hasMore: true,
-    isLoading: false,
-  },
-  
-  // 质押信息
-  staking: {
-    totalStaked: '0',
-    availableRewards: '0',
-    stakingPools: [],
-    userStakes: [],
-    apy: 0,
-  },
-  
-  // 奖励系统
-  rewards: {
-    totalEarned: '0',
-    pendingRewards: '0',
-    claimableRewards: '0',
-    rewardHistory: [],
-    multiplier: 1,
-  },
-  
-  // 智能合约状态
-  contracts: {
-    CBT: {
-      address: '0x742d35Cc6634C0532925a3b8D4C2F8b4C4b4b4b4',
-      abi: null,
-      instance: null,
+  transactions: [
+    {
+      id: 1,
+      type: 'reward',
+      amount: 50,
+      description: '完成文化学习任务',
+      time: '2小时前',
+      status: 'completed',
+      hash: '0xabc123...'
     },
-    Staking: {
-      address: '0x...',
-      abi: null,
-      instance: null,
-    },
-    Rewards: {
-      address: '0x...',
-      abi: null,
-      instance: null,
-    },
-  },
+    {
+      id: 2,
+      type: 'stake',
+      amount: -100,
+      description: '质押代币获得奖励',
+      time: '1天前',
+      status: 'completed',
+      hash: '0xdef456...'
+    }
+  ],
   
-  // 交易状态
-  transaction: {
-    isProcessing: false,
-    hash: null,
-    status: null, // 'pending', 'confirmed', 'failed'
-    gasPrice: null,
-    gasLimit: null,
-  },
-  
-  // 价格信息
-  prices: {
-    CBT: {
-      usd: 0,
-      bnb: 0,
-      change24h: 0,
-      volume24h: 0,
-      marketCap: 0,
+  // 质押池
+  stakingPools: [
+    {
+      id: 1,
+      name: '文化探索池',
+      apy: 12.5,
+      totalStaked: 150000,
+      myStake: 500,
+      rewards: 25,
+      lockPeriod: '30天'
     },
-    BNB: {
-      usd: 0,
-      change24h: 0,
-      volume24h: 0,
-    },
-  },
+    {
+      id: 2,
+      name: '语言学习池',
+      apy: 15.2,
+      totalStaked: 80000,
+      myStake: 0,
+      rewards: 0,
+      lockPeriod: '60天'
+    }
+  ],
   
-  // DeFi功能
-  defi: {
-    liquidityPools: [],
-    userLiquidity: [],
-    farming: {
-      pools: [],
-      userFarms: [],
-    },
-    lending: {
-      markets: [],
-      userPositions: [],
-    },
-  },
+  // 奖励任务
+  rewardTasks: [
+    { id: 1, task: '每日签到', reward: 10, progress: 100, icon: '📅' },
+    { id: 2, task: '完成文化学习', reward: 25, progress: 60, icon: '📚' },
+    { id: 3, task: '参与社区讨论', reward: 15, progress: 80, icon: '💬' },
+    { id: 4, task: '分享文化内容', reward: 20, progress: 40, icon: '📤' }
+  ],
   
-  // NFT相关
-  nfts: {
-    collections: [],
-    userNFTs: [],
-    marketplace: {
-      listings: [],
-      offers: [],
-    },
-  },
-  
-  // 治理
-  governance: {
-    proposals: [],
-    userVotes: [],
-    votingPower: '0',
-    delegatedTo: null,
-  },
-  
-  // 错误和加载状态
+  // 加载状态
   isLoading: false,
   error: null,
   
-  // 设置
-  settings: {
-    autoApprove: false,
-    slippageTolerance: 0.5, // %
-    gasPrice: 'standard', // 'slow', 'standard', 'fast'
-    notifications: {
-      transactions: true,
-      rewards: true,
-      governance: true,
-    },
-  },
+  // 交易状态
+  isTransacting: false,
+  pendingTx: null,
 };
 
 // 创建slice
@@ -253,415 +130,150 @@ const blockchainSlice = createSlice({
   name: 'blockchain',
   initialState,
   reducers: {
+    // 断开钱包连接
+    disconnectWallet: (state) => {
+      state.isConnected = false;
+      state.walletAddress = null;
+      state.network = null;
+      state.balance = 0;
+      state.usdValue = 0;
+      state.stakingRewards = 0;
+      state.totalEarned = 0;
+    },
+    
     // 清除错误
     clearError: (state) => {
       state.error = null;
     },
     
-    // 断开钱包连接
-    disconnectWallet: (state) => {
-      state.wallet = {
-        isConnected: false,
-        address: null,
-        type: null,
-        chainId: null,
-        isConnecting: false,
-      };
-      
-      // 清除相关数据
-      Object.keys(state.tokens).forEach(key => {
-        state.tokens[key].balance = '0';
-      });
-      state.transactions.list = [];
-      state.staking.userStakes = [];
-      state.rewards.pendingRewards = '0';
-    },
-    
-    // 切换网络
-    switchNetwork: (state, action) => {
-      const networkConfig = action.payload;
-      state.network = { ...state.network, ...networkConfig };
-    },
-    
-    // 更新代币余额
-    updateTokenBalance: (state, action) => {
-      const { symbol, balance } = action.payload;
-      if (state.tokens[symbol]) {
-        state.tokens[symbol].balance = balance;
-      }
-    },
-    
-    // 更新代币价格
-    updateTokenPrice: (state, action) => {
-      const { symbol, price, priceChange24h } = action.payload;
-      if (state.tokens[symbol]) {
-        state.tokens[symbol].price = price;
-        state.tokens[symbol].priceChange24h = priceChange24h;
-      }
-    },
-    
-    // 添加待处理交易
-    addPendingTransaction: (state, action) => {
-      const transaction = {
+    // 添加交易记录
+    addTransaction: (state, action) => {
+      const newTx = {
+        id: Date.now(),
         ...action.payload,
-        status: 'pending',
-        timestamp: Date.now(),
+        time: '刚刚',
+        status: 'pending'
       };
-      state.transactions.pending.push(transaction);
+      state.transactions.unshift(newTx);
     },
     
     // 更新交易状态
     updateTransactionStatus: (state, action) => {
-      const { hash, status, blockNumber } = action.payload;
-      
-      // 更新待处理交易
-      const pendingIndex = state.transactions.pending.findIndex(tx => tx.hash === hash);
-      if (pendingIndex >= 0) {
-        if (status === 'confirmed') {
-          // 移动到历史记录
-          const transaction = {
-            ...state.transactions.pending[pendingIndex],
-            status,
-            blockNumber,
-            confirmedAt: Date.now(),
-          };
-          state.transactions.list.unshift(transaction);
-          state.transactions.pending.splice(pendingIndex, 1);
-        } else {
-          state.transactions.pending[pendingIndex].status = status;
-        }
-      }
-      
-      // 更新当前交易状态
-      if (state.transaction.hash === hash) {
-        state.transaction.status = status;
-        if (status !== 'pending') {
-          state.transaction.isProcessing = false;
-        }
+      const { id, status, hash } = action.payload;
+      const tx = state.transactions.find(t => t.id === id);
+      if (tx) {
+        tx.status = status;
+        if (hash) tx.hash = hash;
       }
     },
     
-    // 开始交易
-    startTransaction: (state, action) => {
-      state.transaction = {
-        isProcessing: true,
-        hash: null,
-        status: 'pending',
-        gasPrice: action.payload.gasPrice,
-        gasLimit: action.payload.gasLimit,
-      };
-    },
-    
-    // 设置交易哈希
-    setTransactionHash: (state, action) => {
-      state.transaction.hash = action.payload;
-    },
-    
-    // 完成交易
-    completeTransaction: (state, action) => {
-      state.transaction = {
-        isProcessing: false,
-        hash: null,
-        status: null,
-        gasPrice: null,
-        gasLimit: null,
-      };
-    },
-    
-    // 更新质押信息
-    updateStakingInfo: (state, action) => {
-      state.staking = { ...state.staking, ...action.payload };
-    },
-    
-    // 添加用户质押
-    addUserStake: (state, action) => {
-      const stake = action.payload;
-      const existingIndex = state.staking.userStakes.findIndex(s => s.id === stake.id);
-      
-      if (existingIndex >= 0) {
-        state.staking.userStakes[existingIndex] = stake;
-      } else {
-        state.staking.userStakes.push(stake);
+    // 更新质押池信息
+    updateStakingPool: (state, action) => {
+      const { poolId, updates } = action.payload;
+      const pool = state.stakingPools.find(p => p.id === poolId);
+      if (pool) {
+        Object.assign(pool, updates);
       }
     },
     
-    // 移除用户质押
-    removeUserStake: (state, action) => {
-      const stakeId = action.payload;
-      state.staking.userStakes = state.staking.userStakes.filter(s => s.id !== stakeId);
-    },
-    
-    // 更新奖励信息
-    updateRewards: (state, action) => {
-      state.rewards = { ...state.rewards, ...action.payload };
-    },
-    
-    // 领取奖励
-    claimRewards: (state, action) => {
-      const { amount, txHash } = action.payload;
-      state.rewards.claimableRewards = '0';
-      state.rewards.totalEarned = (parseFloat(state.rewards.totalEarned) + parseFloat(amount)).toString();
-      
-      // 添加到奖励历史
-      state.rewards.rewardHistory.unshift({
-        amount,
-        txHash,
-        timestamp: Date.now(),
-        type: 'claim',
-      });
-    },
-    
-    // 更新价格信息
-    updatePrices: (state, action) => {
-      state.prices = { ...state.prices, ...action.payload };
-    },
-    
-    // 更新DeFi信息
-    updateDefiInfo: (state, action) => {
-      const { type, data } = action.payload;
-      if (state.defi[type]) {
-        state.defi[type] = { ...state.defi[type], ...data };
+    // 更新任务进度
+    updateTaskProgress: (state, action) => {
+      const { taskId, progress } = action.payload;
+      const task = state.rewardTasks.find(t => t.id === taskId);
+      if (task) {
+        task.progress = progress;
       }
     },
     
-    // 添加NFT
-    addNFT: (state, action) => {
-      const nft = action.payload;
-      const exists = state.nfts.userNFTs.find(n => n.tokenId === nft.tokenId && n.contract === nft.contract);
-      if (!exists) {
-        state.nfts.userNFTs.push(nft);
+    // 领取任务奖励
+    claimTaskReward: (state, action) => {
+      const taskId = action.payload;
+      const task = state.rewardTasks.find(t => t.id === taskId);
+      if (task && task.progress === 100) {
+        state.balance += task.reward;
+        state.totalEarned += task.reward;
+        task.progress = 0; // 重置进度
       }
     },
     
-    // 移除NFT
-    removeNFT: (state, action) => {
-      const { tokenId, contract } = action.payload;
-      state.nfts.userNFTs = state.nfts.userNFTs.filter(
-        n => !(n.tokenId === tokenId && n.contract === contract)
-      );
+    // 设置交易状态
+    setTransacting: (state, action) => {
+      state.isTransacting = action.payload;
     },
     
-    // 更新治理信息
-    updateGovernance: (state, action) => {
-      state.governance = { ...state.governance, ...action.payload };
-    },
-    
-    // 投票
-    vote: (state, action) => {
-      const { proposalId, choice, votingPower } = action.payload;
-      
-      // 更新用户投票记录
-      const existingVote = state.governance.userVotes.find(v => v.proposalId === proposalId);
-      if (existingVote) {
-        existingVote.choice = choice;
-        existingVote.votingPower = votingPower;
-      } else {
-        state.governance.userVotes.push({
-          proposalId,
-          choice,
-          votingPower,
-          timestamp: Date.now(),
-        });
-      }
-    },
-    
-    // 更新设置
-    updateBlockchainSettings: (state, action) => {
-      state.settings = { ...state.settings, ...action.payload };
-    },
-    
-    // 设置合约实例
-    setContractInstance: (state, action) => {
-      const { name, instance, abi } = action.payload;
-      if (state.contracts[name]) {
-        state.contracts[name].instance = instance;
-        state.contracts[name].abi = abi;
-      }
-    },
-    
-    // 更新Gas价格
-    updateGasPrice: (state, action) => {
-      state.transaction.gasPrice = action.payload;
+    // 设置待处理交易
+    setPendingTx: (state, action) => {
+      state.pendingTx = action.payload;
     },
   },
   extraReducers: (builder) => {
     // 连接钱包
     builder
       .addCase(connectWallet.pending, (state) => {
-        state.wallet.isConnecting = true;
+        state.isConnecting = true;
         state.error = null;
       })
       .addCase(connectWallet.fulfilled, (state, action) => {
-        state.wallet = {
-          isConnected: true,
-          address: action.payload.address,
-          type: action.payload.type,
-          chainId: action.payload.chainId,
-          isConnecting: false,
-        };
+        state.isConnecting = false;
+        state.isConnected = true;
+        state.walletAddress = action.payload.address;
+        state.balance = action.payload.balance;
+        state.network = action.payload.network;
       })
       .addCase(connectWallet.rejected, (state, action) => {
-        state.wallet.isConnecting = false;
+        state.isConnecting = false;
         state.error = action.payload;
       });
     
-    // 获取钱包余额
+    // 获取代币余额
     builder
-      .addCase(fetchWalletBalance.fulfilled, (state, action) => {
-        const balances = action.payload;
-        Object.keys(balances).forEach(symbol => {
-          if (state.tokens[symbol]) {
-            state.tokens[symbol].balance = balances[symbol];
-          }
-        });
-      });
-    
-    // 发送代币
-    builder
-      .addCase(sendTokens.pending, (state) => {
-        state.transaction.isProcessing = true;
+      .addCase(getTokenBalance.pending, (state) => {
+        state.isLoading = true;
       })
-      .addCase(sendTokens.fulfilled, (state, action) => {
-        const { txHash, from, to, amount, symbol } = action.payload;
-        
-        // 更新余额
-        if (state.tokens[symbol]) {
-          const currentBalance = parseFloat(state.tokens[symbol].balance);
-          state.tokens[symbol].balance = (currentBalance - parseFloat(amount)).toString();
-        }
-        
-        // 添加到交易历史
-        state.transactions.list.unshift({
-          hash: txHash,
-          from,
-          to,
-          amount,
-          symbol,
-          type: 'send',
-          status: 'pending',
-          timestamp: Date.now(),
-        });
-        
-        state.transaction.hash = txHash;
+      .addCase(getTokenBalance.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.balance = action.payload.balance;
+        state.usdValue = action.payload.usdValue;
+        state.stakingRewards = action.payload.stakingRewards;
+        state.totalEarned = action.payload.totalEarned;
       })
-      .addCase(sendTokens.rejected, (state, action) => {
-        state.transaction.isProcessing = false;
+      .addCase(getTokenBalance.rejected, (state, action) => {
+        state.isLoading = false;
         state.error = action.payload;
-      });
-    
-    // 获取交易历史
-    builder
-      .addCase(fetchTransactionHistory.pending, (state) => {
-        state.transactions.isLoading = true;
-      })
-      .addCase(fetchTransactionHistory.fulfilled, (state, action) => {
-        const { transactions, hasMore } = action.payload;
-        state.transactions.list = [...state.transactions.list, ...transactions];
-        state.transactions.hasMore = hasMore;
-        state.transactions.isLoading = false;
-      })
-      .addCase(fetchTransactionHistory.rejected, (state, action) => {
-        state.transactions.isLoading = false;
-        state.error = action.payload;
-      });
-    
-    // 质押代币
-    builder
-      .addCase(stakeTokens.fulfilled, (state, action) => {
-        const stake = action.payload;
-        state.staking.userStakes.push(stake);
-        
-        // 更新总质押量
-        const totalStaked = parseFloat(state.staking.totalStaked) + parseFloat(stake.amount);
-        state.staking.totalStaked = totalStaked.toString();
-      });
-    
-    // 取消质押
-    builder
-      .addCase(unstakeTokens.fulfilled, (state, action) => {
-        const { stakeId, amount } = action.payload;
-        
-        // 移除质押记录
-        state.staking.userStakes = state.staking.userStakes.filter(s => s.id !== stakeId);
-        
-        // 更新总质押量
-        const totalStaked = parseFloat(state.staking.totalStaked) - parseFloat(amount);
-        state.staking.totalStaked = Math.max(0, totalStaked).toString();
       });
   },
 });
 
 // 导出actions
 export const {
-  clearError,
   disconnectWallet,
-  switchNetwork,
-  updateTokenBalance,
-  updateTokenPrice,
-  addPendingTransaction,
+  clearError,
+  addTransaction,
   updateTransactionStatus,
-  startTransaction,
-  setTransactionHash,
-  completeTransaction,
-  updateStakingInfo,
-  addUserStake,
-  removeUserStake,
-  updateRewards,
-  claimRewards,
-  updatePrices,
-  updateDefiInfo,
-  addNFT,
-  removeNFT,
-  updateGovernance,
-  vote,
-  updateBlockchainSettings,
-  setContractInstance,
-  updateGasPrice,
+  updateStakingPool,
+  updateTaskProgress,
+  claimTaskReward,
+  setTransacting,
+  setPendingTx,
 } = blockchainSlice.actions;
 
 // 选择器
 export const selectBlockchain = (state) => state.blockchain;
-export const selectWallet = (state) => state.blockchain.wallet;
-export const selectNetwork = (state) => state.blockchain.network;
-export const selectTokens = (state) => state.blockchain.tokens;
+export const selectWalletAddress = (state) => state.blockchain.walletAddress;
+export const selectIsConnected = (state) => state.blockchain.isConnected;
+export const selectBalance = (state) => state.blockchain.balance;
+export const selectUsdValue = (state) => state.blockchain.usdValue;
+export const selectStakingRewards = (state) => state.blockchain.stakingRewards;
+export const selectTotalEarned = (state) => state.blockchain.totalEarned;
 export const selectTransactions = (state) => state.blockchain.transactions;
-export const selectStaking = (state) => state.blockchain.staking;
-export const selectRewards = (state) => state.blockchain.rewards;
-export const selectPrices = (state) => state.blockchain.prices;
-export const selectDefi = (state) => state.blockchain.defi;
-export const selectNFTs = (state) => state.blockchain.nfts;
-export const selectGovernance = (state) => state.blockchain.governance;
-export const selectBlockchainSettings = (state) => state.blockchain.settings;
+export const selectStakingPools = (state) => state.blockchain.stakingPools;
+export const selectRewardTasks = (state) => state.blockchain.rewardTasks;
+export const selectIsConnecting = (state) => state.blockchain.isConnecting;
+export const selectIsLoading = (state) => state.blockchain.isLoading;
+export const selectBlockchainError = (state) => state.blockchain.error;
+export const selectIsTransacting = (state) => state.blockchain.isTransacting;
+export const selectPendingTx = (state) => state.blockchain.pendingTx;
 
-// 计算选择器
-export const selectTotalPortfolioValue = (state) => {
-  const tokens = state.blockchain.tokens;
-  let total = 0;
-  
-  Object.values(tokens).forEach(token => {
-    if (token.balance && token.price) {
-      total += parseFloat(token.balance) * token.price;
-    }
-  });
-  
-  return total;
-};
-
-export const selectStakingAPY = (state) => {
-  return state.blockchain.staking.apy || 0;
-};
-
-export const selectPendingTransactionCount = (state) => {
-  return state.blockchain.transactions.pending.length;
-};
-
-export const selectIsWalletConnected = (state) => {
-  return state.blockchain.wallet.isConnected;
-};
-
-export const selectCanClaim = (state) => {
-  return parseFloat(state.blockchain.rewards.claimableRewards) > 0;
-};
-
+// 导出reducer
 export default blockchainSlice.reducer;
 

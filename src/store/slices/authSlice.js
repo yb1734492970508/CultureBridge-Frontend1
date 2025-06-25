@@ -4,14 +4,84 @@
  */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authAPI } from '../services/api';
+// import { authAPI } from '../../services/api';
+
+// 模拟API调用
+const mockAuthAPI = {
+  login: async (credentials) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          data: {
+            user: {
+              id: '1',
+              username: credentials.username,
+              email: credentials.email || 'user@example.com',
+              token: 'mock-jwt-token'
+            }
+          }
+        });
+      }, 1000);
+    });
+  },
+  register: async (userData) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          data: {
+            user: {
+              id: '1',
+              username: userData.username,
+              email: userData.email,
+              token: 'mock-jwt-token'
+            }
+          }
+        });
+      }, 1000);
+    });
+  },
+  logout: async () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ data: { success: true } });
+      }, 500);
+    });
+  },
+  walletLogin: async (walletData) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          data: {
+            user: {
+              id: '1',
+              walletAddress: walletData.address,
+              token: 'mock-wallet-jwt-token'
+            }
+          }
+        });
+      }, 1000);
+    });
+  },
+  refreshToken: async (refreshToken) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          data: {
+            token: 'new-mock-jwt-token',
+            refreshToken: 'new-mock-refresh-token'
+          }
+        });
+      }, 500);
+    });
+  }
+};
 
 // 异步action：用户登录
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await authAPI.login(credentials);
+      const response = await mockAuthAPI.login(credentials);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -24,7 +94,7 @@ export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await authAPI.register(userData);
+      const response = await mockAuthAPI.register(userData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -37,7 +107,7 @@ export const loginWithWallet = createAsyncThunk(
   'auth/loginWithWallet',
   async (walletData, { rejectWithValue }) => {
     try {
-      const response = await authAPI.walletLogin(walletData);
+      const response = await mockAuthAPI.walletLogin(walletData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -51,7 +121,7 @@ export const refreshToken = createAsyncThunk(
   async (_, { rejectWithValue, getState }) => {
     try {
       const { auth } = getState();
-      const response = await authAPI.refreshToken(auth.refreshToken);
+      const response = await mockAuthAPI.refreshToken(auth.refreshToken);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -280,6 +350,11 @@ export const {
   setPermissions,
   setRoles,
 } = authSlice.actions;
+
+// 导出异步actions（为了兼容性）
+export const login = loginUser;
+export const walletLogin = loginWithWallet;
+export const checkAuthStatus = verifyToken;
 
 // 选择器
 export const selectAuth = (state) => state.auth;
