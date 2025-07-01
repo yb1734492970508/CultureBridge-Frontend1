@@ -1,290 +1,301 @@
-/**
- * CultureBridge 主应用文件 - 增强版 v3.0
- * 集成Redux、React Query、Socket.IO等现代化功能
- */
+import React from 'react';
+import { Button } from '@/components/ui/button.jsx';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx';
+import { Badge } from '@/components/ui/badge.jsx';
+import { Globe, MessageCircle, BookOpen, Languages, Coins, Users, Star, ArrowRight, Play, CheckCircle } from 'lucide-react';
+import './App.css';
 
-import React, { useEffect, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { Toaster } from 'sonner';
-import { ThemeProvider } from 'next-themes';
+function App() {
+  const features = [
+    {
+      icon: MessageCircle,
+      title: '实时聊天',
+      description: '与世界各地的朋友实时交流，支持多语言翻译',
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+    },
+    {
+      icon: Languages,
+      title: '智能翻译',
+      description: 'AI驱动的语音和文本翻译，支持50+种语言',
+      color: 'text-green-500',
+      bgColor: 'bg-green-50 dark:bg-green-900/20',
+    },
+    {
+      icon: BookOpen,
+      title: '语言学习',
+      description: '个性化的语言学习课程，让学习更有趣',
+      color: 'text-purple-500',
+      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+    },
+    {
+      icon: Globe,
+      title: '文化探索',
+      description: '深入了解不同文化，拓展国际视野',
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+    },
+    {
+      icon: Coins,
+      title: '区块链奖励',
+      description: '通过学习和交流获得代币奖励',
+      color: 'text-yellow-500',
+      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
+    },
+    {
+      icon: Users,
+      title: '全球社区',
+      description: '加入全球用户社区，结交国际朋友',
+      color: 'text-pink-500',
+      bgColor: 'bg-pink-50 dark:bg-pink-900/20',
+    },
+  ];
 
-// Store和配置
-import { store, persistor } from './store';
-import queryClient from './lib/queryClient';
-import config from './utils/config';
-import socketService from './services/socket';
+  const stats = [
+    { label: '活跃用户', value: '100K+' },
+    { label: '支持语言', value: '50+' },
+    { label: '文化内容', value: '1M+' },
+    { label: '在线交流', value: '24/7' },
+  ];
 
-// 组件
-import LoadingSpinner from './components/ui/LoadingSpinner';
-import ErrorBoundary from './components/ErrorBoundary';
-import AuthGuard from './components/AuthGuard';
-import Layout from './components/Layout';
-import NotificationManager from './components/NotificationManager';
-import PerformanceMonitor from './components/PerformanceMonitor';
+  const testimonials = [
+    {
+      name: '张小明',
+      role: '大学生',
+      content: 'CultureBridge让我在学习英语的同时，还了解了很多西方文化，真的很棒！',
+      avatar: '/avatars/user1.jpg',
+    },
+    {
+      name: 'Sarah Johnson',
+      role: '语言老师',
+      content: 'This platform is amazing for cultural exchange. My students love it!',
+      avatar: '/avatars/user2.jpg',
+    },
+    {
+      name: '田中太郎',
+      role: '商务人士',
+      content: 'ビジネスで多言語コミュニケーションが必要な私にとって、とても便利なツールです。',
+      avatar: '/avatars/user3.jpg',
+    },
+  ];
 
-// 页面组件 - 懒加载
-const HomePage = React.lazy(() => import('./pages/HomePage'));
-const LoginPage = React.lazy(() => import('./pages/LoginPage'));
-const RegisterPage = React.lazy(() => import('./pages/RegisterPage'));
-const DashboardPage = React.lazy(() => import('./pages/DashboardPage'));
-const ChatPage = React.lazy(() => import('./pages/ChatPage'));
-const LearningPage = React.lazy(() => import('./pages/LearningPage'));
-const CulturePage = React.lazy(() => import('./pages/CulturePage'));
-const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
-const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
-const BlockchainPage = React.lazy(() => import('./pages/BlockchainPage'));
-const TranslationPage = React.lazy(() => import('./pages/TranslationPage'));
-const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
-
-// 全局样式
-import './styles/globals.css';
-import './styles/animations.css';
-import './styles/themes.css';
-
-/**
- * 应用初始化组件
- */
-const AppInitializer = ({ children }) => {
-  useEffect(() => {
-    // 初始化配置验证
-    try {
-      config.validateConfig();
-      console.log('✅ Configuration validated successfully');
-    } catch (error) {
-      console.error('❌ Configuration validation failed:', error);
-    }
-
-    // 初始化Socket连接
-    const initializeSocket = () => {
-      if (config.isFeatureEnabled('REAL_TIME_COMMUNICATION')) {
-        socketService.connect();
-        console.log('🔌 Socket service initialized');
-      }
-    };
-
-    // 延迟初始化Socket以确保认证状态已加载
-    const timer = setTimeout(initializeSocket, 1000);
-
-    // 性能监控
-    if (config.get('VITE_ENABLE_PERFORMANCE_MONITORING')) {
-      console.log('📊 Performance monitoring enabled');
-    }
-
-    // 错误报告
-    if (config.get('VITE_ENABLE_ERROR_REPORTING')) {
-      window.addEventListener('error', (event) => {
-        console.error('Global error:', event.error);
-        // 这里可以集成错误报告服务
-      });
-
-      window.addEventListener('unhandledrejection', (event) => {
-        console.error('Unhandled promise rejection:', event.reason);
-        // 这里可以集成错误报告服务
-      });
-    }
-
-    // 清理函数
-    return () => {
-      clearTimeout(timer);
-      socketService.disconnect();
-    };
-  }, []);
-
-  return children;
-};
-
-/**
- * 路由配置
- */
-const AppRoutes = () => {
   return (
-    <Routes>
-      {/* 公开路由 */}
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      
-      {/* 受保护的路由 */}
-      <Route path="/dashboard" element={
-        <AuthGuard>
-          <Layout>
-            <DashboardPage />
-          </Layout>
-        </AuthGuard>
-      } />
-      
-      <Route path="/chat" element={
-        <AuthGuard>
-          <Layout>
-            <ChatPage />
-          </Layout>
-        </AuthGuard>
-      } />
-      
-      <Route path="/chat/:roomId" element={
-        <AuthGuard>
-          <Layout>
-            <ChatPage />
-          </Layout>
-        </AuthGuard>
-      } />
-      
-      <Route path="/learning" element={
-        <AuthGuard>
-          <Layout>
-            <LearningPage />
-          </Layout>
-        </AuthGuard>
-      } />
-      
-      <Route path="/learning/:courseId" element={
-        <AuthGuard>
-          <Layout>
-            <LearningPage />
-          </Layout>
-        </AuthGuard>
-      } />
-      
-      <Route path="/culture" element={
-        <AuthGuard>
-          <Layout>
-            <CulturePage />
-          </Layout>
-        </AuthGuard>
-      } />
-      
-      <Route path="/culture/:topicId" element={
-        <AuthGuard>
-          <Layout>
-            <CulturePage />
-          </Layout>
-        </AuthGuard>
-      } />
-      
-      <Route path="/translation" element={
-        <AuthGuard>
-          <Layout>
-            <TranslationPage />
-          </Layout>
-        </AuthGuard>
-      } />
-      
-      <Route path="/blockchain" element={
-        <AuthGuard>
-          <Layout>
-            <BlockchainPage />
-          </Layout>
-        </AuthGuard>
-      } />
-      
-      <Route path="/profile" element={
-        <AuthGuard>
-          <Layout>
-            <ProfilePage />
-          </Layout>
-        </AuthGuard>
-      } />
-      
-      <Route path="/settings" element={
-        <AuthGuard>
-          <Layout>
-            <SettingsPage />
-          </Layout>
-        </AuthGuard>
-      } />
-      
-      {/* 重定向和404 */}
-      <Route path="/app" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
-  );
-};
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* 导航栏 */}
+      <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <Globe className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <span className="font-bold text-xl">CultureBridge</span>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost">
+                登录
+              </Button>
+              <Button>
+                开始体验
+              </Button>
+            </div>
+          </div>
+        </div>
+      </nav>
 
-/**
- * 加载组件
- */
-const LoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
-    <div className="text-center space-y-4">
-      <LoadingSpinner size="lg" />
-      <div className="text-lg font-medium text-gray-700 dark:text-gray-300">
-        正在加载 CultureBridge...
-      </div>
-      <div className="text-sm text-gray-500 dark:text-gray-400">
-        连接世界，交流文化
-      </div>
-    </div>
-  </div>
-);
+      {/* 英雄区域 */}
+      <section className="relative py-20 lg:py-32">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+              连接世界
+              <span className="text-primary block">分享文化</span>
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+              通过AI驱动的实时翻译和区块链激励机制，打破语言障碍，促进全球文化
+              交流与理解
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg">
+                立即开始
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+              <Button size="lg" variant="outline">
+                <Play className="mr-2 w-5 h-5" />
+                观看演示
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
 
-/**
- * 主应用组件
- */
-const App = () => {
-  return (
-    <ErrorBoundary>
-      <Provider store={store}>
-        <PersistGate loading={<LoadingFallback />} persistor={persistor}>
-          <QueryClientProvider client={queryClient}>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme={config.getUIConfig().defaultTheme}
-              enableSystem
-              disableTransitionOnChange
-            >
-              <Router>
-                <AppInitializer>
-                  <div className="app">
-                    {/* 主要内容 */}
-                    <Suspense fallback={<LoadingFallback />}>
-                      <AppRoutes />
-                    </Suspense>
-                    
-                    {/* 全局组件 */}
-                    <NotificationManager />
-                    
-                    {/* 性能监控 */}
-                    {config.get('VITE_ENABLE_PERFORMANCE_MONITORING') && (
-                      <PerformanceMonitor />
-                    )}
-                    
-                    {/* 通知系统 */}
-                    <Toaster
-                      position="top-right"
-                      expand={true}
-                      richColors
-                      closeButton
-                      toastOptions={{
-                        duration: 4000,
-                        style: {
-                          background: 'var(--background)',
-                          color: 'var(--foreground)',
-                          border: '1px solid var(--border)',
-                        },
-                      }}
-                    />
-                    
-                    {/* React Query 开发工具 */}
-                    {config.isDevelopment() && (
-                      <ReactQueryDevtools
-                        initialIsOpen={false}
-                        position="bottom-right"
-                      />
-                    )}
+      {/* 统计数据 */}
+      <section className="py-16 bg-white/50 dark:bg-gray-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-3xl lg:text-4xl font-bold text-primary mb-2">
+                  {stat.value}
+                </div>
+                <div className="text-gray-600 dark:text-gray-300">
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 功能特性 */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              强大的功能特性
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              我们提供全方位的文化交流和语言学习解决方案
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className={`w-12 h-12 rounded-lg ${feature.bgColor} flex items-center justify-center mb-4`}>
+                    <feature.icon className={`w-6 h-6 ${feature.color}`} />
                   </div>
-                </AppInitializer>
-              </Router>
-            </ThemeProvider>
-          </QueryClientProvider>
-        </PersistGate>
-      </Provider>
-    </ErrorBoundary>
+                  <CardTitle>{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-base">
+                    {feature.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 用户评价 */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              用户怎么说
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300">
+              来自全球用户的真实反馈
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <Card key={index}>
+                <CardContent className="pt-6">
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 bg-gray-300 rounded-full mr-3"></div>
+                    <div>
+                      <div className="font-semibold">{testimonial.name}</div>
+                      <div className="text-sm text-gray-500">{testimonial.role}</div>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    "{testimonial.content}"
+                  </p>
+                  <div className="flex mt-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA区域 */}
+      <section className="py-20 bg-primary">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
+            准备开始你的文化之旅了吗？
+          </h2>
+          <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+            加入CultureBridge，与全世界的朋友交流，学习新语言，探索不同文化
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" variant="secondary">
+              立即注册
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+            <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-primary">
+              了解更多
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* 页脚 */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <Globe className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <span className="font-bold text-xl">CultureBridge</span>
+              </div>
+              <p className="text-gray-400">
+                连接世界，交流文化的创新平台
+              </p>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">产品</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white">实时聊天</a></li>
+                <li><a href="#" className="hover:text-white">智能翻译</a></li>
+                <li><a href="#" className="hover:text-white">语言学习</a></li>
+                <li><a href="#" className="hover:text-white">文化探索</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">公司</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white">关于我们</a></li>
+                <li><a href="#" className="hover:text-white">联系我们</a></li>
+                <li><a href="#" className="hover:text-white">隐私政策</a></li>
+                <li><a href="#" className="hover:text-white">服务条款</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">支持</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><a href="#" className="hover:text-white">帮助中心</a></li>
+                <li><a href="#" className="hover:text-white">社区论坛</a></li>
+                <li><a href="#" className="hover:text-white">API文档</a></li>
+                <li><a href="#" className="hover:text-white">状态页面</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 CultureBridge. 保留所有权利。</p>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
-};
+}
 
 export default App;
 
