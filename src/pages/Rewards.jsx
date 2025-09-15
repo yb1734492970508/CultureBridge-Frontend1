@@ -101,39 +101,35 @@ export default function Rewards() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-pink-50">
       <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 flex flex-col md:flex-row justify-between items-center"
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">奖励商城</h1>
-          <p className="text-gray-600">使用您的积分兑换精美奖励，丰富您的文化之旅</p>
-        </motion.div>
-
-        {/* User Points Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-8"
-        >
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">奖励商城</h1>
+            <p className="text-gray-600">使用您的积分兑换精美奖励</p>
+          </div>
           {user && (
-            <Card className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-none">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-white/20 rounded-full">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-none mt-4 md:mt-0">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <div className="bg-white/20 p-2 rounded-full">
                     <Coins className="w-8 h-8" />
                   </div>
                   <div>
                     <p className="text-white/80 text-sm">我的积分</p>
                     <p className="text-3xl font-bold">{user.total_points || 0}</p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
           )}
         </motion.div>
 
@@ -285,4 +281,3 @@ export default function Rewards() {
     </div>
   );
 }
-
