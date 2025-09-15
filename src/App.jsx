@@ -1,11 +1,14 @@
+
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx';
 import { Badge } from '@/components/ui/badge.jsx';
 import { Globe, MessageCircle, BookOpen, Languages, Coins, Users, Star, ArrowRight, Play, CheckCircle } from 'lucide-react';
 import './App.css';
+import Courses from './pages/Courses'; // Import the new Courses component
 
-function App() {
+function Home() {
   const features = [
     {
       icon: MessageCircle,
@@ -81,29 +84,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* 导航栏 */}
-      <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Globe className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-bold text-xl">CultureBridge</span>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost">
-                登录
-              </Button>
-              <Button>
-                开始体验
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* 英雄区域 */}
       <section className="relative py-20 lg:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -297,5 +277,47 @@ function App() {
   );
 }
 
+function App() {
+  return (
+    <Router>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        {/* 导航栏 */}
+        <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <Globe className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <span className="font-bold text-xl">CultureBridge</span>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <Link to="/courses">
+                  <Button variant="ghost">
+                    课程
+                  </Button>
+                </Link>
+                <Button variant="ghost">
+                  登录
+                </Button>
+                <Button>
+                  开始体验
+                </Button>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/courses" element={<Courses />} />
+        </Routes>
+      </div>
+    </Router>
+  );
+}
+
 export default App;
+
 
